@@ -1,0 +1,50 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Node
+node_modules/
+.next/
+out/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build
+*.tsbuildinfo
+
+# Testing
+coverage/
+.pytest_cache/
+htmlcov/
+
+# Misc
+*.bak
+*.tmp
