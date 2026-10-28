@@ -18,7 +18,7 @@ const dowelColor = "#d69858";
  * - Two lateral edge notches with horizontal wooden dowel pins across them
  * - Cutout 1: Front rectangular window smoothly curving around the central wooden tongue
  * - Cutout 2: Sharp 4-point Diamond (Rhombus) through-hole in the center of the wooden tongue
- * - Cutouts 3-8: 3 pairs of round adjustment holes on the side wings (X = ±1.30)
+ * - Cutouts 3-8: 3 pairs of round adjustment holes on the side wings (X = ±1.30, Y = 1.22, 1.60, 1.98)
  * - Raised front stopper block mounted on the front rail to retain a tablet or laptop
  */
 function TabletDeckPiece() {
@@ -36,11 +36,7 @@ function TabletDeckPiece() {
     // Bottom-right chamfer
     shape.lineTo(2.10, -1.80);
 
-    // Right outer edge with lateral notch at Y = 0.50 to 0.80
-    shape.lineTo(2.10, 0.50);
-    shape.lineTo(1.92, 0.50);
-    shape.lineTo(1.92, 0.80);
-    shape.lineTo(2.10, 0.80);
+    // Right outer edge (plain, straight)
     shape.lineTo(2.10, 1.80);
 
     // Top-right chamfer
@@ -52,44 +48,38 @@ function TabletDeckPiece() {
     // Top-left chamfer
     shape.lineTo(-2.10, 1.80);
 
-    // Left outer edge with lateral notch at Y = 0.80 down to 0.50
-    shape.lineTo(-2.10, 0.80);
-    shape.lineTo(-1.92, 0.80);
-    shape.lineTo(-1.92, 0.50);
-    shape.lineTo(-2.10, 0.50);
+    // Left outer edge (plain, straight)
     shape.lineTo(-2.10, -1.80);
 
-    // ── Cutout 1: Front Window + Semicircular Tongue Void Contour ──
-    // The void starts inside the front and side rails, then wraps smoothly around the wooden tongue
+    // ── Cutout 1: Front Window + Smooth Sweeping Curve (reduced curvature dimensions) ──
+    // Continuous wide curve meeting the side rails at Y = 0.28 and sweeping gracefully around the central diamond tongue (apex at Y = -0.46)
     const frontVoidHole = new Path();
-    frontVoidHole.moveTo(-1.45, -1.75); // Inner front-left corner
-    frontVoidHole.lineTo(1.45, -1.75);  // Along front rail inner edge
-    frontVoidHole.lineTo(1.45, -0.45);  // Along right rail inner edge
-    frontVoidHole.lineTo(0.95, 0.05);   // 45° diagonal cut inward toward tongue
+    frontVoidHole.moveTo(-1.45, -1.80); // Bottom-left inner corner
+    frontVoidHole.lineTo(1.45, -1.80);  // Along front rail inner edge
+    frontVoidHole.lineTo(1.45, 0.28);   // Along right rail inner edge
 
-    // Semicircular arc around the wooden tongue (apex at Y = -0.70)
-    frontVoidHole.bezierCurveTo(0.85, -0.55, 0.50, -0.70, 0.00, -0.70);
-    frontVoidHole.bezierCurveTo(-0.50, -0.70, -0.85, -0.55, -0.95, 0.05);
+    // Smooth continuous concave curve sweeping down and cupping under the diamond (apex at Y = -0.46)
+    frontVoidHole.bezierCurveTo(1.05, -0.22, 0.50, -0.46, 0.00, -0.46);
+    frontVoidHole.bezierCurveTo(-0.50, -0.46, -1.05, -0.22, -1.45, 0.28);
 
-    // 45° diagonal cut back outward to left rail
-    frontVoidHole.lineTo(-1.45, -0.45);
-    frontVoidHole.lineTo(-1.45, -1.75); // Along left rail back to start
+    // Straight down along left rail inner edge back to start
+    frontVoidHole.lineTo(-1.45, -1.80);
     frontVoidHole.closePath();
     shape.holes.push(frontVoidHole);
 
-    // ── Cutout 2: Sharp 4-Point Diamond (Rhombus) Cutout ──
-    // Positioned inside the solid wooden tongue
+    // ── Cutout 2: Sharp 4-Point Diamond (Rhombus) Cutout (1.7x scaled) ──
+    // Positioned inside the solid wooden tongue between Y = -0.134 and Y = 1.634 (center Y = 0.75)
     const diamondHole = new Path();
-    diamondHole.moveTo(0.00, -0.38);  // Front tip (pointing towards tongue apex)
-    diamondHole.lineTo(0.60, 0.18);   // Right tip
-    diamondHole.lineTo(0.00, 0.74);   // Rear tip
-    diamondHole.lineTo(-0.60, 0.18);  // Left tip
+    diamondHole.moveTo(0.00, -0.134); // Front tip
+    diamondHole.lineTo(0.935, 0.75);  // Right tip
+    diamondHole.lineTo(0.00, 1.634);  // Rear tip
+    diamondHole.lineTo(-0.935, 0.75); // Left tip
     diamondHole.closePath();
     shape.holes.push(diamondHole);
 
     // ── Cutouts 3-8: 3 Pairs of Round Adjustment Holes on Side Wings ──
     const holeRadius = 0.115;
-    const holeYPositions = [0.45, 1.05, 1.65]; // Hole 1 (low), Hole 2 (mid), Hole 3 (steep)
+    const holeYPositions = [1.22, 1.60, 1.98]; // Hole 1 (low angle), Hole 2 (mid), Hole 3 (steep)
 
     // Left wing holes (X = -1.30)
     for (const hy of holeYPositions) {
@@ -145,59 +135,52 @@ function TabletDeckPiece() {
         />
       </RoundedBox>
 
-      {/* Decorative Wooden Dowel Pins in Lateral Notches */}
-      <mesh position={[1.98, 0.65, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.055, 0.055, 0.22, 16]} />
-        <meshStandardMaterial color={dowelColor} roughness={0.58} />
-      </mesh>
-      <mesh position={[-1.98, 0.65, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.055, 0.055, 0.22, 16]} />
-        <meshStandardMaterial color={dowelColor} roughness={0.58} />
-      </mesh>
+
     </group>
   );
 }
 
 /**
  * Piece 2: Arched Support Leg / Prop
- * Faithful reproduction of the second piece in the reference photos:
- * - Flat top edge with two cylindrical tenon pins at X = ±1.30 that insert into the deck holes
- * - Parabolic arched cutout at base creating two sturdy pointed feet
- * - Height calibrated so when engaged in Hole 1, feet rest exactly on the ground plane
+ * Placed entirely on the underside of the deck:
+ * - Flat top edge positioned beneath Hole 1
+ * - Arched cutout between two pointed feet that touch the table surface
+ * - Does not penetrate the deck slab; stays strictly behind/below it
  */
-function TabletSupportLeg({ legLength = 2.76 }: { legLength?: number }) {
+function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
   const geometry = useMemo(() => {
     const shape = new Shape();
 
-    // Leg local coordinates:
-    // Feet at Y = 0 (Left foot from -1.50 to -1.05; Right foot from 1.05 to 1.50)
-    // Top edge at Y = legLength (from -1.42 to +1.42)
-    // Central Arch cutout peaks at ~67% of leg length
+    // Local coordinates:
+    // Top edge at Y = 0 (sits directly under the deck's Hole 1)
+    // Feet at Y = -legLength
+    // Width = 2.90 (from X = -1.45 to +1.45)
+    // Parabolic arch peaks at ~52% of leg length
 
-    // Start at bottom-left outer foot tip
-    shape.moveTo(-1.50, 0);
+    // Top-left corner
+    shape.moveTo(-1.42, 0);
 
-    // Left outer edge tapering up slightly to top edge
-    shape.lineTo(-1.42, legLength);
+    // Top flat edge across
+    shape.lineTo(1.42, 0);
 
-    // Top edge across
-    shape.lineTo(1.42, legLength);
-
-    // Right outer edge tapering down to bottom-right outer foot tip
-    shape.lineTo(1.50, 0);
+    // Right outer edge tapering down to right foot
+    shape.lineTo(1.50, -legLength);
 
     // Right foot flat base
-    shape.lineTo(1.05, 0);
+    shape.lineTo(1.08, -legLength);
 
-    // Parabolic arched cutout between the two feet (peaking at ~67% of height)
-    const archApexY = legLength * 0.67;
-    shape.quadraticCurveTo(0.00, archApexY, -1.05, 0);
+    // Parabolic arch cutout between the two feet (peaking at ~52% of height)
+    const archApexY = -legLength * 0.52;
+    shape.quadraticCurveTo(0.00, archApexY, -1.08, -legLength);
 
-    // Left foot flat base back to start
-    shape.lineTo(-1.50, 0);
+    // Left foot flat base
+    shape.lineTo(-1.50, -legLength);
+
+    // Left outer edge tapering up to top-left corner
+    shape.lineTo(-1.42, 0);
 
     return new ExtrudeGeometry(shape, {
-      depth: 0.20,
+      depth: 0.18,
       bevelEnabled: true,
       bevelSegments: 3,
       bevelSize: 0.015,
@@ -206,49 +189,28 @@ function TabletSupportLeg({ legLength = 2.76 }: { legLength?: number }) {
   }, [legLength]);
 
   return (
-    <group>
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={geometry}
-        position={[0, 0, -0.10]}
-      >
-        <meshStandardMaterial
-          color={pineWarm}
-          roughness={0.52}
-          metalness={0.01}
-        />
-      </mesh>
-
-      {/* Tenon Pin 1 (Right): Inserts into right adjustment hole and pokes through top surface */}
-      <mesh
-        castShadow
-        position={[1.30, legLength + 0.12, 0]}
-        rotation={[0, 0, 0]}
-      >
-        <cylinderGeometry args={[0.11, 0.11, 0.28, 16]} />
-        <meshStandardMaterial color={dowelColor} roughness={0.55} />
-      </mesh>
-
-      {/* Tenon Pin 2 (Left): Inserts into left adjustment hole and pokes through top surface */}
-      <mesh
-        castShadow
-        position={[-1.30, legLength + 0.12, 0]}
-        rotation={[0, 0, 0]}
-      >
-        <cylinderGeometry args={[0.11, 0.11, 0.28, 16]} />
-        <meshStandardMaterial color={dowelColor} roughness={0.55} />
-      </mesh>
-    </group>
+    <mesh
+      castShadow
+      receiveShadow
+      geometry={geometry}
+      position={[0, 0, -0.18]}
+    >
+      <meshStandardMaterial
+        color={pineWarm}
+        roughness={0.52}
+        metalness={0.01}
+      />
+    </mesh>
   );
 }
 
 /**
  * Assembled Tablet Stand:
- * 1. Deck is tilted at 24.5° ergonomic incline.
- * 2. Bottom front edge touches ground plane exactly.
- * 3. Arched support leg props underneath into Hole 1 (Y = 0.45).
- * 4. Feet of the support leg touch ground plane at the exact same level.
+ * 1. Deck is tilted at 25.5° comfortable laptop / tablet typing incline.
+ * 2. Front lip rests directly on the ground plane (Y = -0.85).
+ * 3. Support leg props underneath from Hole 1, tilting back 14.1° to ground (Y = -0.85).
+ * 4. Wide split (3.66 units) provides natural, rock-solid ergonomic balance.
+ * 5. ONLY the two cylindrical wooden peg extensions fill the holes — no board clipping.
  */
 function TabletStandAssembly() {
   const model = useRef<Group>(null);
@@ -258,31 +220,36 @@ function TabletStandAssembly() {
     if (model.current) model.current.rotation.y += delta * 0.12;
   });
 
-  // Mathematically calculated constants for 100% coplanar ground contact:
-  // Deck angle: 24.5° (0.4276 rad)
-  // Leg tilt backward: 20° (0.3491 rad)
-  // Calibrated legLength: 2.76 units
-  const legLength = 2.76;
-
   return (
-    <Float speed={1.05} rotationIntensity={0.05} floatIntensity={0.12}>
+    <Float speed={1.05} rotationIntensity={0.05} floatIntensity={0.10}>
       <group
         ref={model}
-        position={[0, -0.32, 0]}
+        position={[0, -0.15, 0]}
         rotation={[0.08, -0.52, 0]}
-        scale={0.68}
+        scale={0.76}
       >
-        {/* Piece 1: Sloping Main Deck */}
-        <group position={[0, 1.188, 0]} rotation={[-0.4276, 0, 0]}>
+        {/* Piece 1: Sloping Main Deck — inclined at 25.5° (rotX = -1.1257 rad) */}
+        <group position={[0, 0.2825, 0]} rotation={[-1.1257, 0, 0]}>
           <TabletDeckPiece />
+
+          {/* Tenon Pin 1 (Right): Round wooden peg filling Hole 1 */}
+          <mesh position={[1.30, 1.22, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.11, 0.11, 0.24, 16]} />
+            <meshStandardMaterial color={dowelColor} roughness={0.55} />
+          </mesh>
+
+          {/* Tenon Pin 2 (Left): Round wooden peg filling Hole 1 */}
+          <mesh position={[-1.30, 1.22, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.11, 0.11, 0.24, 16]} />
+            <meshStandardMaterial color={dowelColor} roughness={0.55} />
+          </mesh>
         </group>
 
-        {/* Piece 2: Arched Support Leg propped under Hole 1 */}
-        {/* Pivot at top edge of leg (Y = 1.643, Z = 0.086), rotated backward 20° */}
-        <group position={[0, 1.643, 0.086]} rotation={[0.3491, 0, 0]}>
-          <group position={[0, -legLength, 0]}>
-            <TabletSupportLeg legLength={legLength} />
-          </group>
+        {/* Piece 2: Arched Support Leg — propped underneath Hole 1 to ground */}
+        {/* World pivot at underside of Hole 1: Y = 0.7085, Z = -1.1485 */}
+        {/* Tilts backward 14.1° from vertical (rotX = +0.2461 rad) */}
+        <group position={[0, 0.7085, -1.1485]} rotation={[0.2461, 0, 0]}>
+          <TabletSupportLeg legLength={1.61} />
         </group>
       </group>
     </Float>
@@ -294,7 +261,7 @@ export function TabletStandScene() {
     <Canvas
       shadows
       dpr={[1, 1.5]}
-      camera={{ position: [5.2, 3.8, 6.4], fov: 36 }}
+      camera={{ position: [5.0, 3.4, 6.2], fov: 36 }}
       aria-label="Interactive 3D model of the Dridha multi-angle wooden tablet stand and easel"
       className="w-full h-full cursor-grab active:cursor-grabbing"
     >
@@ -313,11 +280,11 @@ export function TabletStandScene() {
       />
       <TabletStandAssembly />
       <ContactShadows
-        position={[0, -0.98, 0]}
-        opacity={0.44}
-        scale={9.2}
+        position={[0, -0.80, 0]}
+        opacity={0.42}
+        scale={8.8}
         blur={2.4}
-        far={3.8}
+        far={3.5}
       />
       <OrbitControls
         enablePan={false}
