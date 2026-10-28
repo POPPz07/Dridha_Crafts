@@ -211,12 +211,12 @@ function MobileStandAssembly() {
   });
 
   return (
-    <Float speed={1.1} rotationIntensity={0.06} floatIntensity={0.15}>
+    <Float speed={1.1} rotationIntensity={0.06} floatIntensity={0.12}>
       <group
         ref={model}
-        position={[0, 0.1, 0]}
+        position={[0, -0.45, 0]}
         rotation={[0.08, -0.6, 0]}
-        scale={0.95}
+        scale={0.64}
       >
         {/* Piece 1: Upright Backrest (Spine) — tilted backwards ~22° */}
         <group position={[0, 0, 0]} rotation={[-0.38, 0, 0]}>
@@ -239,7 +239,7 @@ export function MobileHolderScene() {
     <Canvas
       shadows
       dpr={[1, 1.5]}
-      camera={{ position: [4.8, 3.4, 6.2], fov: 38 }}
+      camera={{ position: [4.6, 2.6, 6.6], fov: 36 }}
       aria-label="Interactive 3D model of the Dridha two-piece interlocking wooden mobile stand"
       className="w-full h-full cursor-grab active:cursor-grabbing"
     >
@@ -258,13 +258,14 @@ export function MobileHolderScene() {
       />
       <MobileStandAssembly />
       <ContactShadows
-        position={[0, -0.92, 0]}
+        position={[0, -1.05, 0]}
         opacity={0.42}
         scale={8.5}
         blur={2.4}
         far={3.8}
       />
       <OrbitControls
+        target={[0, 0.42, 0]}
         enablePan={false}
         enableZoom={false}
         minPolarAngle={0.65}
