@@ -41,8 +41,8 @@ import { Badge } from "@/components/ui/Badge";
 import { PRODUCTS_DATA, BUNDLES_DATA, StaticProduct } from "@/lib/products-data";
 import { getProducts } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
-import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 
 export default function HomePage() {
   const [products, setProducts] = useState<StaticProduct[]>(PRODUCTS_DATA);
@@ -58,8 +58,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
+  const { addToCart } = useAuthGatedAddToCart();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
   const categories = [
@@ -76,9 +75,9 @@ export default function HomePage() {
       ? products
       : products.filter((p) => p.category === selectedCategory);
 
-  const handleAddToCart = (product: StaticProduct) => {
+  const handleAddToCart = async (product: StaticProduct) => {
     const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
-    addItem({
+    const added = await addToCart({
       id: `${product.id}-default`,
       product_id: product.id,
       variant_id: defaultVariant?.id || null,
@@ -97,9 +96,10 @@ export default function HomePage() {
           }
         : null,
     });
-    setQuickAddedId(product.id);
-    setTimeout(() => setQuickAddedId(null), 1500);
-    openCart();
+    if (added) {
+      setQuickAddedId(product.id);
+      setTimeout(() => setQuickAddedId(null), 1500);
+    }
   };
 
   return (
@@ -472,29 +472,14 @@ export default function HomePage() {
                         {formatPrice(bundle.original_price)}
                       </span>
                     </div>
-                    <Button
-                      variant="primary"
-                      className="w-full"
-                      onClick={() => {
-                        addItem({
-                          id: `${bundle.id}-bundle`,
-                          product_id: bundle.id,
-                          variant_id: null,
-                          quantity: 1,
-                          product: {
-                            name: bundle.name,
-                            slug: bundle.slug,
-                            price: bundle.price,
-                            primary_image_url: bundle.image,
-                            stock_quantity: 10,
-                          },
-                          variant: null,
-                        });
-                        openCart();
-                      }}
-                    >
-                      Get This Bundle
-                    </Button>
+                    <Link href="/shop" className="block w-full">
+                      <Button
+                        variant="primary"
+                        className="w-full"
+                      >
+                        Explore Set Pieces
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

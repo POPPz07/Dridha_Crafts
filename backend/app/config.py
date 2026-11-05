@@ -59,6 +59,28 @@ class Settings(BaseSettings):
     UPI_ID: str = "dridhacrafts@upi"
     GOOGLE_PAY_QR_URL: str = ""
 
+    # ── Cashfree Payment Gateway ──────────────────────────
+    CASHFREE_CLIENT_ID: str = Field(default="", description="Cashfree App ID / Client ID")
+    CASHFREE_CLIENT_SECRET: str = Field(default="", description="Cashfree Client Secret (server-only)")
+    CASHFREE_ENVIRONMENT: str = Field(default="sandbox", pattern="^(sandbox|production)$")
+    CASHFREE_API_VERSION: str = Field(default="2023-08-01", description="Pinned Cashfree API version")
+    CASHFREE_PAYMENT_METHODS: str = Field(default="upi,nb", description="Restricted customer-facing payment methods (UPI & Net Banking)")
+    CASHFREE_RETURN_URL: str = Field(
+        default="http://localhost:3000/checkout/payment-status?order_id={order_id}",
+        description="Return URL after Cashfree checkout completion",
+    )
+    CASHFREE_NOTIFY_URL: str = Field(
+        default="http://localhost:8000/api/payments/webhook",
+        description="Server-to-server webhook notification URL",
+    )
+
+    @property
+    def CASHFREE_BASE_URL(self) -> str:
+        """Centralized base URL for Cashfree PG API endpoints."""
+        if self.CASHFREE_ENVIRONMENT == "production":
+            return "https://api.cashfree.com/pg"
+        return "https://sandbox.cashfree.com/pg"
+
     # ── File Storage ─────────────────────────────────────
     MAX_FILE_SIZE_MB: int = 5
     ALLOWED_IMAGE_TYPES: list[str] = ["image/jpeg", "image/png", "image/webp", "image/avif"]

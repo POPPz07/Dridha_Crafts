@@ -8,13 +8,12 @@ import { Badge } from "@/components/ui/Badge";
 import { PRODUCTS_DATA } from "@/lib/products-data";
 import { formatPrice } from "@/lib/utils";
 import { useWishlistStore } from "@/stores/wishlistStore";
-import { useCartStore } from "@/stores/cartStore";
+import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function WishlistPage() {
   const { productIds, removeFromWishlist, clearWishlist } = useWishlistStore();
-  const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
+  const { addToCart } = useAuthGatedAddToCart();
 
   const savedProducts = PRODUCTS_DATA.filter((p) => productIds.includes(p.id));
 
@@ -92,7 +91,7 @@ export default function WishlistPage() {
                   variant="primary"
                   className="w-full"
                   onClick={() => {
-                    addItem({
+                    addToCart({
                       id: `${product.id}-wishlist`,
                       product_id: product.id,
                       variant_id: null,
@@ -106,7 +105,6 @@ export default function WishlistPage() {
                       },
                       variant: null,
                     });
-                    openCart();
                   }}
                   leftIcon={<ShoppingBag className="w-4 h-4" />}
                 >

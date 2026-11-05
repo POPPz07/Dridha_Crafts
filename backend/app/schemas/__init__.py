@@ -42,7 +42,17 @@ from app.schemas.wishlist import (
     WishlistResponse,
 )
 
+from app.schemas.payment import (
+    CashfreeCheckoutRequest,
+    CashfreeCheckoutResponse,
+    PaymentStatusResponse,
+)
+
 __all__ = [
+    # Payment
+    "CashfreeCheckoutRequest",
+    "CashfreeCheckoutResponse",
+    "PaymentStatusResponse",
     # User
     "UserCreate",
     "UserResponse",

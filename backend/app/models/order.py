@@ -120,6 +120,9 @@ class Order(Base):
     reservations: Mapped[list["InventoryReservation"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
+    payments: Mapped[list["Payment"]] = relationship(
+        back_populates="order"
+    )  # noqa: F821
 
     def __repr__(self) -> str:
         return f"<Order {self.order_number} ₹{self.total}>"

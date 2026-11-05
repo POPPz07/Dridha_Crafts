@@ -7,6 +7,7 @@ import { z } from "zod";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
+import { useCartStore } from "@/stores/cartStore";
 import { createClient } from "@/lib/supabase";
 
 // ── Validation Schemas ─────────────────────────────────────────
@@ -74,6 +75,14 @@ export function AuthModal() {
           role: "customer",
           created_at: authData.user.created_at,
         });
+
+        // Resume pending Add to Cart action once if one was held
+        const pending = useAuthStore.getState().consumePendingCartItem();
+        if (pending) {
+          useCartStore.getState().addItem(pending);
+          useCartStore.getState().openCart();
+        }
+
         setSuccessMsg("Signed in successfully!");
         setTimeout(() => {
           setSuccessMsg("");
@@ -116,6 +125,13 @@ export function AuthModal() {
           role: "customer",
           created_at: authData.user.created_at,
         });
+
+        const pending = useAuthStore.getState().consumePendingCartItem();
+        if (pending) {
+          useCartStore.getState().addItem(pending);
+          useCartStore.getState().openCart();
+        }
+
         setSuccessMsg("Account created and signed in!");
         setTimeout(() => {
           setSuccessMsg("");

@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/Badge";
 import { PRODUCTS_DATA, StaticProduct } from "@/lib/products-data";
 import { getProductBySlug } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
-import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -65,8 +65,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
   const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity ?? 10;
   const isOutOfStock = currentStock <= 0;
 
-  const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
+  const { addToCart } = useAuthGatedAddToCart();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const inWishlist = isInWishlist(product.id);
 
@@ -75,10 +74,10 @@ function ProductDetail({ product }: { product: StaticProduct }) {
     (p) => p.category === product.category && p.id !== product.id
   ).slice(0, 3);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (isOutOfStock) return;
-    for (let i = 0; i < quantity; i++) {
-      addItem({
+    const added = await addToCart(
+      {
         id: activeVariant ? `${product.id}-${activeVariant.id}` : `${product.id}-pdp`,
         product_id: product.id,
         variant_id: activeVariant ? activeVariant.id : null,
@@ -96,11 +95,13 @@ function ProductDetail({ product }: { product: StaticProduct }) {
               price_override: activeVariant.price_override ?? null,
             }
           : null,
-      });
+      },
+      quantity
+    );
+    if (added) {
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
     }
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
-    openCart();
   };
 
   const images = product.images.length > 0 ? product.images : [{ url: "/images/image1.jpeg", alt: product.name }];

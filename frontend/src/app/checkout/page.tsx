@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Check, ChevronRight, QrCode, Truck, Shield, Loader2, CreditCard } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2, Smartphone, Building2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
@@ -26,12 +26,12 @@ const addressSchema = z.object({
 
 type AddressForm = z.infer<typeof addressSchema>;
 
-type PaymentMethod = "online" | "cod" | "gpay";
+type PaymentMethod = "online" | "cod";
 type CheckoutStep = "address" | "payment" | "confirmation";
 
 export default function CheckoutPage() {
   const [step, setStep] = useState<CheckoutStep>("address");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [isPlacing, setIsPlacing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   const subtotal = useCartStore((s) => s.subtotal());
   const totalItems = useCartStore((s) => s.totalItems());
   const clearCart = useCartStore((s) => s.clearCart);
+  const hasBundleItems = items.some((i) => i.id?.includes("bundle") || !i.product_id);
 
   const {
     register,
@@ -105,13 +106,22 @@ export default function CheckoutPage() {
   }
 
   const onAddressSubmit = (data: AddressForm) => {
+    if (hasBundleItems) {
+      setErrorMessage("Your cart contains a curated set. Please remove the set and select individual items to proceed with checkout.");
+      return;
+    }
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePlaceOrder = async () => {
+    if (hasBundleItems) {
+      setErrorMessage("Your cart contains a curated set. Please remove the set and select individual items to proceed with checkout.");
+      return;
+    }
+
     if (paymentMethod === "online") {
-      setErrorMessage("Online payments via Cashfree are coming soon. Please select COD or Google Pay QR.");
+      setErrorMessage("Cashfree payment session creation is being connected in Phase 5. Please select Cash on Delivery to complete order checkout.");
       return;
     }
 
@@ -129,7 +139,7 @@ export default function CheckoutPage() {
           state: addressData.state,
           pincode: addressData.pincode,
         },
-        payment_method: paymentMethod === "gpay" ? "google_pay" : paymentMethod,
+        payment_method: paymentMethod,
         idempotency_key: idempotencyKey,
         customer_email: user?.email || undefined,
         customer_phone: addressData.phone,
@@ -236,24 +246,39 @@ export default function CheckoutPage() {
                     <p className="text-brand-cream/70 text-sm mt-1">Choose how you'd like to pay</p>
                   </div>
                   <div className="px-8 py-6 space-y-4">
-                    {/* Online Payment (Cashfree Ready - Disabled until session creation exists) */}
-                    <div
-                      className="w-full flex items-start gap-4 p-5 rounded-2xl border-2 border-warmgrey/60 bg-warmgrey/10 opacity-75 cursor-not-allowed select-none"
+                    {/* Online Payment (UPI & Net Banking via Cashfree) */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("online")}
+                      className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
+                        paymentMethod === "online"
+                          ? "border-brand-green bg-brand-green/5"
+                          : "border-warmgrey hover:border-brand-green/40"
+                      }`}
                     >
-                      <div className="mt-0.5 w-5 h-5 rounded-full border-2 border-warmgrey/60 flex items-center justify-center shrink-0">
+                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === "online" ? "border-brand-green" : "border-warmgrey"}`}>
+                        {paymentMethod === "online" && <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <CreditCard className="w-5 h-5 text-charcoal/40" />
-                          <span className="font-semibold text-charcoal/60">Pay Online (UPI / Cards / NetBanking)</span>
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-warmgrey/40 text-charcoal/60 px-2 py-0.5 rounded-full">Coming Soon (Cashfree)</span>
+                          <span className="font-semibold text-brand-green">Pay Online (UPI & Net Banking)</span>
+                          <span className="text-[10px] font-bold tracking-wider uppercase bg-brand-green/10 text-brand-green px-2 py-0.5 rounded-full">Cashfree</span>
                         </div>
-                        <p className="text-xs text-charcoal/50 mt-1">Cashfree payment gateway integration is in progress. Please choose Cash on Delivery or Google Pay QR below.</p>
+                        <p className="text-xs text-charcoal/60 mt-1">Instant, secure checkout via Google Pay, PhonePe, Paytm, BHIM UPI and major Indian banks.</p>
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-charcoal/70 bg-warmgrey/50 px-2.5 py-0.5 rounded-full">
+                            <Smartphone className="w-3 h-3 text-brand-green" /> UPI Apps
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-charcoal/70 bg-warmgrey/50 px-2.5 py-0.5 rounded-full">
+                            <Building2 className="w-3 h-3 text-brand-green" /> Net Banking
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    </button>
 
                     {/* COD Option */}
                     <button
+                      type="button"
                       onClick={() => setPaymentMethod("cod")}
                       className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
                         paymentMethod === "cod"
@@ -272,37 +297,6 @@ export default function CheckoutPage() {
                         <p className="text-xs text-charcoal/60 mt-1">Pay when your order arrives. No advance payment needed.</p>
                       </div>
                     </button>
-
-                    {/* Google Pay QR */}
-                    <button
-                      onClick={() => setPaymentMethod("gpay")}
-                      className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
-                        paymentMethod === "gpay"
-                          ? "border-brand-green bg-brand-green/5"
-                          : "border-warmgrey hover:border-brand-green/40"
-                      }`}
-                    >
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === "gpay" ? "border-brand-green" : "border-warmgrey"}`}>
-                        {paymentMethod === "gpay" && <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <QrCode className="w-5 h-5 text-brand-green" />
-                          <span className="font-semibold text-brand-green">Google Pay / UPI (QR Code)</span>
-                        </div>
-                        <p className="text-xs text-charcoal/60 mt-1">Scan the QR code and complete payment. Order confirmed after verification.</p>
-                      </div>
-                    </button>
-
-                    {/* GPay QR placeholder */}
-                    {paymentMethod === "gpay" && (
-                      <div className="bg-warmgrey/30 rounded-2xl p-6 text-center border border-warmgrey">
-                        <QrCode className="w-20 h-20 text-brand-green/40 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-brand-green">Scan with Google Pay or any UPI app</p>
-                        <p className="text-xs text-charcoal/50 mt-1">UPI ID: dridhacrafts@upi (placeholder — will be updated)</p>
-                        <p className="text-xs text-charcoal/50 mt-1">Amount: {formatPrice(subtotal)}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -382,6 +376,12 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
+                {hasBundleItems && (
+                  <div className="px-6 py-3 bg-amber-50 border-t border-b border-amber-200 text-amber-800 text-xs">
+                    <p className="font-semibold">Curated Set in Cart</p>
+                    <p className="mt-0.5 text-amber-700">Curated sets are coming soon as single packages. Please remove the set and select individual items to proceed.</p>
+                  </div>
+                )}
                 <div className="px-6 py-5 space-y-3 border-t border-warmgrey/60 bg-warmgrey/10">
                   <div className="flex justify-between text-sm text-charcoal/70">
                     <span>Subtotal</span>
