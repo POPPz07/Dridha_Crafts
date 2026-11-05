@@ -3,6 +3,7 @@ Dridha Crafts - Security Utilities
 Token verification for Supabase Auth and order number generation.
 """
 
+import logging
 import secrets
 import string
 from datetime import datetime, timezone
@@ -11,6 +12,8 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, status
 
 from app.config import get_settings
+
+logger = logging.getLogger("dridhacrafts.security")
 
 
 async def verify_supabase_token(token: str) -> dict:
@@ -46,9 +49,10 @@ async def verify_supabase_token(token: str) -> dict:
             )
         return payload
     except JWTError as exc:
+        logger.warning("Supabase JWT validation failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not validate credentials: {exc}",
+            detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

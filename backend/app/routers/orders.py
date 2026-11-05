@@ -13,12 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.middleware.auth import get_current_admin, get_current_user
+from app.middleware.auth import get_current_admin, get_current_user, get_optional_user
 from app.models.cart import CartItem
-from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod, PaymentStatus
+from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
 from app.models.product import Product, ProductVariant
 from app.models.user import Address, User
 from app.schemas.order import (
+    DirectOrderCreate,
     OrderCreate,
     OrderListResponse,
     OrderResponse,
@@ -73,15 +74,31 @@ async def create_order(
             detail="Cart is empty",
         )
 
-    # 3 & 4. Validate stock and build order items
+    # 3 & 4. Validate stock with row-level locks and build order items (prevents overselling race conditions)
     order_items = []
     subtotal = Decimal("0.00")
 
     for ci in cart_items:
-        product = ci.product
-        variant = ci.variant
+        # Acquire row-level lock on product
+        prod_stmt = select(Product).where(Product.id == ci.product_id).with_for_update()
+        product = (await db.execute(prod_stmt)).scalar_one_or_none()
+        if not product or not product.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Product '{ci.product.name}' is no longer available",
+            )
 
-        # Check stock
+        variant = None
+        if ci.variant_id:
+            var_stmt = select(ProductVariant).where(ProductVariant.id == ci.variant_id).with_for_update()
+            variant = (await db.execute(var_stmt)).scalar_one_or_none()
+            if not variant or not variant.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Selected finish for '{product.name}' is no longer available",
+                )
+
+        # Check stock under locked transaction
         available = variant.stock_quantity if variant else product.stock_quantity
         if ci.quantity > available:
             raise HTTPException(
@@ -96,10 +113,10 @@ async def create_order(
 
         # Primary image
         image_url = None
-        if product.images:
+        if ci.product.images:
             image_url = next(
-                (img.image_url for img in product.images if img.is_primary),
-                product.images[0].image_url if product.images else None,
+                (img.image_url for img in ci.product.images if img.is_primary),
+                ci.product.images[0].image_url if ci.product.images else None,
             )
 
         order_items.append(
@@ -115,7 +132,7 @@ async def create_order(
             )
         )
 
-        # Decrement stock
+        # Decrement stock atomically within the locked row
         if variant:
             variant.stock_quantity -= ci.quantity
         else:
@@ -165,6 +182,131 @@ async def create_order(
     await db.flush()
 
     # Reload with items for response
+    await db.refresh(order, attribute_names=["items"])
+    return order
+
+
+@router.post("/direct", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+async def create_direct_order(
+    data: DirectOrderCreate,
+    current_user: User | None = Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Direct / express checkout order creation.
+    Allows guests or authenticated users to place an order directly with address and item details.
+
+    Security & Integrity:
+    - All prices and product details are verified against the database (client prices ignored).
+    - Inventory is locked with with_for_update() and atomically decremented.
+    - Generates cryptographically secure order numbers.
+    """
+    if not data.items:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order must contain at least one item",
+        )
+
+    order_items = []
+    subtotal = Decimal("0.00")
+
+    for item_input in data.items:
+        # Resolve product by ID or Slug
+        if item_input.product_id:
+            prod_stmt = select(Product).where(Product.id == item_input.product_id).with_for_update()
+        elif item_input.product_slug:
+            prod_stmt = select(Product).where(Product.slug == item_input.product_slug).with_for_update()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Each item must have a product_id or product_slug",
+            )
+
+        prod_result = await db.execute(prod_stmt)
+        product = prod_result.scalar_one_or_none()
+        if not product or not product.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Product '{item_input.product_slug or item_input.product_id}' is unavailable",
+            )
+
+        variant = None
+        if item_input.variant_id:
+            var_stmt = select(ProductVariant).where(ProductVariant.id == item_input.variant_id).with_for_update()
+            variant = (await db.execute(var_stmt)).scalar_one_or_none()
+            if not variant or not variant.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Selected product finish is unavailable",
+                )
+
+        available = variant.stock_quantity if variant else product.stock_quantity
+        if item_input.quantity > available:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Insufficient stock for '{product.name}'. Available: {available}",
+            )
+
+        # Enforce server-side price (prevents price tampering CWE-602)
+        unit_price = variant.price_override if variant and variant.price_override else product.price
+        line_total = unit_price * item_input.quantity
+        subtotal += line_total
+
+        # Primary image
+        image_url = None
+        if product.images:
+            image_url = next(
+                (img.image_url for img in product.images if img.is_primary),
+                product.images[0].image_url if product.images else None,
+            )
+
+        order_items.append(
+            OrderItem(
+                product_id=product.id,
+                product_name=product.name,
+                product_slug=product.slug,
+                variant_name=variant.variant_name if variant else None,
+                price=unit_price,
+                quantity=item_input.quantity,
+                total=line_total,
+                image_url=image_url,
+            )
+        )
+
+        # Atomically decrement stock
+        if variant:
+            variant.stock_quantity -= item_input.quantity
+        else:
+            product.stock_quantity -= item_input.quantity
+
+    # Normalize payment method
+    is_cod = data.payment_method.lower() in ("cod", "cash_on_delivery")
+    payment_method_value = "cod" if is_cod else "google_pay"
+    initial_payment_status = PaymentStatus.COD_PENDING.value if is_cod else PaymentStatus.PENDING.value
+    initial_order_status = OrderStatus.CONFIRMED.value if is_cod else OrderStatus.PAYMENT_PENDING.value
+
+    order = Order(
+        order_number=generate_order_number(),
+        user_id=current_user.id if current_user else None,
+        shipping_name=data.full_name,
+        shipping_phone=data.phone,
+        shipping_address_line_1=data.address_line_1,
+        shipping_address_line_2=data.address_line_2,
+        shipping_city=data.city,
+        shipping_state=data.state,
+        shipping_pincode=data.pincode,
+        subtotal=subtotal,
+        shipping_cost=Decimal("0.00"),
+        discount=Decimal("0.00"),
+        total=subtotal,
+        status=initial_order_status,
+        payment_method=payment_method_value,
+        payment_status=initial_payment_status,
+        notes=data.notes,
+        items=order_items,
+    )
+    db.add(order)
+    await db.flush()
     await db.refresh(order, attribute_names=["items"])
     return order
 

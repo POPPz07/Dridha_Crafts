@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, User as UserIcon, X, Heart, Menu } from "lucide-react";
@@ -8,26 +8,25 @@ import { useCartStore } from "@/stores/cartStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 
+const emptySubscribe = () => () => {};
+
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop" },
   { label: "Our Story", href: "/story" },
-  { label: "Kashmir", href: "/story#kashmir" },
   { label: "Help", href: "/help" },
 ];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const totalCartItems = useCartStore((s) => s.totalItems());
   const toggleCart = useCartStore((s) => s.toggleCart);
   const user = useAuthStore((s) => s.user);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const wishlistCount = useWishlistStore((s) => s.productIds.length);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

@@ -21,6 +21,20 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
+// Custom YouTube SVG icon
+function YoutubeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="bg-charcoal text-brand-cream relative overflow-hidden border-t border-white/5">
@@ -75,16 +89,26 @@ export function Footer() {
               From the fallen trees of Kashmir to your desk, we bring you
               handcrafted wood essentials — made to last a lifetime.
             </p>
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap gap-2.5 pt-2">
               <a
-                href="https://instagram.com/dridhacrafts"
+                href="https://www.instagram.com/dridha_crafts/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-brand-gold/30 text-brand-cream/70 hover:text-brand-gold hover:border-brand-gold transition-all duration-300 text-xs font-medium"
+                className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-brand-gold/30 text-brand-cream/70 hover:text-brand-gold hover:border-brand-gold transition-all duration-300 text-xs font-medium"
                 aria-label="Follow Dridha Crafts on Instagram"
               >
                 <InstagramIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                @dridhacrafts
+                @dridha_crafts
+              </a>
+              <a
+                href="https://youtube.com/@dridha_crafts?si=lQ79Jp2HmKjxFTGZ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-brand-gold/30 text-brand-cream/70 hover:text-brand-gold hover:border-brand-gold transition-all duration-300 text-xs font-medium"
+                aria-label="Subscribe to Dridha Crafts on YouTube"
+              >
+                <YoutubeIcon className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />
+                YouTube
               </a>
             </div>
           </div>
@@ -146,7 +170,12 @@ export function Footer() {
             <div className="space-y-3 text-sm text-brand-cream/70">
               <p className="flex items-start gap-2">
                 <span className="text-brand-gold mt-0.5">✉</span>
-                <span>hello@dridhacrafts.com</span>
+                <a
+                  href="mailto:craftsdridha@gmail.com"
+                  className="hover:text-brand-gold transition-colors"
+                >
+                  craftsdridha@gmail.com
+                </a>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-brand-gold mt-0.5">📍</span>

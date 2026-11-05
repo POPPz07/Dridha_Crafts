@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.product import Bundle, BundleItem, Product, ProductImage, ProductVariant
+from app.models.product import Bundle, BundleItem, Product
 from app.models.review import Review
 from app.schemas.product import (
     BundleItemResponse,

@@ -35,8 +35,10 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     is_featured: true,
     badge: "Bestseller",
     images: [
-      { url: "/images/image1.jpeg", alt: "6 levels adjustable wooden laptop stand" },
-      { url: "/images/image2.jpeg", alt: "ShiftDesk laptop stand in use" },
+      { url: "/images/products/shiftdesk-cutout.jpg", alt: "ShiftDesk Foldable Kashmiri Walnut Stand" },
+      { url: "/images/products/shiftdesk-outdoor-mountain.jpg", alt: "ShiftDesk Stand in use outdoors with laptop" },
+      { url: "/images/products/shiftdesk-side-scenic.jpg", alt: "ShiftDesk Stand side profile elevation" },
+      { url: "/images/products/shiftdesk-low-angle.jpg", alt: "ShiftDesk Stand low ergonomic typing angle" },
     ],
   },
   {
@@ -111,9 +113,9 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     weight_kg: 0.2,
     is_featured: true,
     images: [
-      { url: "/images/image7.jpeg", alt: "Minimalist wooden mobile stand" },
-      { url: "/images/image6.jpeg", alt: "Wooden phone stand on desk" },
-      { url: "/images/image5.jpeg", alt: "Mobile stand presentation" },
+      { url: "/images/products/phone-stand-cutout.jpg", alt: "Handcrafted Kashmiri Wooden Mobile Stand" },
+      { url: "/images/products/phone-stand-dual-finish.jpg", alt: "Natural Matte and Rich Gloss finish comparison" },
+      { url: "/images/products/phone-stand-outdoor.jpg", alt: "Phone stand in outdoor Kashmiri sunlight" },
     ],
   },
   {
@@ -130,6 +132,8 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     weight_kg: 0.4,
     is_featured: false,
     images: [
+      { url: "/images/products/shiftdesk-low-angle.jpg", alt: "Multi-Angle Tablet Stand ergonomic profile" },
+      { url: "/images/products/shiftdesk-cutout.jpg", alt: "Foldable wooden easel stand" },
       { url: "/images/image3.jpeg", alt: "Adjustable wooden tablet stand" },
       { url: "/images/image4.jpeg", alt: "Folded tablet stand" },
     ],

@@ -13,7 +13,7 @@ interface AuthState {
   openAuthModal: (view?: "login" | "signup") => void;
   closeAuthModal: () => void;
   setAuthModalView: (view: "login" | "signup") => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -27,5 +27,17 @@ export const useAuthStore = create<AuthState>()((set) => ({
   openAuthModal: (view = "login") => set({ isAuthModalOpen: true, authModalView: view }),
   closeAuthModal: () => set({ isAuthModalOpen: false }),
   setAuthModalView: (authModalView) => set({ authModalView }),
-  logout: () => set({ user: null }),
+  logout: async () => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth-token");
+        const { createClient } = await import("@/lib/supabase");
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      }
+    } catch {
+      // Silently handle if Supabase is offline or not configured in environment
+    }
+    set({ user: null });
+  },
 }));

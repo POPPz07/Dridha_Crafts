@@ -105,8 +105,8 @@ function ShiftDeskStand() {
     { x: 0, z: -1.22, width: 0.9, length: 0.24 },
     { x: 0, z: -0.72, width: 0.9, length: 0.24 },
     { x: 0, z: 0.56, width: 2.05, length: 1.18 },
-    { x: -1.05, z: 2.06, width: 0.58, length: 0.58 },
-    { x: 1.05, z: 2.06, width: 0.58, length: 0.58 },
+    { x: -1.05, z: 2.06, width: 0.58, length: 0.68 },
+    { x: 1.05, z: 2.06, width: 0.58, length: 0.68 },
   ];
 
   const baseApertures: Aperture[] = [
@@ -131,10 +131,13 @@ function ShiftDeskStand() {
 
         {/* Its two integral front prongs pass through the deck's two square
             holes. Their exposed ends become the photographed laptop stoppers. */}
-        <Timber args={[0.54, 0.64, 0.42]} position={[-1.05, 0.31, 2.1]} color={oak} radius={0.04} />
-        <Timber args={[0.54, 0.64, 0.42]} position={[1.05, 0.31, 2.1]} color={oak} radius={0.04} />
-        <Timber args={[0.54, 0.2, 0.76]} position={[-1.05, 0.04, 2.36]} color={oak} radius={0.03} />
-        <Timber args={[0.54, 0.2, 0.76]} position={[1.05, 0.04, 2.36]} color={oak} radius={0.03} />
+        {/* Left & Right riser posts connecting base to the deck cutouts */}
+        <Timber args={[0.52, 0.35, 0.30]} position={[-1.05, 0.22, 2.05]} color={oak} radius={0.03} />
+        <Timber args={[0.52, 0.18, 1.20]} position={[-1.05, 0.44, 2.55]} color={oak} radius={0.03} />
+        <Timber args={[0.52, 0.35, 0.30]} position={[1.05, 0.22, 2.05]} color={oak} radius={0.03} />
+        <Timber args={[0.52, 0.18, 1.20]} position={[1.05, 0.44, 2.55]} color={oak} radius={0.03} />
+        <Timber args={[0.64, 0.35, 0.24]} position={[-1.05, 0.64, 3.05]} color={oak} radius={0.035} />
+        <Timber args={[0.64, 0.35, 0.24]} position={[1.05, 0.64, 3.05]} color={oak} radius={0.035} />
 
         {/* Piece 2: the plain, solid support handle. It runs from the chosen
             base slot to the chosen upper-deck slot and sets the tilt. */}

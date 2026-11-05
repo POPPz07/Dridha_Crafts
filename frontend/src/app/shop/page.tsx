@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { PRODUCTS_DATA, BUNDLES_DATA, StaticProduct } from "@/lib/products-data";
+import { PRODUCTS_DATA, StaticProduct } from "@/lib/products-data";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
@@ -23,7 +23,7 @@ export default function ShopPage() {
 
   const categories = ["All", "Laptop Stands", "Audio Accessories", "Desk Organizers", "Phone Stands", "Tablet Stands", "Desk Decor"];
 
-  let filtered =
+  const filtered =
     selectedCategory === "All"
       ? [...PRODUCTS_DATA]
       : PRODUCTS_DATA.filter((p) => p.category === selectedCategory);

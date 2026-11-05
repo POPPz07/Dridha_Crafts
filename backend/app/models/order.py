@@ -5,7 +5,7 @@ Order and OrderItem models.
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from sqlalchemy import String, DateTime, ForeignKey, Text, Integer, Numeric, Enum as SAEnum
+from sqlalchemy import String, DateTime, ForeignKey, Text, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, Sparkles, Shield, Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "Our Story — Handcrafted in Kashmir Valley",
@@ -110,7 +110,7 @@ export default function StoryPage() {
                   and eco-friendly packaging. Every parcel is dispatched with our signed gratitude card and artisan stamp.
                 </p>
                 <p className="font-accent text-brand-brown text-2xl pt-2">
-                  "Every piece we create is a blend of nature, tradition and skilled hands."
+                  &ldquo;Every piece we create is a blend of nature, tradition and skilled hands.&rdquo;
                 </p>
                 <div className="pt-2">
                   <Link href="/shop">

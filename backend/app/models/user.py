@@ -5,7 +5,7 @@ Users are managed by Supabase Auth — this model stores extended profile data.
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base

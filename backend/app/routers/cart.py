@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.cart import CartItem
-from app.models.product import Product, ProductImage, ProductVariant
+from app.models.product import Product, ProductVariant
 from app.models.user import User
 from app.schemas.cart import CartItemAdd, CartItemResponse, CartItemUpdate, CartResponse
 

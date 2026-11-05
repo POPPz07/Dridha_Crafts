@@ -5,7 +5,7 @@ Centralized settings using Pydantic Settings for type-safe environment variable 
 
 import os
 from functools import lru_cache
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
 _env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -69,6 +69,18 @@ class Settings(BaseSettings):
         "case_sensitive": True,
         "extra": "ignore",
     }
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Enforce strict security standards in production and staging."""
+        if self.ENVIRONMENT in ("production", "staging"):
+            if "placeholder" in self.SUPABASE_JWT_SECRET.lower():
+                raise ValueError("SUPABASE_JWT_SECRET must be configured with a real secret in production/staging")
+            if "placeholder" in self.SUPABASE_SERVICE_ROLE_KEY.lower():
+                raise ValueError("SUPABASE_SERVICE_ROLE_KEY must be configured with a real secret in production/staging")
+            if self.DEBUG:
+                self.DEBUG = False
+        return self
 
 
 @lru_cache()

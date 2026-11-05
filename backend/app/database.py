@@ -17,6 +17,17 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+# Strip ?pgbouncer=true because asyncpg does not accept driver argument 'pgbouncer'
+if "?pgbouncer=true" in database_url:
+    database_url = database_url.replace("?pgbouncer=true", "")
+elif "&pgbouncer=true" in database_url:
+    database_url = database_url.replace("&pgbouncer=true", "")
+
+# Configure asyncpg connection arguments for Supabase PgBouncer pooler compatibility
+connect_args = {}
+if "asyncpg" in database_url:
+    connect_args["statement_cache_size"] = 0
+
 engine = create_async_engine(
     database_url,
     echo=settings.DEBUG,
@@ -24,6 +35,7 @@ engine = create_async_engine(
     max_overflow=10,
     pool_pre_ping=True,
     pool_recycle=300,
+    connect_args=connect_args,
 )
 
 async_session = async_sessionmaker(
@@ -41,7 +53,8 @@ class Base(DeclarativeBase):
 async def get_db() -> AsyncSession:
     """
     Dependency that provides a database session per request.
-    Automatically commits on success, rolls back on error.
+    Automatically commits on success, rolls back on error,
+    and cleanly disposes the session on context manager exit.
     """
     async with async_session() as session:
         try:
@@ -50,5 +63,3 @@ async def get_db() -> AsyncSession:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()

@@ -34,6 +34,30 @@ class OrderItemResponse(BaseModel):
 # ── Order Schemas ────────────────────────────────────────────────────────────
 
 
+class CheckoutItemInput(BaseModel):
+    """Item specification for direct checkout."""
+
+    product_id: Optional[uuid.UUID] = None
+    product_slug: Optional[str] = None
+    variant_id: Optional[uuid.UUID] = None
+    quantity: int = Field(default=1, ge=1, le=10, description="Quantity (1-10)")
+
+
+class DirectOrderCreate(BaseModel):
+    """Schema for direct / guest order creation with full delivery details."""
+
+    full_name: str = Field(..., min_length=2, max_length=100)
+    phone: str = Field(..., min_length=10, max_length=20)
+    address_line_1: str = Field(..., min_length=5, max_length=255)
+    address_line_2: Optional[str] = Field(None, max_length=255)
+    city: str = Field(..., min_length=2, max_length=100)
+    state: str = Field(..., min_length=2, max_length=100)
+    pincode: str = Field(..., min_length=6, max_length=10)
+    payment_method: str = Field(..., pattern=r"^(cod|google_pay|gpay|qr)$")
+    notes: Optional[str] = Field(None, max_length=500)
+    items: list[CheckoutItemInput] = Field(..., min_length=1, description="List of ordered items")
+
+
 class OrderCreate(BaseModel):
     """Schema for creating a new order from the user's cart."""
 

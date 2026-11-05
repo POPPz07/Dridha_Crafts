@@ -4,7 +4,7 @@ Review and Wishlist models.
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Text, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base

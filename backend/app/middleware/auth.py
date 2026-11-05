@@ -3,11 +3,10 @@ Dridha Crafts - Authentication Middleware
 FastAPI dependencies for extracting and verifying the current user from Supabase JWTs.
 """
 
-import uuid
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -42,19 +41,25 @@ async def get_current_user(
     user = result.scalar_one_or_none()
 
     if user is None:
-        # Auto-create profile on first authenticated request
-        user = User(
-            auth_id=auth_id,
-            email=email,
-            full_name=email.split("@")[0],  # Fallback name
-        )
-        db.add(user)
-        await db.flush()  # Populate id
+        # Auto-create profile on first authenticated request with concurrency collision safety
+        try:
+            user = User(
+                auth_id=auth_id,
+                email=email,
+                full_name=email.split("@")[0],  # Fallback name
+            )
+            db.add(user)
+            await db.flush()  # Populate id
+        except IntegrityError:
+            # Another concurrent request already inserted the profile
+            await db.rollback()
+            result = await db.execute(select(User).where(User.auth_id == auth_id))
+            user = result.scalar_one_or_none()
 
-    if not user.is_active:
+    if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is deactivated",
+            detail="Account is deactivated or unavailable",
         )
 
     return user
@@ -97,4 +102,6 @@ async def get_optional_user(
     auth_id: str = payload["sub"]
     result = await db.execute(select(User).where(User.auth_id == auth_id))
     user = result.scalar_one_or_none()
+    if user is not None and not user.is_active:
+        return None
     return user

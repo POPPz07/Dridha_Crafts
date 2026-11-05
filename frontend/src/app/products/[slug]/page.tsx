@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,11 +14,12 @@ import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default function ProductDetailPage({ params }: PageProps) {
-  const product = PRODUCTS_DATA.find((p) => p.slug === params.slug);
+  const { slug } = use(params);
+  const product = PRODUCTS_DATA.find((p) => p.slug === slug);
 
   if (!product) return notFound();
 
@@ -299,7 +300,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
         <Container>
           <div className="text-center mb-12">
             <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold block mb-3">
-              How It's Made
+              How It&apos;s Made
             </span>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-cream">
               The Making of Your{" "}

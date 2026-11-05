@@ -3,7 +3,8 @@ Dridha Crafts - Auth Router
 Handles user registration, login, profile, and logout via Supabase Auth.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import create_client
@@ -11,8 +12,12 @@ from supabase import create_client
 from app.config import get_settings
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UserUpdate
 from app.middleware.auth import get_current_user
+from app.utils.rate_limit import limiter
+
+logger = logging.getLogger("dridhacrafts.auth")
+settings = get_settings()
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -30,7 +35,9 @@ def _get_supabase_anon_client():
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def signup(
+    request: Request,
     data: UserCreate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -82,25 +89,28 @@ async def signup(
 
 
 @router.post("/login")
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def login(
-    email: str,
-    password: str,
+    request: Request,
+    data: UserLogin,
 ):
     """
     Authenticate a user via Supabase Auth.
 
     Returns access_token, refresh_token, and user metadata.
+    Credentials are submitted securely via request body.
     """
     supabase = _get_supabase_anon_client()
 
     try:
         auth_response = supabase.auth.sign_in_with_password(
-            {"email": email, "password": password}
+            {"email": data.email, "password": data.password}
         )
     except Exception as exc:
+        logger.warning("Failed login attempt for %s: %s", data.email, exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid credentials: {exc}",
+            detail="Invalid credentials",
         )
 
     return {

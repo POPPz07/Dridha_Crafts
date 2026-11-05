@@ -8,7 +8,6 @@ import {
   Check,
   ShoppingBag,
   Heart,
-  ChevronDown,
 } from "lucide-react";
 import { ImageHero } from "@/components/sections/ImageHero";
 import { MaterialSection } from "@/components/sections/MaterialSection";
@@ -207,12 +206,12 @@ export default function HomePage() {
               <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center space-y-4">
                 <Badge variant="handcrafted">Our Packaging Promise</Badge>
                 <h3 className="font-display text-3xl sm:text-4xl font-bold text-brand-green leading-tight">
-                  "Thank You for Being a Part of Our Journey"
+                  &ldquo;Thank You for Being a Part of Our Journey&rdquo;
                 </h3>
                 <p className="font-body text-base text-charcoal/80 leading-relaxed italic border-l-2 border-brand-gold pl-4">
-                  "Every piece we create is a blend of nature, tradition and skilled hands.
+                  &ldquo;Every piece we create is a blend of nature, tradition and skilled hands.
                   From the forests of Kashmir to your desk, we bring you handcrafted wood
-                  essentials — made to last."
+                  essentials — made to last.&rdquo;
                 </p>
                 <p className="font-accent text-brand-brown text-2xl">
                   Crafted with care, just for you.
@@ -383,6 +382,33 @@ export default function HomePage() {
       </section>
 
       {/* ── 4b. 3D INTERACTIVE FORM STUDIES ────────────────── */}
+      <section className="bg-[#ebdcc6] border-t border-[#123526]/10 py-7 sm:py-9 px-4 sm:px-6 lg:px-8">
+        <Container>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#fbf9f1]/75 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border border-[#123526]/12 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#9a6039] animate-pulse flex-shrink-0" />
+              <div>
+                <span className="text-[#9a6039] text-[10px] font-black uppercase tracking-[0.2em] block">
+                  Interactive Atelier
+                </span>
+                <h3 className="font-serif font-normal text-[#123526] text-lg sm:text-xl tracking-tight leading-snug">
+                  3D Form Studies &amp; Mechanics
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-start sm:items-center gap-2.5 text-xs text-[#13261d]/75 max-w-xl border-t md:border-t-0 md:border-l border-[#123526]/12 pt-3 md:pt-0 md:pl-6 leading-relaxed">
+              <span className="inline-block px-2 py-0.5 rounded bg-[#9a6039]/15 text-[#854b23] text-[10px] font-bold uppercase tracking-wider flex-shrink-0 mt-0.5 sm:mt-0">
+                Craft Note
+              </span>
+              <p className="text-[11px] sm:text-xs">
+                3D models are close digital representations designed for visual exploration of form and joinery. As every Dridha piece is individually hand-shaped from natural mountain timber, physical wood grain, tone, and artisanal details are uniquely one of a kind.
+              </p>
+            </div>
+          </div>
+        </Container>
+      </section>
+
       <ShiftDesk3DSection />
       <MobileStand3DSection />
       <TabletStand3DSection />
@@ -561,9 +587,9 @@ export default function HomePage() {
             loop
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
-            poster="/images/image1.jpeg"
+            poster="/images/products/shiftdesk-outdoor-mountain.jpg"
           >
-            <source src="/videos/brand_video1.mp4" type="video/mp4" />
+            <source src="/videos/scenic_hero.mp4" type="video/mp4" />
           </video>
 
           {/* Overlays — dark vignette, stronger at bottom so text pops */}
@@ -657,13 +683,13 @@ export default function HomePage() {
             {/* CTA */}
             <div className="text-center">
               <a
-                href="https://instagram.com/dridhacrafts"
+                href="https://www.instagram.com/dridha_crafts/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-brand-green text-white rounded-full text-sm font-semibold uppercase tracking-wider hover:bg-brand-green-light transition-all duration-300 shadow-medium hover:shadow-elevated"
               >
                 <InstagramIcon className="w-5 h-5" />
-                Follow @dridhacrafts on Instagram
+                Follow @dridha_crafts on Instagram
               </a>
             </div>
           </Container>

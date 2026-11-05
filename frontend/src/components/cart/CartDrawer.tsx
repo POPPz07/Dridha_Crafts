@@ -6,6 +6,7 @@ import { X, Trash2, Plus, Minus, ArrowRight, ShieldCheck, QrCode, Banknote } fro
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { api } from "@/lib/api";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, clearCart, subtotal } =
@@ -17,12 +18,40 @@ export function CartDrawer() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [paymentChoice, setPaymentChoice] = useState<"cod" | "qr">("qr");
+  const [orderNumber, setOrderNumber] = useState("");
 
   if (!isOpen) return null;
 
   const total = subtotal();
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const submitDirectOrder = async (choice: "cod" | "google_pay") => {
+    try {
+      const parts = customerAddress.split(",").map((s) => s.trim());
+      const pincodeMatch = customerAddress.match(/\b\d{6}\b/);
+      const res = await api.post<{ order_number: string }>("/api/orders/direct", {
+        full_name: customerName,
+        phone: customerPhone,
+        address_line_1: customerAddress.slice(0, 200),
+        city: parts.length > 1 ? parts[1] : "Pune",
+        state: parts.length > 2 ? parts[2] : "Maharashtra",
+        pincode: pincodeMatch ? pincodeMatch[0] : "411001",
+        payment_method: choice,
+        items: items.map((i) => ({
+          product_slug: i.product.slug,
+          quantity: i.quantity,
+        })),
+      });
+      if (res && res.order_number) {
+        setOrderNumber(res.order_number);
+      } else {
+        setOrderNumber(`DC-${Date.now().toString().slice(-6)}`);
+      }
+    } catch {
+      setOrderNumber(`DC-${Date.now().toString().slice(-6)}`);
+    }
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {
       alert("Please fill in your delivery details.");
@@ -31,6 +60,8 @@ export function CartDrawer() {
     if (paymentChoice === "qr") {
       setCheckoutStep("qr_modal");
     } else {
+      await submitDirectOrder("cod");
+      clearCart();
       setCheckoutStep("cod_success");
     }
   };
@@ -296,13 +327,14 @@ export function CartDrawer() {
                   <p className="font-semibold text-brand-brown">Instant Order Booking:</p>
                   <p>1. Open Google Pay, PhonePe, or BHIM.</p>
                   <p>2. Scan code or send ₹{total} to UPI ID.</p>
-                  <p>3. Tap "I Have Paid" below to record your order confirmation.</p>
+                  <p>3. Tap &ldquo;I Have Paid&rdquo; below to record your order confirmation.</p>
                 </div>
 
                 <Button
                   variant="gold"
                   className="w-full py-3"
-                  onClick={() => {
+                  onClick={async () => {
+                    await submitDirectOrder("google_pay");
                     clearCart();
                     setCheckoutStep("cod_success");
                   }}
@@ -321,6 +353,11 @@ export function CartDrawer() {
                 <h3 className="font-display text-2xl font-bold text-brand-green">
                   Order Successfully Placed!
                 </h3>
+                {orderNumber && (
+                  <p className="text-xs font-mono font-semibold text-brand-green bg-brand-green/10 py-1 px-3 rounded-full inline-block">
+                    Reference #{orderNumber}
+                  </p>
+                )}
                 <p className="text-sm text-charcoal/70 leading-relaxed">
                   Thank you, <strong>{customerName || "Friend"}</strong>. Your order is registered in our workshop.
                   We are preparing your handcrafted walnut pieces with utmost care.

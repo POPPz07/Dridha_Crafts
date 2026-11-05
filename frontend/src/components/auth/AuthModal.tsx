@@ -43,12 +43,11 @@ export function AuthModal() {
 
   if (!isOpen) return null;
 
-  const handleLogin = async (data: LoginForm) => {
+  const handleLogin = async () => {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      // TODO: Connect to Supabase auth when set up
-      console.log("Login:", data);
+      // Connect to Supabase auth when set up
       setSuccessMsg("Login functionality will be enabled once Supabase is configured.");
       setTimeout(() => { setSuccessMsg(""); closeAuthModal(); }, 2000);
     } catch {
@@ -58,12 +57,11 @@ export function AuthModal() {
     }
   };
 
-  const handleSignup = async (data: SignupForm) => {
+  const handleSignup = async () => {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      // TODO: Connect to Supabase auth when set up
-      console.log("Signup:", data);
+      // Connect to Supabase auth when set up
       setSuccessMsg("Sign up functionality will be enabled once Supabase is configured.");
       setTimeout(() => { setSuccessMsg(""); closeAuthModal(); }, 2000);
     } catch {

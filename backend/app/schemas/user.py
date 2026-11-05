@@ -21,6 +21,13 @@ class UserCreate(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=100, description="User's full name")
 
 
+class UserLogin(BaseModel):
+    """Schema for user authentication / login."""
+
+    email: EmailStr
+    password: str = Field(..., min_length=1, description="User password")
+
+
 class UserResponse(BaseModel):
     """Public user profile response."""
 

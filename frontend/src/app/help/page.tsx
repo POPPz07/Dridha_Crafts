@@ -68,7 +68,7 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "What is your return policy?",
-        a: "We offer a 7-day hassle-free return window from the date of delivery. Products must be unused and in original packaging. Reach out to us at support@dridhacrafts.com to initiate a return.",
+        a: "We offer a 7-day hassle-free return window from the date of delivery. Products must be unused and in original packaging. Reach out to us at craftsdridha@gmail.com to initiate a return.",
       },
       {
         q: "What if my product arrives damaged?",
@@ -85,15 +85,15 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "Can I get a custom or personalised piece?",
-        a: "Yes! We take limited custom orders. Email us at custom@dridhacrafts.com with your idea, dimensions, and timeline. We will come back to you within 3 business days.",
+        a: "Yes! We take limited custom orders. Email us at craftsdridha@gmail.com with your idea, dimensions, and timeline. We will come back to you within 3 business days.",
       },
       {
         q: "Do you offer bulk or corporate gifting?",
-        a: "We love gifting enquiries. For bulk orders of 10+ pieces, reach out to us at gifting@dridhacrafts.com for special pricing and bespoke packaging.",
+        a: "We love gifting enquiries. For bulk orders of 10+ pieces, reach out to us at craftsdridha@gmail.com for special pricing and bespoke packaging.",
       },
       {
         q: "How can I contact support?",
-        a: "Email us at support@dridhacrafts.com or use the form below. We aim to respond within 24 hours on business days.",
+        a: "Email us at craftsdridha@gmail.com or use the form below. We aim to respond within 24 hours on business days.",
       },
     ],
   },
@@ -192,10 +192,10 @@ export default function HelpPage() {
             within 24 hours on business days.
           </p>
           <Link
-            href="mailto:support@dridhacrafts.com"
+            href="mailto:craftsdridha@gmail.com"
             className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#e5c89d] text-[#092417] text-sm font-bold uppercase tracking-wider rounded-full hover:bg-white transition-all duration-300"
           >
-            support@dridhacrafts.com
+            craftsdridha@gmail.com
           </Link>
         </div>
       </section>

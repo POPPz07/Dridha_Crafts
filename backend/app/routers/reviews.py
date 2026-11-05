@@ -8,6 +8,7 @@ import uuid as _uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.middleware.auth import get_current_user
@@ -48,9 +49,10 @@ async def get_product_reviews(
     """
     product = await _get_product_by_slug(slug, db)
 
-    # Fetch reviews with user info
+    # Fetch reviews with user info eager loaded to prevent N+1 queries
     query = (
         select(Review)
+        .options(selectinload(Review.user))
         .where(Review.product_id == product.id)
         .order_by(Review.created_at.desc())
         .offset((page - 1) * per_page)
@@ -59,23 +61,20 @@ async def get_product_reviews(
     result = await db.execute(query)
     reviews = result.scalars().all()
 
-    # Build response items with user names
-    items = []
-    for review in reviews:
-        # Fetch user name
-        user = await db.get(User, review.user_id)
-        items.append(
-            ReviewResponse(
-                id=review.id,
-                product_id=review.product_id,
-                user_id=review.user_id,
-                user_name=user.full_name if user else "Anonymous",
-                rating=review.rating,
-                comment=review.comment,
-                is_verified=review.is_verified,
-                created_at=review.created_at,
-            )
+    # Build response items with user names (0 additional queries)
+    items = [
+        ReviewResponse(
+            id=review.id,
+            product_id=review.product_id,
+            user_id=review.user_id,
+            user_name=review.user.full_name if review.user else "Anonymous",
+            rating=review.rating,
+            comment=review.comment,
+            is_verified=review.is_verified,
+            created_at=review.created_at,
         )
+        for review in reviews
+    ]
 
     # Aggregation: average + total
     stats_result = await db.execute(

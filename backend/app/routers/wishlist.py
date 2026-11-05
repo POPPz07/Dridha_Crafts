@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.middleware.auth import get_current_user
-from app.models.product import Product, ProductImage
+from app.models.product import Product
 from app.models.review import Wishlist
 from app.models.user import User
 from app.schemas.wishlist import WishlistItemResponse, WishlistResponse

@@ -277,17 +277,9 @@ CREATE POLICY "Users read own order_items" ON order_items FOR SELECT USING (
     )
 );
 
-CREATE POLICY "Users create own orders" ON orders FOR INSERT WITH CHECK (
-    user_id IN (SELECT id FROM users WHERE auth_id = auth.uid()::text)
-);
-
-CREATE POLICY "Users create order_items" ON order_items FOR INSERT WITH CHECK (
-    order_id IN (
-        SELECT id FROM orders WHERE user_id IN (
-            SELECT id FROM users WHERE auth_id = auth.uid()::text
-        )
-    )
-);
+-- Orders and order_items can ONLY be created via the trusted FastAPI backend server
+-- using the service_role key to prevent client-side price, discount, or payment status tampering (CWE-602).
+-- Direct client INSERT via PostgREST is disallowed. Users have SELECT-only access to their own orders.
 
 CREATE POLICY "Users write own reviews" ON reviews FOR INSERT WITH CHECK (
     user_id IN (SELECT id FROM users WHERE auth_id = auth.uid()::text)

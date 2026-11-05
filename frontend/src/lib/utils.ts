@@ -1,15 +1,19 @@
 import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+// Cached Intl formatter to avoid repeated instantiation in render loops
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
 /**
- * Format price in Indian Rupees.
+ * Format price in Indian Rupees with high performance (cached formatter).
  */
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
+  return inrFormatter.format(price);
 }
 
 /**
@@ -55,9 +59,8 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 /**
- * Merge class names with Tailwind conflict resolution.
- * Note: This is a simplified version. For production with Tailwind merge, install tailwind-merge.
+ * Merge class names with full Tailwind CSS conflict resolution.
  */
 export function cn(...inputs: ClassValue[]): string {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
