@@ -12,16 +12,24 @@ export interface StaticProduct {
   weight_kg: number;
   dimensions?: string;
   is_featured: boolean;
+  stock_quantity?: number;
   images: {
     url: string;
     alt: string;
+  }[];
+  variants?: {
+    id: string;
+    variant_name: string;
+    variant_type: string;
+    price_override?: number | null;
+    stock_quantity: number;
   }[];
   badge?: "Handcrafted" | "Bestseller" | "Signature" | "Popular";
 }
 
 export const PRODUCTS_DATA: StaticProduct[] = [
   {
-    id: "prod-1",
+    id: "9180ed68-60bf-44b0-8f7f-bc8d0d691819",
     name: "ShiftDesk Stand (Adjustable)",
     slug: "shiftdesk-stand",
     short_description: "6-level ergonomic elevation crafted from solid Kashmir walnut. Folds completely flat.",
@@ -40,7 +48,26 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-2",
+    id: "50dfedc8-9477-43e1-84ca-52e1e0f0a54b",
+    name: "Signature ShiftDesk Stand",
+    slug: "signature-shiftdesk-stand",
+    short_description: "Premium adjustable stand with signature finishing. The ultimate ergonomic companion for your desk.",
+    long_description: "Combines the versatility of our ShiftDesk design with premium signature finishing. Hand-rubbed oil finish, refined edges, and deeper wood tones that age beautifully with time.",
+    category: "Laptop Stands",
+    price: 749,
+    compare_at_price: 899,
+    wood_type: "Kashmir Walnut",
+    finish: "Signature Satin Finish",
+    weight_kg: 0.8,
+    is_featured: false,
+    badge: "Signature",
+    images: [
+      { url: "/images/image1.jpeg", alt: "Signature ShiftDesk Stand in use" },
+      { url: "/images/image2.jpeg", alt: "Premium wooden adjustable stand" },
+    ],
+  },
+  {
+    id: "46e18608-1624-466f-8afe-ccaab48da878",
     name: "Signature Fixed Laptop Stand",
     slug: "signature-fixed-laptop-stand",
     short_description: "Minimalist continuous wooden arc designed for optimal airflow and neck posture.",
@@ -59,7 +86,26 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-3",
+    id: "5f235bcd-1d7c-4003-b181-3b98b0d93240",
+    name: "Fixed Laptop Stand",
+    slug: "fixed-laptop-stand",
+    short_description: "Elevate your workspace with this handcrafted wooden laptop stand. Designed for stability and airflow.",
+    long_description: "Handcrafted from sustainably sourced Kashmiri walnut wood, this fixed laptop stand raises your screen to eye level, reducing neck strain during long work sessions. The natural wood grain makes every piece unique. Fits laptops up to 15.6 inches.",
+    category: "Laptop Stands",
+    price: 539,
+    compare_at_price: 649,
+    wood_type: "Kashmir Walnut",
+    finish: "Classic",
+    weight_kg: 0.8,
+    is_featured: true,
+    badge: "Handcrafted",
+    images: [
+      { url: "/images/image2.jpeg", alt: "Fixed wooden laptop stand" },
+      { url: "/images/image1.jpeg", alt: "Fixed wooden stand side view" },
+    ],
+  },
+  {
+    id: "0be46bc7-8940-4123-8259-ff1e025bc391",
     name: "Sculptural Headphone Stand",
     slug: "headphone-stand",
     short_description: "An architectural focal point for your desk that gracefully cradles your audio gear.",
@@ -79,7 +125,7 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-4",
+    id: "c69842f5-61ba-45b6-bb5c-fd296e69e544",
     name: "Magnetic Wooden Cable Holder",
     slug: "cable-holder",
     short_description: "Dual-tone walnut organizer with 3 neodymium magnetic pods for tangle-free cables.",
@@ -98,7 +144,7 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-5",
+    id: "31e508df-81ec-41cb-9446-79855ce4e9bd",
     name: "Minimalist Mobile Stand",
     slug: "mobile-stand",
     short_description: "Natural timber phone cradle with dual-orientation viewing slot for calls and media.",
@@ -117,7 +163,7 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-6",
+    id: "5ed64139-19e7-4e2b-99dc-afc7c62e08db",
     name: "Multi-Angle Tablet Stand",
     slug: "tablet-stand",
     short_description: "Foldable 3-level tablet and sketch easel for iPads, e-readers, and tablets.",
@@ -135,7 +181,7 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     ],
   },
   {
-    id: "prod-7",
+    id: "42cdd4b0-3192-4b4f-99e7-978e695bc015",
     name: "Solid Walnut Bookends (Pair)",
     slug: "bookends",
     short_description: "Heavyweight architectural blocks highlighting natural grain and live tree contours.",
@@ -171,7 +217,7 @@ export interface StaticBundle {
 
 export const BUNDLES_DATA: StaticBundle[] = [
   {
-    id: "bundle-1",
+    id: "da923af9-bc88-4b02-ab20-2ef88ba74fd4",
     name: "Work From Home Set",
     slug: "work-from-home-set",
     price: 999,
@@ -183,9 +229,21 @@ export const BUNDLES_DATA: StaticBundle[] = [
     badge: "Most Popular Bundle",
   },
   {
-    id: "bundle-2",
-    name: "ShiftDesk Pro Set",
-    slug: "shiftdesk-pro-set",
+    id: "4506690d-fb08-4f9e-9db9-7c820befea09",
+    name: "Signature WFH Set",
+    slug: "signature-wfh-set",
+    price: 1099,
+    original_price: 1247,
+    savings: 148,
+    description: "Premium work-from-home bundle: Signature Fixed Laptop Stand + Mobile Stand + Cable Holder in hand-rubbed oil finish.",
+    items: ["Signature Fixed Laptop Stand", "Mobile Stand", "Magnetic Cable Holder"],
+    image: "/images/image1.jpeg",
+    badge: "Luxury Finish",
+  },
+  {
+    id: "9161dabd-4082-43b7-a400-bd28adfb6c6e",
+    name: "ShiftDesk WFH Set",
+    slug: "shiftdesk-wfh-set",
     price: 1099,
     original_price: 1297,
     savings: 198,
@@ -195,15 +253,15 @@ export const BUNDLES_DATA: StaticBundle[] = [
     badge: "Best Ergonomics",
   },
   {
-    id: "bundle-3",
-    name: "Signature ShiftDesk Set",
-    slug: "signature-shiftdesk-set",
+    id: "9e41736e-1d44-4118-bb88-7cee7987e6b7",
+    name: "Signature ShiftDesk WFH Set",
+    slug: "signature-shiftdesk-wfh-set",
     price: 1199,
     original_price: 1397,
     savings: 198,
     description: "Hand-finished Signature ShiftDesk Stand + Mobile Stand + Magnetic Cable Holder in our deepest Kashmir walnut grain.",
     items: ["Signature ShiftDesk Stand", "Mobile Stand", "Magnetic Cable Holder"],
     image: "/images/image9.jpeg",
-    badge: "Luxury Finish",
+    badge: "Executive Edition",
   },
 ];

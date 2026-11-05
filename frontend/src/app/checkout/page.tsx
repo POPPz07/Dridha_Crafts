@@ -6,10 +6,12 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Check, ChevronRight, QrCode, Truck, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, QrCode, Truck, Shield, Loader2, CreditCard } from "lucide-react";
+import { api } from "@/lib/api";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/stores/cartStore";
+import { useAuthStore } from "@/stores/authStore";
 import { formatPrice } from "@/lib/utils";
 
 const addressSchema = z.object({
@@ -24,7 +26,7 @@ const addressSchema = z.object({
 
 type AddressForm = z.infer<typeof addressSchema>;
 
-type PaymentMethod = "cod" | "gpay";
+type PaymentMethod = "online" | "cod" | "gpay";
 type CheckoutStep = "address" | "payment" | "confirmation";
 
 export default function CheckoutPage() {
@@ -32,6 +34,17 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [isPlacing, setIsPlacing] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [idempotencyKey] = useState<string>(() => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  });
+
+  const user = useAuthStore((s) => s.user);
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
 
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
@@ -45,6 +58,39 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<AddressForm>({ resolver: zodResolver(addressSchema) });
 
+  // 1. Auth Guard: Require an authenticated Supabase user before checkout
+  if (!isAuthLoading && !user && step !== "confirmation") {
+    return (
+      <main className="min-h-screen bg-brand-cream flex items-center justify-center p-4 pt-28 pb-16">
+        <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-soft p-8 max-w-md w-full text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mx-auto">
+            <Shield className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-brand-green">Sign in to Checkout</h1>
+            <p className="text-charcoal/70 text-sm mt-1">
+              Please sign in to your Dridha Crafts account to ensure secure order processing and tracking.
+            </p>
+          </div>
+          <div className="pt-2 space-y-3">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => openAuthModal("login")}
+            >
+              Sign In / Register
+            </Button>
+            <Link href="/shop" className="block text-sm text-charcoal/60 hover:text-brand-green transition-colors">
+              ← Return to Collection
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 2. Empty Cart Guard
   if (items.length === 0 && step !== "confirmation") {
     return (
       <main className="min-h-screen bg-brand-cream flex items-center justify-center">
@@ -59,24 +105,52 @@ export default function CheckoutPage() {
   }
 
   const onAddressSubmit = (data: AddressForm) => {
-    console.log("Address:", data);
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePlaceOrder = async () => {
+    if (paymentMethod === "online") {
+      setErrorMessage("Online payments via Cashfree are coming soon. Please select COD or Google Pay QR.");
+      return;
+    }
+
     setIsPlacing(true);
+    setErrorMessage(null);
     try {
-      // TODO: Connect to FastAPI backend when ready
-      // For now, simulate order placement
-      await new Promise((r) => setTimeout(r, 1500));
-      const generatedOrderNum = `DC-${Date.now().toString().slice(-6)}`;
-      setOrderNumber(generatedOrderNum);
+      const addressData = getValues();
+      const orderPayload = {
+        shipping_address: {
+          full_name: addressData.full_name,
+          phone: addressData.phone,
+          address_line_1: addressData.address_line_1,
+          address_line_2: addressData.address_line_2 || null,
+          city: addressData.city,
+          state: addressData.state,
+          pincode: addressData.pincode,
+        },
+        payment_method: paymentMethod === "gpay" ? "google_pay" : paymentMethod,
+        idempotency_key: idempotencyKey,
+        customer_email: user?.email || undefined,
+        customer_phone: addressData.phone,
+        items: items.map((i) => ({
+          product_id: i.product_id,
+          variant_id: i.variant_id || null,
+          quantity: i.quantity,
+        })),
+      };
+
+      const res = await api.post<{ order_number: string; id: string }>("/api/orders", orderPayload);
+      setOrderNumber(res.order_number);
+      // Only clear cart on successful order confirmation
       clearCart();
       setStep("confirmation");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Order placement failed:", err);
+      const maybeError = err as { response?: { data?: { detail?: string } }; message?: string };
+      const detail = maybeError?.response?.data?.detail || maybeError?.message || "Failed to place order. Please try again.";
+      setErrorMessage(typeof detail === "string" ? detail : "Failed to place order.");
     } finally {
       setIsPlacing(false);
     }
@@ -162,6 +236,22 @@ export default function CheckoutPage() {
                     <p className="text-brand-cream/70 text-sm mt-1">Choose how you'd like to pay</p>
                   </div>
                   <div className="px-8 py-6 space-y-4">
+                    {/* Online Payment (Cashfree Ready - Disabled until session creation exists) */}
+                    <div
+                      className="w-full flex items-start gap-4 p-5 rounded-2xl border-2 border-warmgrey/60 bg-warmgrey/10 opacity-75 cursor-not-allowed select-none"
+                    >
+                      <div className="mt-0.5 w-5 h-5 rounded-full border-2 border-warmgrey/60 flex items-center justify-center shrink-0">
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <CreditCard className="w-5 h-5 text-charcoal/40" />
+                          <span className="font-semibold text-charcoal/60">Pay Online (UPI / Cards / NetBanking)</span>
+                          <span className="text-[10px] font-bold tracking-wider uppercase bg-warmgrey/40 text-charcoal/60 px-2 py-0.5 rounded-full">Coming Soon (Cashfree)</span>
+                        </div>
+                        <p className="text-xs text-charcoal/50 mt-1">Cashfree payment gateway integration is in progress. Please choose Cash on Delivery or Google Pay QR below.</p>
+                      </div>
+                    </div>
+
                     {/* COD Option */}
                     <button
                       onClick={() => setPaymentMethod("cod")}
@@ -221,6 +311,12 @@ export default function CheckoutPage() {
                   <Shield className="w-5 h-5 text-brand-green shrink-0" />
                   <p className="text-xs text-charcoal/70">Your order and personal information are secure. We never store payment details.</p>
                 </div>
+
+                {errorMessage && (
+                  <div className="p-4 bg-terracotta/10 border border-terracotta/30 text-terracotta rounded-xl text-sm font-medium">
+                    {errorMessage}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-2">
                   <button onClick={() => setStep("address")} className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">

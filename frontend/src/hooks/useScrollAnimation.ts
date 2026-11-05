@@ -117,9 +117,12 @@ export function useScrollAnimations() {
       });
     };
 
-    init();
+    const timer = requestAnimationFrame(() => {
+      init();
+    });
 
     return () => {
+      cancelAnimationFrame(timer);
       // Cleanup on unmount
       if (ScrollTrigger) {
         ScrollTrigger.getAll().forEach((t) => t.kill());

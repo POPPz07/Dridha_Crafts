@@ -1,21 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PRODUCTS_DATA, BUNDLES_DATA, StaticProduct } from "@/lib/products-data";
+import { getProducts } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { Check, Heart, ShoppingBag, SlidersHorizontal } from "lucide-react";
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<StaticProduct[]>(PRODUCTS_DATA);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
   const [quickAddedId, setQuickAddedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getProducts().then((data) => {
+      if (data && data.length > 0) {
+        setProducts(data);
+      }
+    });
+  }, []);
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -25,8 +35,8 @@ export default function ShopPage() {
 
   let filtered =
     selectedCategory === "All"
-      ? [...PRODUCTS_DATA]
-      : PRODUCTS_DATA.filter((p) => p.category === selectedCategory);
+      ? [...products]
+      : products.filter((p) => p.category === selectedCategory);
 
   if (sortBy === "price-low") {
     filtered.sort((a, b) => a.price - b.price);
@@ -35,19 +45,25 @@ export default function ShopPage() {
   }
 
   const handleAddToCart = (product: StaticProduct) => {
+    const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
     addItem({
       id: `${product.id}-shop`,
       product_id: product.id,
-      variant_id: null,
+      variant_id: defaultVariant?.id || null,
       quantity: 1,
       product: {
         name: product.name,
         slug: product.slug,
-        price: product.price,
+        price: defaultVariant?.price_override ?? product.price,
         primary_image_url: product.images[0]?.url || null,
-        stock_quantity: 20,
+        stock_quantity: defaultVariant?.stock_quantity ?? product.stock_quantity ?? 20,
       },
-      variant: null,
+      variant: defaultVariant
+        ? {
+            variant_name: defaultVariant.variant_name,
+            price_override: defaultVariant.price_override ?? null,
+          }
+        : null,
     });
     setQuickAddedId(product.id);
     setTimeout(() => setQuickAddedId(null), 1500);

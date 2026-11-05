@@ -7,6 +7,7 @@ import { z } from "zod";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
+import { createClient } from "@/lib/supabase";
 
 // ── Validation Schemas ─────────────────────────────────────────
 const loginSchema = z.object({
@@ -14,22 +15,25 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-const signupSchema = z.object({
-  full_name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "At least 8 characters").max(128),
-  confirm_password: z.string(),
-}).refine((d) => d.password === d.confirm_password, {
-  message: "Passwords don't match",
-  path: ["confirm_password"],
-});
+const signupSchema = z
+  .object({
+    full_name: z.string().min(2, "Name must be at least 2 characters").max(100),
+    email: z.string().email("Enter a valid email"),
+    password: z.string().min(8, "At least 8 characters").max(128),
+    confirm_password: z.string(),
+  })
+  .refine((d) => d.password === d.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
 
 type LoginForm = z.infer<typeof loginSchema>;
 type SignupForm = z.infer<typeof signupSchema>;
 
 // ── Auth Modal Component ───────────────────────────────────────
 export function AuthModal() {
-  const { isAuthModalOpen, authModalView, closeAuthModal, openAuthModal } = useAuthStore();
+  const { isAuthModalOpen, authModalView, closeAuthModal, openAuthModal, setUser } =
+    useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -47,12 +51,37 @@ export function AuthModal() {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      // TODO: Connect to Supabase auth when set up
-      console.log("Login:", data);
-      setSuccessMsg("Login functionality will be enabled once Supabase is configured.");
-      setTimeout(() => { setSuccessMsg(""); closeAuthModal(); }, 2000);
+      const supabase = createClient();
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      if (authData.user) {
+        setUser({
+          id: authData.user.id,
+          email: authData.user.email || data.email,
+          full_name:
+            authData.user.user_metadata?.full_name ||
+            authData.user.email?.split("@")[0] ||
+            "User",
+          phone: authData.user.phone || null,
+          role: "customer",
+          created_at: authData.user.created_at,
+        });
+        setSuccessMsg("Signed in successfully!");
+        setTimeout(() => {
+          setSuccessMsg("");
+          closeAuthModal();
+        }, 1000);
+      }
     } catch {
-      setErrorMsg("An error occurred. Please try again.");
+      setErrorMsg("An error occurred during sign in. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -62,12 +91,41 @@ export function AuthModal() {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      // TODO: Connect to Supabase auth when set up
-      console.log("Signup:", data);
-      setSuccessMsg("Sign up functionality will be enabled once Supabase is configured.");
-      setTimeout(() => { setSuccessMsg(""); closeAuthModal(); }, 2000);
+      const supabase = createClient();
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.full_name,
+          },
+        },
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      if (authData.session && authData.user) {
+        setUser({
+          id: authData.user.id,
+          email: authData.user.email || data.email,
+          full_name: data.full_name,
+          phone: authData.user.phone || null,
+          role: "customer",
+          created_at: authData.user.created_at,
+        });
+        setSuccessMsg("Account created and signed in!");
+        setTimeout(() => {
+          setSuccessMsg("");
+          closeAuthModal();
+        }, 1000);
+      } else {
+        setSuccessMsg("Registration successful! Check your email to confirm your account.");
+      }
     } catch {
-      setErrorMsg("An error occurred. Please try again.");
+      setErrorMsg("An error occurred during registration. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +159,11 @@ export function AuthModal() {
             </button>
             <div className="flex gap-2 mb-4">
               <button
-                onClick={() => openAuthModal("login")}
+                onClick={() => {
+                  setErrorMsg("");
+                  setSuccessMsg("");
+                  openAuthModal("login");
+                }}
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
                 }`}
@@ -109,7 +171,11 @@ export function AuthModal() {
                 Login
               </button>
               <button
-                onClick={() => openAuthModal("signup")}
+                onClick={() => {
+                  setErrorMsg("");
+                  setSuccessMsg("");
+                  openAuthModal("signup");
+                }}
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   !isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
                 }`}
@@ -157,7 +223,11 @@ export function AuthModal() {
                   autoComplete="current-password"
                   error={loginForm.formState.errors.password?.message}
                   rightElement={
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-charcoal/50 hover:text-charcoal">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-charcoal/50 hover:text-charcoal"
+                    >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   }
@@ -193,7 +263,11 @@ export function AuthModal() {
                   autoComplete="new-password"
                   error={signupForm.formState.errors.password?.message}
                   rightElement={
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-charcoal/50 hover:text-charcoal">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-charcoal/50 hover:text-charcoal"
+                    >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   }

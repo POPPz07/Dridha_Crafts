@@ -1,3 +1,5 @@
+import { createClient } from "@/lib/supabase";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface FetchOptions extends RequestInit {
@@ -18,13 +20,28 @@ class ApiError extends Error {
 async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { token, headers: customHeaders, ...fetchOptions } = options;
 
+  let resolvedToken = token;
+  if (!resolvedToken && typeof window !== "undefined") {
+    try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        resolvedToken = session.access_token;
+      }
+    } catch {
+      // If Supabase client is unconfigured or in SSR, continue without token
+    }
+  }
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...customHeaders,
   };
 
-  if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  if (resolvedToken) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${resolvedToken}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -48,21 +65,21 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
 export const api = {
   get: <T>(endpoint: string, options?: FetchOptions) =>
     fetchApi<T>(endpoint, { ...options, method: "GET" }),
-    
+
   post: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
     fetchApi<T>(endpoint, {
       ...options,
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     }),
-    
+
   put: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
     fetchApi<T>(endpoint, {
       ...options,
       method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
     }),
-    
+
   delete: <T>(endpoint: string, options?: FetchOptions) =>
     fetchApi<T>(endpoint, { ...options, method: "DELETE" }),
 };

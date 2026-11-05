@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     )
     RATE_LIMIT_AUTH: str = "5/minute"
     RATE_LIMIT_GENERAL: str = "60/minute"
+    CRON_SECRET: str | None = Field(default=None, description="Secret token for triggering cron endpoints")
 
     # ── Email (Resend) ───────────────────────────────────
     RESEND_API_KEY: str = ""

@@ -1,35 +1,69 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, ChevronLeft, Heart, Minus, Plus, ShoppingBag, Shield, Star, Truck, RefreshCw } from "lucide-react";
+import { Check, ChevronLeft, Heart, Minus, Plus, ShoppingBag, Shield, Star, Truck, RefreshCw, Loader2 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PRODUCTS_DATA, StaticProduct } from "@/lib/products-data";
+import { getProductBySlug } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default function ProductDetailPage({ params }: PageProps) {
-  const product = PRODUCTS_DATA.find((p) => p.slug === params.slug);
+  const { slug } = use(params);
+  const fallback = PRODUCTS_DATA.find((p) => p.slug === slug);
+  const [product, setProduct] = useState<StaticProduct | null>(fallback || null);
+  const [isLoading, setIsLoading] = useState(!fallback);
 
-  if (!product) return notFound();
+  useEffect(() => {
+    let isMounted = true;
+    getProductBySlug(slug).then((res) => {
+      if (isMounted) {
+        if (res) {
+          setProduct(res);
+        }
+        setIsLoading(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
+
+  if (!product && !isLoading) return notFound();
+  if (!product) {
+    return (
+      <main className="min-h-screen bg-brand-cream pt-28 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-green" />
+      </main>
+    );
+  }
 
   return <ProductDetail product={product} />;
 }
 
 function ProductDetail({ product }: { product: StaticProduct }) {
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    product.variants && product.variants.length > 0 ? product.variants[0].id : null
+  );
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  const activeVariant = product.variants?.find((v) => v.id === selectedVariantId) || null;
+  const currentPrice = activeVariant?.price_override ?? product.price;
+  const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity ?? 10;
+  const isOutOfStock = currentStock <= 0;
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -42,20 +76,26 @@ function ProductDetail({ product }: { product: StaticProduct }) {
   ).slice(0, 3);
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     for (let i = 0; i < quantity; i++) {
       addItem({
-        id: `${product.id}-pdp`,
+        id: activeVariant ? `${product.id}-${activeVariant.id}` : `${product.id}-pdp`,
         product_id: product.id,
-        variant_id: null,
+        variant_id: activeVariant ? activeVariant.id : null,
         quantity: 1,
         product: {
           name: product.name,
           slug: product.slug,
-          price: product.price,
+          price: currentPrice,
           primary_image_url: product.images[0]?.url || null,
-          stock_quantity: 20,
+          stock_quantity: currentStock,
         },
-        variant: null,
+        variant: activeVariant
+          ? {
+              variant_name: activeVariant.variant_name,
+              price_override: activeVariant.price_override ?? null,
+            }
+          : null,
       });
     }
     setIsAdded(true);
@@ -73,7 +113,6 @@ function ProductDetail({ product }: { product: StaticProduct }) {
     { step: "04", title: "Organic Oil Finish", desc: "Sealed with natural walnut oil and beeswax — food-safe, zero-plastic finish." },
   ];
 
-  // Fake rating data (will be replaced with real DB data when Supabase is set up)
   const fakeRating = { avg: 4.8, count: 12 };
 
   return (
@@ -119,14 +158,14 @@ function ProductDetail({ product }: { product: StaticProduct }) {
             {/* Thumbnail Strip */}
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-1">
-                {images.map((img, i) => (
+                {images.map((img, idx) => (
                   <button
-                    key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                      selectedImage === i
-                        ? "border-brand-gold shadow-soft scale-105"
-                        : "border-warmgrey hover:border-brand-green/40"
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
+                      selectedImage === idx
+                        ? "border-brand-green ring-2 ring-brand-green/20"
+                        : "border-warmgrey opacity-70 hover:opacity-100"
                     }`}
                   >
                     <Image src={img.url} alt={img.alt} fill className="object-cover" sizes="80px" />
@@ -135,49 +174,57 @@ function ProductDetail({ product }: { product: StaticProduct }) {
               </div>
             )}
 
-            {/* Craftsmanship story below gallery */}
-            <div className="bg-brand-green rounded-2xl p-6 text-brand-cream mt-4">
-              <p className="font-accent text-brand-gold text-lg mb-2">Every piece is unique.</p>
-              <p className="text-sm text-brand-cream/80 leading-relaxed">
-                Because we use naturally fallen walnut timber, every product carries its own distinct grain pattern,
-                knots, and natural character marks — making yours truly one of a kind.
-              </p>
+            {/* Natural Material Note */}
+            <div className="p-4 bg-brand-cream border border-warmgrey/80 rounded-2xl text-xs text-charcoal/70 space-y-1">
+              <p className="font-semibold text-brand-green">Natural Timber Variance</p>
+              <p>Each piece is individually carved from fallen walnut trees. Grain patterns, knot placement, and rich tone gradients are unique to your individual piece.</p>
             </div>
           </div>
 
-          {/* ── RIGHT: Product Info ────────────────────────── */}
+          {/* ── RIGHT: Product Details ─────────────────────── */}
           <div className="lg:col-span-6 space-y-6">
-            {/* Category + Rating */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="handcrafted">{product.category}</Badge>
-                {product.badge && <Badge variant="bestseller">{product.badge}</Badge>}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {[1,2,3,4,5].map((s) => (
-                  <Star
-                    key={s}
-                    className={`w-4 h-4 ${s <= Math.round(fakeRating.avg) ? "fill-brand-gold text-brand-gold" : "text-warmgrey"}`}
-                  />
-                ))}
-                <span className="text-xs text-charcoal/60 ml-1">({fakeRating.count} reviews)</span>
-              </div>
-            </div>
-
-            {/* Name */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold mb-1">
-                {product.wood_type}
-              </p>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-green leading-tight">
+              {/* Badge & Category */}
+              <div className="flex items-center gap-2 mb-2">
+                {product.badge && (
+                  <Badge variant={product.badge === "Bestseller" ? "bestseller" : "new"}>
+                    {product.badge}
+                  </Badge>
+                )}
+                <span className="text-xs uppercase tracking-widest text-charcoal/50 font-medium">
+                  {product.category}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1 className="font-display text-3xl sm:text-4xl font-bold text-brand-green">
                 {product.name}
               </h1>
+
+              {/* Review summary */}
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-3.5 h-3.5 ${
+                        i < Math.floor(fakeRating.avg)
+                          ? "fill-brand-gold text-brand-gold"
+                          : "text-warmgrey fill-warmgrey"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-charcoal/60">
+                  {fakeRating.avg} ({fakeRating.count} reviews)
+                </span>
+              </div>
             </div>
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="font-display text-4xl font-bold text-brand-green">
-                {formatPrice(product.price)}
+                {formatPrice(currentPrice)}
               </span>
               {product.compare_at_price && (
                 <>
@@ -185,9 +232,26 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                     {formatPrice(product.compare_at_price)}
                   </span>
                   <Badge variant="sale">
-                    Save ₹{product.compare_at_price - product.price}
+                    Save ₹{product.compare_at_price - currentPrice}
                   </Badge>
                 </>
+              )}
+            </div>
+
+            {/* Stock indicator */}
+            <div>
+              {isOutOfStock ? (
+                <span className="inline-block px-3 py-1 bg-terracotta/10 text-terracotta border border-terracotta/30 rounded-full text-xs font-semibold">
+                  Out of Stock
+                </span>
+              ) : currentStock <= 5 ? (
+                <span className="text-xs text-amber-700 font-medium">
+                  Only {currentStock} left in stock — order soon
+                </span>
+              ) : (
+                <span className="text-xs text-brand-green font-medium">
+                  In stock • Ready to dispatch
+                </span>
               )}
             </div>
 
@@ -195,6 +259,32 @@ function ProductDetail({ product }: { product: StaticProduct }) {
             <p className="text-sm text-charcoal/75 leading-relaxed border-l-2 border-brand-gold/50 pl-4">
               {product.short_description}
             </p>
+
+            {/* Variant Selector (if variants are present) */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-widest text-charcoal/60">
+                  Select {product.variants[0].variant_type || "Option"}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedVariantId(v.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
+                        selectedVariantId === v.id
+                          ? "border-brand-green bg-brand-green/10 text-brand-green"
+                          : "border-warmgrey bg-white text-charcoal/70 hover:border-brand-green/40"
+                      }`}
+                    >
+                      {v.variant_name}
+                      {v.price_override ? ` (${formatPrice(v.price_override)})` : ""}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity Selector */}
             <div className="space-y-2">
@@ -206,6 +296,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-10 flex items-center justify-center rounded-l-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
                   aria-label="Decrease quantity"
+                  disabled={isOutOfStock}
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -213,9 +304,10 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                   {quantity}
                 </div>
                 <button
-                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                  onClick={() => setQuantity(Math.min(currentStock || 10, quantity + 1))}
                   className="w-10 h-10 flex items-center justify-center rounded-r-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
                   aria-label="Increase quantity"
+                  disabled={isOutOfStock || quantity >= currentStock}
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -225,12 +317,15 @@ function ProductDetail({ product }: { product: StaticProduct }) {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
-                variant={isAdded ? "gold" : "primary"}
+                variant={isOutOfStock ? "outline" : isAdded ? "gold" : "primary"}
                 size="lg"
                 onClick={handleAddToCart}
-                className="flex-1 py-4 text-base"
+                disabled={isOutOfStock}
+                className={`flex-1 py-4 text-base ${isOutOfStock ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                {isAdded ? (
+                {isOutOfStock ? (
+                  "Out of Stock"
+                ) : isAdded ? (
                   <><Check className="w-5 h-5 mr-2" /> Added to Cart!</>
                 ) : (
                   <><ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart</>
@@ -257,166 +352,94 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                 { icon: <Shield className="w-4 h-4" />, label: "Secure Checkout" },
                 { icon: <RefreshCw className="w-4 h-4" />, label: "Easy Returns" },
                 { icon: <Check className="w-4 h-4" />, label: "Pune Inspected" },
-              ].map((t, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-xl border border-warmgrey/60 text-center">
-                  <span className="text-brand-green">{t.icon}</span>
-                  <span className="text-[10px] font-semibold text-charcoal/70">{t.label}</span>
+              ].map((badge, idx) => (
+                <div key={idx} className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-warmgrey/70 text-xs text-charcoal/70">
+                  <span className="text-brand-green shrink-0">{badge.icon}</span>
+                  <span className="font-medium text-[11px] leading-tight">{badge.label}</span>
                 </div>
               ))}
             </div>
 
-            {/* Specifications */}
-            <div className="bg-white rounded-2xl border border-warmgrey/70 overflow-hidden">
-              <div className="px-5 py-3 bg-warmgrey/30 border-b border-warmgrey/60">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-charcoal/70">Specifications</h3>
+            {/* Specifications Table */}
+            <div className="border border-warmgrey rounded-2xl overflow-hidden bg-white">
+              <div className="px-5 py-3 bg-brand-green/5 border-b border-warmgrey">
+                <p className="text-xs font-bold uppercase tracking-wider text-brand-green">Specifications</p>
               </div>
-              <div className="divide-y divide-warmgrey/40">
+              <div className="divide-y divide-warmgrey text-xs">
                 {[
-                  ["Wood Type", product.wood_type || "Kashmiri Walnut"],
-                  ["Finish", product.finish || "Natural Oil + Beeswax"],
-                  ["Weight", product.weight_kg ? `${product.weight_kg} kg` : "~0.6 kg"],
-                  ["Dimensions", product.dimensions || "Varies by product"],
-                  ["Care", "Wipe with dry cloth. Re-oil every 6 months."],
-                ].map(([key, val]) => (
-                  <div key={key} className="flex justify-between px-5 py-3 text-sm">
-                    <span className="font-medium text-charcoal/60">{key}</span>
-                    <span className="text-charcoal font-semibold text-right max-w-[180px]">{val}</span>
+                  { label: "Timber", value: product.wood_type },
+                  { label: "Finish", value: product.finish },
+                  { label: "Weight", value: `${product.weight_kg} kg` },
+                  ...(product.dimensions ? [{ label: "Dimensions", value: product.dimensions }] : []),
+                  { label: "Origin", value: "Kashmir Valley, India" },
+                  { label: "Packaging", value: "Eco-friendly, 5-ply corrugated box" },
+                ].map((spec, idx) => (
+                  <div key={idx} className="flex justify-between px-5 py-2.5">
+                    <span className="text-charcoal/50 font-medium">{spec.label}</span>
+                    <span className="text-charcoal font-semibold">{spec.value}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Payment note */}
-            <p className="text-xs text-charcoal/50 text-center pt-1">
-              💳 Pay via Google Pay QR or Cash on Delivery · Free delivery Pan-India
-            </p>
           </div>
         </div>
-      </Container>
 
-      {/* ── Craftsmanship Process ─────────────────────────── */}
-      <section className="py-16 bg-brand-green text-brand-cream">
-        <Container>
-          <div className="text-center mb-12">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold block mb-3">
-              How It's Made
-            </span>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-cream">
-              The Making of Your{" "}
-              <span className="italic font-normal text-brand-gold">{product.name}</span>
+        {/* ── Story / Long Description Section ────────────── */}
+        {product.long_description && (
+          <div className="py-12 border-t border-warmgrey/60 max-w-3xl">
+            <h2 className="font-display text-2xl font-bold text-brand-green mb-4">
+              The Story Behind This Piece
             </h2>
+            <div className="prose prose-sm text-charcoal/80 leading-relaxed space-y-4">
+              <p>{product.long_description}</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {processSteps.map((step, i) => (
-              <div key={i} className="relative pl-5 border-l border-brand-gold/30">
-                <span className="absolute -left-3 top-0 w-6 h-6 rounded-full bg-brand-gold text-charcoal text-[10px] font-bold flex items-center justify-center">
-                  {i + 1}
-                </span>
-                <span className="font-display text-3xl font-bold text-brand-gold/20 block -mt-1 mb-1">
-                  {step.step}
-                </span>
-                <h3 className="font-display text-lg font-bold text-brand-cream mb-2">{step.title}</h3>
-                <p className="text-xs text-brand-cream/65 leading-relaxed">{step.desc}</p>
+        )}
+
+        {/* ── Artisanal Process Steps ───────────────────────── */}
+        <div className="py-16 border-t border-warmgrey/60">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-brown mb-2">The Craft</p>
+            <h2 className="font-display text-3xl font-bold text-brand-green">How It's Made</h2>
+            <p className="text-sm text-charcoal/70 mt-2">Every step honours the timber and the artisan.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {processSteps.map((s) => (
+              <div key={s.step} className="p-6 bg-white rounded-2xl border border-warmgrey/60 shadow-soft space-y-2">
+                <span className="font-display text-3xl font-bold text-brand-gold/60">{s.step}</span>
+                <h3 className="font-semibold text-brand-green text-sm">{s.title}</h3>
+                <p className="text-xs text-charcoal/70 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
-        </Container>
-      </section>
+        </div>
 
-      {/* ── Reviews Placeholder ───────────────────────────── */}
-      <section className="py-16 bg-brand-cream border-t border-warmgrey/50">
-        <Container>
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="font-display text-3xl font-bold text-brand-green mb-2">
-                Customer Reviews
-              </h2>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                {[1,2,3,4,5].map((s) => (
-                  <Star key={s} className={`w-5 h-5 ${s <= Math.round(fakeRating.avg) ? "fill-brand-gold text-brand-gold" : "text-warmgrey"}`} />
-                ))}
-                <span className="font-display text-2xl font-bold text-brand-green ml-2">{fakeRating.avg}</span>
-              </div>
-              <p className="text-sm text-charcoal/60">Based on {fakeRating.count} reviews</p>
+        {/* ── Related Products ─────────────────────────────── */}
+        {related.length > 0 && (
+          <div className="py-16 border-t border-warmgrey/60">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-display text-2xl font-bold text-brand-green">More in {product.category}</h2>
+              <Link href="/shop" className="text-xs font-semibold text-brand-brown hover:text-brand-green transition-colors flex items-center gap-1">
+                View All <ChevronLeft className="w-3.5 h-3.5 rotate-180" />
+              </Link>
             </div>
-
-            {/* Sample reviews (static for now, will connect to DB later) */}
-            <div className="space-y-4">
-              {[
-                { name: "Rohan M.", rating: 5, text: "Absolutely love this! The wood grain is gorgeous and it's super sturdy. Worth every rupee.", date: "2 weeks ago" },
-                { name: "Priya S.", rating: 5, text: "Got this as a gift for my husband. He was blown away by the quality. Packaging was also very premium!", date: "1 month ago" },
-                { name: "Arjun K.", rating: 4, text: "Great product, solidly made. Slight imperfections in the wood but that's what makes it handcrafted!", date: "1 month ago" },
-              ].map((review, i) => (
-                <div key={i} className="bg-white rounded-2xl p-6 border border-warmgrey/60 shadow-soft">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <p className="font-semibold text-charcoal text-sm">{review.name}</p>
-                      <p className="text-xs text-charcoal/50">{review.date}</p>
-                    </div>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map((s) => (
-                        <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? "fill-brand-gold text-brand-gold" : "text-warmgrey"}`} />
-                      ))}
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {related.map((item) => (
+                <Link key={item.id} href={`/products/${item.slug}`} className="group block bg-white rounded-2xl border border-warmgrey/60 overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
+                  <div className="relative aspect-[4/3] bg-warmgrey/20 overflow-hidden">
+                    <Image src={item.images[0]?.url || "/images/image1.jpeg"} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="33vw" />
                   </div>
-                  <p className="text-sm text-charcoal/75 leading-relaxed">{review.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* ── Related Products ──────────────────────────────── */}
-      {related.length > 0 && (
-        <section className="py-16 bg-white border-t border-warmgrey/50">
-          <Container>
-            <div className="text-center mb-10">
-              <h2 className="font-display text-3xl font-bold text-brand-green">
-                You Might Also Love
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {related.map((rel) => (
-                <Link
-                  key={rel.id}
-                  href={`/products/${rel.slug}`}
-                  className="group bg-brand-cream rounded-3xl overflow-hidden border border-warmgrey/70 hover:border-brand-gold/60 hover:shadow-elevated transition-all duration-500 flex flex-col"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-warmgrey/20">
-                    <Image
-                      src={rel.images[0]?.url || "/images/image1.jpeg"}
-                      alt={rel.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      sizes="(max-width: 640px) 100vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-lg font-bold text-brand-green group-hover:text-brand-brown transition-colors">
-                      {rel.name}
-                    </h3>
-                    <p className="font-display text-xl font-bold text-brand-green mt-1">
-                      {formatPrice(rel.price)}
-                    </p>
+                  <div className="p-4 space-y-1">
+                    <p className="text-xs text-charcoal/50 uppercase tracking-wide">{item.category}</p>
+                    <h3 className="font-semibold text-sm text-brand-green group-hover:text-brand-brown transition-colors">{item.name}</h3>
+                    <p className="font-display font-bold text-brand-green">{formatPrice(item.price)}</p>
                   </div>
                 </Link>
               ))}
             </div>
-          </Container>
-        </section>
-      )}
-
-      {/* Back to shop */}
-      <div className="py-10 text-center bg-brand-cream border-t border-warmgrey/50">
-        <Link
-          href="/shop"
-          className="inline-flex items-center gap-2 text-sm text-charcoal/60 hover:text-brand-green transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Collection
-        </Link>
-      </div>
+          </div>
+        )}
+      </Container>
     </main>
   );
 }

@@ -3,6 +3,7 @@ Dridha Crafts - FastAPI Main Application
 Entry point for the backend REST API.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 
@@ -14,6 +15,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.config import get_settings
+from app.database import async_session
+from app.routers.orders import release_expired_reservations
 from app.routers import (
     addresses,
     auth,
@@ -33,11 +36,36 @@ settings = get_settings()
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIMIT_GENERAL])
 
 
+async def reservation_expiry_worker():
+    """
+    Background worker that runs periodically (every 5 minutes)
+    to reconcile and release expired inventory reservations.
+    """
+    while True:
+        try:
+            await asyncio.sleep(300)
+            async with async_session() as session:
+                released = await release_expired_reservations(session)
+                if released > 0:
+                    await session.commit()
+                    logger.info("Reservation worker: released %d expired reservations.", released)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error("Error in reservation_expiry_worker: %s", e)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle events: startup and shutdown."""
     logger.info("Starting up Dridha Crafts API in %s mode...", settings.ENVIRONMENT)
+    expiry_task = asyncio.create_task(reservation_expiry_worker())
     yield
+    expiry_task.cancel()
+    try:
+        await expiry_task
+    except asyncio.CancelledError:
+        pass
     logger.info("Shutting down Dridha Crafts API...")
 
 

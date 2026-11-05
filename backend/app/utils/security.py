@@ -65,6 +65,6 @@ def generate_order_number() -> str:
     """
     date_part = datetime.now(timezone.utc).strftime("%Y%m%d")
     random_part = "".join(
-        secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4)
+        secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6)
     )
     return f"DC-{date_part}-{random_part}"

@@ -3,6 +3,7 @@ Dridha Crafts - Database Connection
 Uses SQLAlchemy async engine connected to Supabase PostgreSQL.
 """
 
+from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from app.config import get_settings
@@ -17,6 +18,20 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+is_pgbouncer = "pgbouncer=true" in database_url.lower() or ":6543" in database_url
+
+# Strip pgbouncer query param from URL since asyncpg does not accept it as a kwarg
+if "?pgbouncer=true" in database_url:
+    database_url = database_url.replace("?pgbouncer=true", "")
+elif "&pgbouncer=true" in database_url:
+    database_url = database_url.replace("&pgbouncer=true", "")
+
+connect_args = {}
+if is_pgbouncer:
+    connect_args["statement_cache_size"] = 0
+    connect_args["prepared_statement_cache_size"] = 0
+    connect_args["prepared_statement_name_func"] = lambda: f"__asyncpg_{uuid4()}__"
+
 engine = create_async_engine(
     database_url,
     echo=settings.DEBUG,
@@ -24,6 +39,7 @@ engine = create_async_engine(
     max_overflow=10,
     pool_pre_ping=True,
     pool_recycle=300,
+    connect_args=connect_args,
 )
 
 async_session = async_sessionmaker(

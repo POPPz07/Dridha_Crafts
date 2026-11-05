@@ -9,6 +9,7 @@ from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel, Field
+from app.schemas.user import AddressCreate
 
 
 # ── Order Item Schemas ───────────────────────────────────────────────────────
@@ -20,6 +21,7 @@ class OrderItemResponse(BaseModel):
     id: uuid.UUID
     order_id: uuid.UUID
     product_id: Optional[uuid.UUID] = None
+    variant_id: Optional[uuid.UUID] = None
     product_name: str
     product_slug: str
     variant_name: Optional[str] = None
@@ -34,14 +36,27 @@ class OrderItemResponse(BaseModel):
 # ── Order Schemas ────────────────────────────────────────────────────────────
 
 
+class OrderItemCreate(BaseModel):
+    """Item snapshot input for order creation."""
+
+    product_id: uuid.UUID
+    variant_id: Optional[uuid.UUID] = None
+    quantity: int = Field(default=1, ge=1, le=10)
+
+
 class OrderCreate(BaseModel):
     """Schema for creating a new order from the user's cart."""
 
-    address_id: uuid.UUID = Field(..., description="Shipping address ID")
+    address_id: Optional[uuid.UUID] = Field(None, description="Shipping address ID")
+    shipping_address: Optional[AddressCreate] = Field(None, description="Inline shipping address")
     payment_method: str = Field(
-        ..., pattern=r"^(cod|google_pay)$", description="Payment method: 'cod' or 'google_pay'"
+        ..., pattern=r"^(cod|google_pay|upi|online|cashfree)$", description="Payment method: 'cod', 'google_pay', 'upi', 'online', 'cashfree'"
     )
     notes: Optional[str] = Field(None, max_length=500, description="Optional order notes")
+    items: Optional[list[OrderItemCreate]] = Field(None, description="Optional cart items from client")
+    idempotency_key: Optional[str] = Field(None, max_length=100, description="Unique client key to prevent duplicate checkout requests")
+    customer_email: Optional[str] = Field(None, max_length=255, description="Buyer email snapshot")
+    customer_phone: Optional[str] = Field(None, max_length=20, description="Buyer contact phone snapshot")
 
 
 class OrderResponse(BaseModel):
@@ -50,6 +65,8 @@ class OrderResponse(BaseModel):
     id: uuid.UUID
     order_number: str
     user_id: Optional[uuid.UUID] = None
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
     shipping_name: str
     shipping_phone: str
     shipping_address_line_1: str
@@ -64,6 +81,10 @@ class OrderResponse(BaseModel):
     status: str
     payment_method: str
     payment_status: str
+    idempotency_key: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    payment_completed_at: Optional[datetime] = None
+    cancel_reason: Optional[str] = None
     notes: Optional[str] = None
     tracking_number: Optional[str] = None
     created_at: datetime
@@ -97,9 +118,15 @@ class OrderStatusUpdate(BaseModel):
         description="New order status",
     )
     tracking_number: Optional[str] = Field(None, max_length=100)
+    cancel_reason: Optional[str] = Field(None, max_length=500)
+    restore_stock: Optional[bool] = Field(
+        default=False,
+        description="Explicit flag for physical inventory restoration (independent of financial refund)"
+    )
 
 
 class PaymentConfirmation(BaseModel):
-    """User confirms QR/UPI payment with optional transaction ID."""
+    """User confirms QR/UPI payment with optional transaction ID or UTR number."""
 
     transaction_id: Optional[str] = Field(None, max_length=100)
+    utr_number: Optional[str] = Field(None, max_length=100)
