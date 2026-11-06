@@ -40,6 +40,7 @@ class PaymentStatus(str, enum.Enum):
     COD_PENDING = "cod_pending"
     MANUAL_VERIFICATION = "manual_verification"
     CONFIRMED = "confirmed"
+    PAID = "paid"
     FAILED = "failed"
     REFUNDED = "refunded"
 

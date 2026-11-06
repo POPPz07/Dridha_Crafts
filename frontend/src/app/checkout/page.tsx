@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2, Smartphone, Building2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { getCashfree, CashfreeCheckoutResponse } from "@/lib/cashfree";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/stores/cartStore";
@@ -105,7 +106,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const onAddressSubmit = (data: AddressForm) => {
+  const onAddressSubmit = () => {
     if (hasBundleItems) {
       setErrorMessage("Your cart contains a curated set. Please remove the set and select individual items to proceed with checkout.");
       return;
@@ -120,47 +121,85 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === "online") {
-      setErrorMessage("Cashfree payment session creation is being connected in Phase 5. Please select Cash on Delivery to complete order checkout.");
-      return;
-    }
-
     setIsPlacing(true);
     setErrorMessage(null);
+
+    const addressData = getValues();
+    const shippingAddressPayload = {
+      full_name: addressData.full_name,
+      phone: addressData.phone,
+      address_line_1: addressData.address_line_1,
+      address_line_2: addressData.address_line_2 || null,
+      city: addressData.city,
+      state: addressData.state,
+      pincode: addressData.pincode,
+    };
+
+    const itemsPayload = items.map((i) => ({
+      product_id: i.product_id,
+      variant_id: i.variant_id || null,
+      quantity: i.quantity,
+    }));
+
     try {
-      const addressData = getValues();
+      if (paymentMethod === "online") {
+        // Phase 6: Cashfree Hosted Checkout initiation
+        const checkoutPayload = {
+          shipping_address: shippingAddressPayload,
+          idempotency_key: idempotencyKey,
+          customer_email: user?.email || undefined,
+          customer_phone: addressData.phone,
+          items: itemsPayload,
+        };
+
+        const res = await api.post<CashfreeCheckoutResponse>(
+          "/api/payments/checkout",
+          checkoutPayload
+        );
+
+        if (!res?.payment_session_id) {
+          throw new Error("No payment session was returned by the server.");
+        }
+
+        const cashfree = await getCashfree(res.environment);
+        if (!cashfree) {
+          throw new Error("Unable to initialize Cashfree payment SDK.");
+        }
+
+        // Launch Cashfree Hosted Checkout redirect flow
+        await cashfree.checkout({
+          paymentSessionId: res.payment_session_id,
+          redirectTarget: "_self",
+        });
+
+        // Cart is retained until return payment verification (Phase 8)
+        return;
+      }
+
+      // COD payment flow
       const orderPayload = {
-        shipping_address: {
-          full_name: addressData.full_name,
-          phone: addressData.phone,
-          address_line_1: addressData.address_line_1,
-          address_line_2: addressData.address_line_2 || null,
-          city: addressData.city,
-          state: addressData.state,
-          pincode: addressData.pincode,
-        },
+        shipping_address: shippingAddressPayload,
         payment_method: paymentMethod,
         idempotency_key: idempotencyKey,
         customer_email: user?.email || undefined,
         customer_phone: addressData.phone,
-        items: items.map((i) => ({
-          product_id: i.product_id,
-          variant_id: i.variant_id || null,
-          quantity: i.quantity,
-        })),
+        items: itemsPayload,
       };
 
       const res = await api.post<{ order_number: string; id: string }>("/api/orders", orderPayload);
       setOrderNumber(res.order_number);
-      // Only clear cart on successful order confirmation
       clearCart();
       setStep("confirmation");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: unknown) {
       console.error("Order placement failed:", err);
-      const maybeError = err as { response?: { data?: { detail?: string } }; message?: string };
-      const detail = maybeError?.response?.data?.detail || maybeError?.message || "Failed to place order. Please try again.";
-      setErrorMessage(typeof detail === "string" ? detail : "Failed to place order.");
+      let detail = "Failed to place order. Please try again.";
+      if (err instanceof ApiError && err.data && typeof (err.data as { detail?: string }).detail === "string") {
+        detail = (err.data as { detail: string }).detail;
+      } else if (err instanceof Error) {
+        detail = err.message;
+      }
+      setErrorMessage(detail);
     } finally {
       setIsPlacing(false);
     }
@@ -243,7 +282,7 @@ export default function CheckoutPage() {
                 <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-soft overflow-hidden">
                   <div className="px-8 py-6 bg-brand-green">
                     <h2 className="font-display text-2xl font-bold text-white">Payment Method</h2>
-                    <p className="text-brand-cream/70 text-sm mt-1">Choose how you'd like to pay</p>
+                    <p className="text-brand-cream/70 text-sm mt-1">Choose how you&apos;d like to pay</p>
                   </div>
                   <div className="px-8 py-6 space-y-4">
                     {/* Online Payment (UPI & Net Banking via Cashfree) */}
@@ -317,7 +356,14 @@ export default function CheckoutPage() {
                     <ArrowLeft className="w-4 h-4" /> Back to Address
                   </button>
                   <Button variant="primary" size="lg" onClick={handlePlaceOrder} isLoading={isPlacing}>
-                    {isPlacing ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Placing Order...</> : "Place Order"}
+                    {isPlacing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        {paymentMethod === "online" ? "Connecting to Cashfree..." : "Placing Order..."}
+                      </>
+                    ) : (
+                      paymentMethod === "online" ? "Pay Online with Cashfree" : "Place Order"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -336,7 +382,7 @@ export default function CheckoutPage() {
                   <p className="font-display text-2xl font-bold text-brand-brown mt-1">{orderNumber}</p>
                 </div>
                 <div className="bg-white rounded-2xl border border-warmgrey p-6 text-left max-w-sm mx-auto shadow-soft">
-                  <p className="text-sm text-charcoal/70 mb-2 font-semibold">What's next?</p>
+                  <p className="text-sm text-charcoal/70 mb-2 font-semibold">What&apos;s next?</p>
                   <ul className="space-y-2 text-sm text-charcoal/70">
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Order confirmed and being prepared</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Packed in eco-friendly 5-ply box</li>
