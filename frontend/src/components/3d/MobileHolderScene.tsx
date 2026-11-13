@@ -22,35 +22,40 @@ function SpinePiece() {
   const geometry = useMemo(() => {
     const shape = new Shape();
 
-    // Start at bottom-left outer foot
-    shape.moveTo(-1.3, -1.05);
+    // ── Upright Spine: Subtle Hand-Shaped Asymmetries & Artisan Contours ──
+    // Hand-planed edges, rasped shoulders, and manual fret-sawed bottom arch.
 
-    // Left outer edge up to shoulder
-    shape.lineTo(-1.3, 3.5);
-    shape.quadraticCurveTo(-1.3, 4.15, -0.7, 4.15);
+    // Start at bottom-left outer foot (slight natural workshop width variance)
+    shape.moveTo(-1.31, -1.05);
 
-    // Top edge across
-    shape.lineTo(0.7, 4.15);
-    shape.quadraticCurveTo(1.3, 4.15, 1.3, 3.5);
+    // Left outer edge up to shoulder (subtle grain-aligned edge)
+    shape.lineTo(-1.305, 3.48);
+    // Left shoulder hand-rounded curve
+    shape.quadraticCurveTo(-1.31, 4.16, -0.72, 4.165);
 
-    // Right edge down to top of interlocking slot (subtly revealed by ~0.05 units above cradle)
-    shape.lineTo(1.3, 0.22);
-    // Inward slot cut (right half, from x = 1.3 to x = 0)
-    shape.lineTo(0.0, 0.22);
-    shape.lineTo(0.0, -0.17);
-    shape.lineTo(1.3, -0.17);
+    // Top edge across with gentle hand-sanded crown/camber
+    shape.lineTo(0.68, 4.142);
+    // Right shoulder hand-rounded curve (subtle organic difference from rasping)
+    shape.quadraticCurveTo(1.295, 4.135, 1.295, 3.52);
+
+    // Right edge down to top of interlocking slot
+    shape.lineTo(1.295, 0.225);
+    // Inward slot cut (right half, hand-chiseled slot tolerance)
+    shape.lineTo(0.008, 0.225);
+    shape.lineTo(0.008, -0.165);
+    shape.lineTo(1.295, -0.165);
 
     // Right edge down to bottom-right outer foot
-    shape.lineTo(1.3, -1.05);
+    shape.lineTo(1.29, -1.05);
 
-    // Right foot flat base
-    shape.lineTo(0.95, -1.05);
+    // Right foot flat base (hand-cut foot width ≈ 0.93)
+    shape.lineTo(0.93, -1.05);
 
-    // Arched cutout between the two feet
-    shape.quadraticCurveTo(0.0, -0.25, -0.95, -1.05);
+    // Arched cutout between the two feet (handcrafted arch apex slightly off-center at X = 0.022)
+    shape.quadraticCurveTo(0.022, -0.238, -0.97, -1.05);
 
-    // Left foot flat base back to start
-    shape.lineTo(-1.3, -1.05);
+    // Left foot flat base (hand-cut foot width ≈ 0.97) back to start
+    shape.lineTo(-1.31, -1.05);
 
     return new ExtrudeGeometry(shape, {
       depth: 0.32,
@@ -71,7 +76,7 @@ function SpinePiece() {
     >
       <meshStandardMaterial
         color={pineWarm}
-        roughness={0.52}
+        roughness={0.54}
         metalness={0.01}
       />
     </mesh>
@@ -82,14 +87,12 @@ function SpinePiece() {
  * Piece 2: Horizontal Cradle / Perch
  * Features:
  * - Extended rear support (L_rear = 2.55) calibrated so rear edge touches ground level with the feet
- * - Chamfered rear corners
- * - Mating slot on the LEFT half (x from -1.3 to 0), subtly visible by 0.05 units in front of the spine
- * - Solid on the RIGHT half (x from 0 to 1.3)
- * - Slightly increased front resting width in front of the backrest
- * - 5 radially angled triangular cutouts:
+ * - Hand-rasped chamfers with organic workshop variances
+ * - Mating slot on the LEFT half (x from -1.31 to 0.008)
+ * - 5 radially angled triangular cutouts carved with artisanal saw tolerances:
  *   1. Extreme-left pointed triangle (points outward to the left)
  *   2. Left-slanting triangle (tilts diagonally between left & center)
- *   3. Middle triangle (points straight back for the phone charging cable)
+ *   3. Middle triangle (cable notch, hand-centered)
  *   4. Right-slanting triangle (tilts diagonally between center & right)
  *   5. Extreme-right pointed triangle (points outward to the right)
  */
@@ -97,76 +100,76 @@ function CradlePiece() {
   const geometry = useMemo(() => {
     const shape = new Shape();
 
-    // Start at rear-left chamfer (extended rear length L_rear = 2.55)
-    shape.moveTo(-0.9, -2.55);
+    // Start at rear-left chamfer (hand-rasped bevel)
+    shape.moveTo(-0.92, -2.55);
 
     // Rear straight edge across to right chamfer
-    shape.lineTo(0.9, -2.55);
-    // Rear-right chamfer
-    shape.lineTo(1.3, -2.15);
+    shape.lineTo(0.88, -2.552);
+    // Rear-right chamfer (subtly softer curve)
+    shape.lineTo(1.29, -2.14);
 
     // Right outer edge forward
-    shape.lineTo(1.3, 1.15);
+    shape.lineTo(1.295, 1.14);
     // Front-right hook outer chamfer
-    shape.lineTo(1.15, 1.68);
+    shape.lineTo(1.155, 1.675);
 
     // Front-right hook flat tip
-    shape.lineTo(0.85, 1.68);
+    shape.lineTo(0.86, 1.675);
 
     // Inner edge of right hook
-    shape.lineTo(0.85, 1.25);
+    shape.lineTo(0.86, 1.24);
 
     // ── 5. Extreme Right Pointed Triangle Cutout (points outward to the right) ──
-    shape.lineTo(1.05, 1.10);
-    shape.lineTo(0.82, 0.95);
+    shape.lineTo(1.06, 1.09);
+    shape.lineTo(0.81, 0.94);
 
     // Transition wall
-    shape.lineTo(0.72, 0.85);
+    shape.lineTo(0.71, 0.84);
 
     // ── 4. Right Slanting Triangle Cutout (tilts diagonally +45°) ──
-    shape.lineTo(0.86, 0.68);
-    shape.lineTo(0.52, 0.65);
+    shape.lineTo(0.87, 0.67);
+    shape.lineTo(0.51, 0.645);
 
-    // Transition wall (widened resting shelf in front of backrest)
-    shape.lineTo(0.20, 0.65);
+    // Transition wall (resting shelf in front of backrest)
+    shape.lineTo(0.19, 0.645);
 
-    // ── 3. Middle Triangle Cutout (points straight backward for phone charging cable) ──
-    shape.lineTo(0.00, 0.38);
-    shape.lineTo(-0.20, 0.65);
+    // ── 3. Middle Triangle Cutout (hand-notched cable pass-through, slightly offset) ──
+    shape.lineTo(-0.015, 0.365);
+    shape.lineTo(-0.21, 0.655);
 
     // Transition wall
-    shape.lineTo(-0.52, 0.65);
+    shape.lineTo(-0.53, 0.655);
 
     // ── 2. Left Slanting Triangle Cutout (tilts diagonally -45°) ──
-    shape.lineTo(-0.86, 0.68);
-    shape.lineTo(-0.72, 0.85);
+    shape.lineTo(-0.87, 0.685);
+    shape.lineTo(-0.73, 0.855);
 
     // Transition wall
-    shape.lineTo(-0.82, 0.95);
+    shape.lineTo(-0.83, 0.955);
 
     // ── 1. Extreme Left Pointed Triangle Cutout (points outward to the left) ──
-    shape.lineTo(-1.05, 1.10);
-    shape.lineTo(-0.85, 1.25);
+    shape.lineTo(-1.06, 1.11);
+    shape.lineTo(-0.84, 1.26);
 
     // Inner edge of left hook forward to tip
-    shape.lineTo(-0.85, 1.68);
-    // Front-left hook flat tip
-    shape.lineTo(-1.15, 1.68);
+    shape.lineTo(-0.84, 1.685);
+    // Front-left hook flat tip (subtle hand-cut discrepancy in tip width)
+    shape.lineTo(-1.14, 1.685);
     // Front-left hook outer chamfer
-    shape.lineTo(-1.3, 1.15);
+    shape.lineTo(-1.31, 1.16);
 
     // Left outer edge back towards slot
-    shape.lineTo(-1.3, 0.82);
+    shape.lineTo(-1.31, 0.81);
 
-    // Mating slot on left half (centered at y = 0, subtle 0.05 reveal)
-    shape.lineTo(-1.3, 0.17);
-    shape.lineTo(0.0, 0.17);
-    shape.lineTo(0.0, -0.17);
-    shape.lineTo(-1.3, -0.17);
+    // Mating slot on left half (hand-chiseled joint)
+    shape.lineTo(-1.31, 0.175);
+    shape.lineTo(-0.008, 0.175);
+    shape.lineTo(-0.008, -0.165);
+    shape.lineTo(-1.31, -0.165);
 
     // Left outer edge back to rear chamfer
-    shape.lineTo(-1.3, -2.15);
-    shape.lineTo(-0.9, -2.55);
+    shape.lineTo(-1.31, -2.16);
+    shape.lineTo(-0.92, -2.55);
 
     return new ExtrudeGeometry(shape, {
       depth: 0.32,
@@ -187,7 +190,7 @@ function CradlePiece() {
     >
       <meshStandardMaterial
         color={pineWarm}
-        roughness={0.52}
+        roughness={0.54}
         metalness={0.01}
       />
     </mesh>
@@ -218,14 +221,14 @@ function MobileStandAssembly() {
         rotation={[0.08, -0.6, 0]}
         scale={0.64}
       >
-        {/* Piece 1: Upright Backrest (Spine) — tilted backwards ~22° */}
-        <group position={[0, 0, 0]} rotation={[-0.38, 0, 0]}>
+        {/* Piece 1: Upright Backrest (Spine) — tilted backwards ~22° with subtle organic roll */}
+        <group position={[0, 0, 0]} rotation={[-0.38, 0.006, -0.005]}>
           <SpinePiece />
         </group>
 
-        {/* Piece 2: Horizontal Cradle (Perch) — tilted ~23°, with a subtle 0.05 offset */}
-        <group position={[0, 0, 0]} rotation={[Math.PI / 2 - 0.40, 0, 0]}>
-          <group position={[0, 0.05, 0]}>
+        {/* Piece 2: Horizontal Cradle (Perch) — interlocks through the slot with authentic hand-cut joint tolerance */}
+        <group position={[0, 0, 0]} rotation={[Math.PI / 2 - 0.40, 0.007, 0.009]}>
+          <group position={[0.006, 0.05, 0]}>
             <CradlePiece />
           </group>
         </group>

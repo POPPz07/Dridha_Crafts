@@ -7,6 +7,7 @@ import { ShoppingBag, User as UserIcon, X, Heart, Menu } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { PRODUCTS_DATA, BUNDLES_DATA } from "@/lib/products-data";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -21,13 +22,37 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const totalCartItems = useCartStore((s) => s.totalItems());
+  const cartItems = useCartStore((s) => s.items);
+  const totalCartItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const toggleCart = useCartStore((s) => s.toggleCart);
   const user = useAuthStore((s) => s.user);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
-  const wishlistCount = useWishlistStore((s) => s.productIds.length);
+  const productIds = useWishlistStore((s) => s.productIds);
+  // Ensure we only count active catalog items
+  const wishlistCount = productIds.filter((id) => PRODUCTS_DATA.some((p) => p.id === id)).length;
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prune any legacy test items from local storage that are no longer in catalog
+  useEffect(() => {
+    if (!mounted) return;
+    const validWishlist = productIds.filter((id) => PRODUCTS_DATA.some((p) => p.id === id));
+    if (validWishlist.length !== productIds.length) {
+      useWishlistStore.getState().setProductIds(validWishlist);
+    }
+
+    const validCart = cartItems.filter(
+      (item) =>
+        item.id?.startsWith("bundle-") ||
+        BUNDLES_DATA.some((b) => b.id === item.id || b.id === item.product_id) ||
+        PRODUCTS_DATA.some((p) => p.id === item.product_id || p.id === item.id)
+    );
+    if (validCart.length !== cartItems.length) {
+      useCartStore.getState().setItems(validCart);
+    }
+  }, [mounted, productIds, cartItems]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

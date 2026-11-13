@@ -25,73 +25,80 @@ function TabletDeckPiece() {
   const geometry = useMemo(() => {
     const shape = new Shape();
 
-    // ── Outer Boundary with 45° Chamfered Corners and Lateral Notches ──
-    // Bottom-left chamfer
-    shape.moveTo(-2.10, -1.80);
-    shape.lineTo(-1.50, -2.40);
+    // ── Outer Boundary: Subtle Artisan Asymmetries & Hand-Planed Edges ──
+    // In authentic handcrafted woodworking, edge lines, chamfers, and corners have
+    // subtle organic variations from manual sawing, rasping, and hand-sanding.
+    
+    // Bottom-left chamfer (slightly steeper hand-rasp cut)
+    shape.moveTo(-2.11, -1.78);
+    shape.lineTo(-1.48, -2.41);
 
-    // Front lip edge
-    shape.lineTo(1.50, -2.40);
+    // Front lip edge (gentle hand-sanded micro-camber)
+    shape.lineTo(0.02, -2.415);
+    shape.lineTo(1.52, -2.39);
 
-    // Bottom-right chamfer
-    shape.lineTo(2.10, -1.80);
+    // Bottom-right chamfer (softer curve from sanding block)
+    shape.lineTo(2.09, -1.82);
 
-    // Right outer edge (plain, straight)
-    shape.lineTo(2.10, 1.80);
+    // Right outer edge (subtle hand-planed taper along the grain)
+    shape.lineTo(2.115, 0.15);
+    shape.lineTo(2.085, 1.81);
 
     // Top-right chamfer
-    shape.lineTo(1.50, 2.40);
+    shape.lineTo(1.48, 2.405);
 
-    // Rear top edge
-    shape.lineTo(-1.50, 2.40);
+    // Rear top edge (gentle natural crown)
+    shape.lineTo(-0.04, 2.418);
+    shape.lineTo(-1.52, 2.395);
 
     // Top-left chamfer
-    shape.lineTo(-2.10, 1.80);
+    shape.lineTo(-2.095, 1.79);
 
-    // Left outer edge (plain, straight)
-    shape.lineTo(-2.10, -1.80);
+    // Left outer edge (organic line along timber grain back to bottom chamfer)
+    shape.lineTo(-2.12, 0.05);
+    shape.lineTo(-2.11, -1.78);
 
-    // ── Cutout 1: Front Window + Smooth Sweeping Curve (reduced curvature dimensions) ──
-    // Continuous wide curve meeting the side rails at Y = 0.28 and sweeping gracefully around the central diamond tongue (apex at Y = -0.46)
+    // ── Cutout 1: Front Window + Hand-Swept Asymmetric Curve ──
+    // Hand-routed void with subtle organic asymmetry (apex slightly offset from centerline)
     const frontVoidHole = new Path();
-    frontVoidHole.moveTo(-1.45, -1.80); // Bottom-left inner corner
-    frontVoidHole.lineTo(1.45, -1.80);  // Along front rail inner edge
-    frontVoidHole.lineTo(1.45, 0.28);   // Along right rail inner edge
+    frontVoidHole.moveTo(-1.46, -1.81); // Bottom-left inner corner
+    frontVoidHole.lineTo(1.44, -1.79);  // Front rail inner edge (slight manual saw drift)
+    frontVoidHole.lineTo(1.43, 0.29);   // Along right rail inner edge
 
-    // Smooth continuous concave curve sweeping down and cupping under the diamond (apex at Y = -0.46)
-    frontVoidHole.bezierCurveTo(1.05, -0.22, 0.50, -0.46, 0.00, -0.46);
-    frontVoidHole.bezierCurveTo(-0.50, -0.46, -1.05, -0.22, -1.45, 0.28);
+    // Smooth concave curve cupping under diamond tongue (handcrafted apex at X = -0.015, Y = -0.465)
+    frontVoidHole.bezierCurveTo(1.03, -0.21, 0.49, -0.47, -0.015, -0.465);
+    frontVoidHole.bezierCurveTo(-0.52, -0.46, -1.06, -0.23, -1.46, 0.27);
 
     // Straight down along left rail inner edge back to start
-    frontVoidHole.lineTo(-1.45, -1.80);
+    frontVoidHole.lineTo(-1.46, -1.81);
     frontVoidHole.closePath();
     shape.holes.push(frontVoidHole);
 
-    // ── Cutout 2: Sharp 4-Point Diamond (Rhombus) Cutout (1.7x scaled) ──
-    // Positioned inside the solid wooden tongue between Y = -0.134 and Y = 1.634 (center Y = 0.75)
+    // ── Cutout 2: Artisan 4-Point Diamond (Rhombus) Cutout ──
+    // Scroll-sawn and hand-chiseled: tips have authentic human workshop tolerances
     const diamondHole = new Path();
-    diamondHole.moveTo(0.00, -0.134); // Front tip
-    diamondHole.lineTo(0.935, 0.75);  // Right tip
-    diamondHole.lineTo(0.00, 1.634);  // Rear tip
-    diamondHole.lineTo(-0.935, 0.75); // Left tip
+    diamondHole.moveTo(-0.012, -0.136); // Front tip (subtle artisan drift)
+    diamondHole.lineTo(0.942, 0.762);   // Right tip
+    diamondHole.lineTo(0.016, 1.638);   // Rear tip
+    diamondHole.lineTo(-0.928, 0.742);  // Left tip
     diamondHole.closePath();
     shape.holes.push(diamondHole);
 
-    // ── Cutouts 3-8: 3 Pairs of Round Adjustment Holes on Side Wings ──
-    const holeRadius = 0.115;
-    const holeYPositions = [1.22, 1.60, 1.98]; // Hole 1 (low angle), Hole 2 (mid), Hole 3 (steep)
-
-    // Left wing holes (X = -1.30)
-    for (const hy of holeYPositions) {
+    // ── Cutouts 3-8: Hand-Drilled Adjustment Hole Pairs ──
+    // Drilled with a manual drill press; slight organic variance in awl-marked centers and diameters
+    // Left wing holes (X ≈ -1.305, radius ≈ 0.116)
+    const leftHoleY = [1.215, 1.605, 1.975];
+    for (const hy of leftHoleY) {
       const hole = new Path();
-      hole.absarc(-1.30, hy, holeRadius, 0, Math.PI * 2, true);
+      hole.absarc(-1.305, hy, 0.116, 0, Math.PI * 2, true);
       shape.holes.push(hole);
     }
 
-    // Right wing holes (X = +1.30)
-    for (const hy of holeYPositions) {
+    // Right wing holes (X ≈ 1.292, radius ≈ 0.114)
+    const rightHoleY = [1.225, 1.595, 1.985];
+    for (const hy of rightHoleY) {
       const hole = new Path();
-      hole.absarc(1.30, hy, holeRadius, 0, Math.PI * 2, true);
+      hole.absarc(1.292, hy, 0.114, 0, Math.PI * 2, true);
       shape.holes.push(hole);
     }
 
@@ -114,28 +121,27 @@ function TabletDeckPiece() {
       >
         <meshStandardMaterial
           color={pineWarm}
-          roughness={0.52}
+          roughness={0.54}
           metalness={0.01}
         />
       </mesh>
 
-      {/* Front Tablet / Laptop Stopper Block */}
+      {/* Front Tablet / Laptop Stopper Block — Hand-aligned with human workshop placement */}
       <RoundedBox
         castShadow
         receiveShadow
-        args={[0.88, 0.28, 0.18]}
-        position={[0, -2.25, 0.18]}
-        radius={0.02}
+        args={[0.885, 0.28, 0.18]}
+        position={[0.018, -2.245, 0.18]}
+        rotation={[0, 0, 0.009]}
+        radius={0.022}
         smoothness={2}
       >
         <meshStandardMaterial
           color={pineStopper}
-          roughness={0.50}
+          roughness={0.52}
           metalness={0.01}
         />
       </RoundedBox>
-
-
     </group>
   );
 }
@@ -151,33 +157,28 @@ function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
   const geometry = useMemo(() => {
     const shape = new Shape();
 
-    // Local coordinates:
-    // Top edge at Y = 0 (sits directly under the deck's Hole 1)
-    // Feet at Y = -legLength
-    // Width = 2.90 (from X = -1.45 to +1.45)
-    // Parabolic arch peaks at ~52% of leg length
+    // Local coordinates with authentic hand-carved subtle discrepancies:
+    // Top-left corner (slight manual rasp variance)
+    shape.moveTo(-1.43, 0);
 
-    // Top-left corner
-    shape.moveTo(-1.42, 0);
-
-    // Top flat edge across
-    shape.lineTo(1.42, 0);
+    // Top flat edge across with gentle hand-planed micro-tilt
+    shape.lineTo(1.415, 0.004);
 
     // Right outer edge tapering down to right foot
-    shape.lineTo(1.50, -legLength);
+    shape.lineTo(1.49, -legLength);
 
-    // Right foot flat base
-    shape.lineTo(1.08, -legLength);
+    // Right foot flat base (hand-cut foot width ≈ 1.06)
+    shape.lineTo(1.06, -legLength);
 
-    // Parabolic arch cutout between the two feet (peaking at ~52% of height)
-    const archApexY = -legLength * 0.52;
-    shape.quadraticCurveTo(0.00, archApexY, -1.08, -legLength);
+    // Parabolic arch cutout between feet: artisan-cut apex slightly off-center (X = 0.018)
+    const archApexY = -legLength * 0.525;
+    shape.quadraticCurveTo(0.018, archApexY, -1.09, -legLength);
 
-    // Left foot flat base
-    shape.lineTo(-1.50, -legLength);
+    // Left foot flat base (hand-cut foot width ≈ 1.10)
+    shape.lineTo(-1.51, -legLength);
 
     // Left outer edge tapering up to top-left corner
-    shape.lineTo(-1.42, 0);
+    shape.lineTo(-1.43, 0);
 
     return new ExtrudeGeometry(shape, {
       depth: 0.18,
@@ -197,7 +198,7 @@ function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
     >
       <meshStandardMaterial
         color={pineWarm}
-        roughness={0.52}
+        roughness={0.54}
         metalness={0.01}
       />
     </mesh>
@@ -209,8 +210,8 @@ function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
  * 1. Deck is tilted at 25.5° comfortable laptop / tablet typing incline.
  * 2. Front lip rests directly on the ground plane (Y = -0.85).
  * 3. Support leg props underneath from Hole 1, tilting back 14.1° to ground (Y = -0.85).
- * 4. Wide split (3.66 units) provides natural, rock-solid ergonomic balance.
- * 5. ONLY the two cylindrical wooden peg extensions fill the holes — no board clipping.
+ * 4. Hand-fitted wooden dowel pins with natural micro-variations.
+ * 5. Subtle hand-joint tolerances (0.3° - 0.4° artisanal skew) for organic woodworking feel.
  */
 function TabletStandAssembly() {
   const model = useRef<Group>(null);
@@ -228,27 +229,25 @@ function TabletStandAssembly() {
         rotation={[0.08, -0.52, 0]}
         scale={0.76}
       >
-        {/* Piece 1: Sloping Main Deck — inclined at 25.5° (rotX = -1.1257 rad) */}
-        <group position={[0, 0.2825, 0]} rotation={[-1.1257, 0, 0]}>
+        {/* Piece 1: Sloping Main Deck — inclined at 25.5° with slight organic hand-settling tilt */}
+        <group position={[0, 0.2825, 0]} rotation={[-1.1257, 0.005, 0.007]}>
           <TabletDeckPiece />
 
-          {/* Tenon Pin 1 (Right): Round wooden peg filling Hole 1 */}
-          <mesh position={[1.30, 1.22, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.11, 0.11, 0.24, 16]} />
-            <meshStandardMaterial color={dowelColor} roughness={0.55} />
+          {/* Tenon Pin 1 (Right): Hand-turned wooden dowel peg filling Hole 1 */}
+          <mesh position={[1.292, 1.225, 0.016]} rotation={[Math.PI / 2 + 0.007, 0.004, 0]}>
+            <cylinderGeometry args={[0.111, 0.113, 0.245, 16]} />
+            <meshStandardMaterial color={dowelColor} roughness={0.58} />
           </mesh>
 
-          {/* Tenon Pin 2 (Left): Round wooden peg filling Hole 1 */}
-          <mesh position={[-1.30, 1.22, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.11, 0.11, 0.24, 16]} />
-            <meshStandardMaterial color={dowelColor} roughness={0.55} />
+          {/* Tenon Pin 2 (Left): Hand-turned wooden dowel peg filling Hole 1 */}
+          <mesh position={[-1.305, 1.215, 0.019]} rotation={[Math.PI / 2 - 0.005, -0.003, 0]}>
+            <cylinderGeometry args={[0.114, 0.112, 0.238, 16]} />
+            <meshStandardMaterial color={dowelColor} roughness={0.58} />
           </mesh>
         </group>
 
-        {/* Piece 2: Arched Support Leg — propped underneath Hole 1 to ground */}
-        {/* World pivot at underside of Hole 1: Y = 0.7085, Z = -1.1485 */}
-        {/* Tilts backward 14.1° from vertical (rotX = +0.2461 rad) */}
-        <group position={[0, 0.7085, -1.1485]} rotation={[0.2461, 0, 0]}>
+        {/* Piece 2: Arched Support Leg — propped underneath Hole 1 with artisan joint tolerance */}
+        <group position={[0, 0.7085, -1.1485]} rotation={[0.2461, -0.004, 0.006]}>
           <TabletSupportLeg legLength={1.61} />
         </group>
       </group>

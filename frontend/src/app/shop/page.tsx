@@ -30,7 +30,13 @@ export default function ShopPage() {
   const { addToCart } = useAuthGatedAddToCart();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
-  const categories = ["All", "Laptop Stands", "Audio Accessories", "Desk Organizers", "Phone Stands", "Tablet Stands", "Desk Decor"];
+  const categories = [
+    "All",
+    "Laptop and Tablet Stands",
+    "Mobile Stands",
+    "Headphone Stands",
+    "Book Organizers",
+  ];
 
   let filtered =
     selectedCategory === "All"
@@ -181,6 +187,11 @@ export default function ShopPage() {
                       {product.compare_at_price && (
                         <span className="text-xs text-charcoal/40 line-through ml-2">
                           {formatPrice(product.compare_at_price)}
+                        </span>
+                      )}
+                      {product.compare_at_price && product.compare_at_price > product.price && (
+                        <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                          Save ₹{product.compare_at_price - product.price}
                         </span>
                       )}
                     </div>

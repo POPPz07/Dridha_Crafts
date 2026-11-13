@@ -15,8 +15,9 @@ import { MaterialSection } from "@/components/sections/MaterialSection";
 import { ShiftDesk3DSection } from "@/components/sections/ShiftDesk3DSection";
 import { MobileStand3DSection } from "@/components/sections/MobileStand3DSection";
 import { TabletStand3DSection } from "@/components/sections/TabletStand3DSection";
+import { CustomCaddy3DSection } from "@/components/sections/CustomCaddy3DSection";
 
-// Custom Instagram SVG icon (not in this lucide-react version)
+// Social SVG icons & links
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -35,6 +36,28 @@ function InstagramIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+function YouTubeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+const SOCIAL_LINKS = {
+  youtube: "https://youtube.com/@dridha_crafts?si=AqfNqP7CNxkKbAtf",
+  instagram: "https://www.instagram.com/dridha_crafts?dlrf=ODVtZ2VvZ3Flcng=",
+  facebook: "https://www.facebook.com/share/19hvBRRtFT/",
+};
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -49,6 +72,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [quickAddedId, setQuickAddedId] = useState<string | null>(null);
+  const [quickAddedBundleId, setQuickAddedBundleId] = useState<string | null>(null);
 
   useEffect(() => {
     getProducts().then((data) => {
@@ -63,11 +87,10 @@ export default function HomePage() {
 
   const categories = [
     "All",
-    "Laptop Stands",
-    "Audio Accessories",
-    "Desk Organizers",
-    "Phone Stands",
-    "Desk Decor",
+    "Laptop and Tablet Stands",
+    "Mobile Stands",
+    "Headphone Stands",
+    "Book Organizers",
   ];
 
   const filteredProducts =
@@ -99,6 +122,27 @@ export default function HomePage() {
     if (added) {
       setQuickAddedId(product.id);
       setTimeout(() => setQuickAddedId(null), 1500);
+    }
+  };
+
+  const handleAddToCartBundle = async (bundle: (typeof BUNDLES_DATA)[0]) => {
+    const added = await addToCart({
+      id: `${bundle.id}`,
+      product_id: bundle.id,
+      variant_id: null,
+      quantity: 1,
+      product: {
+        name: bundle.name,
+        slug: bundle.slug,
+        price: bundle.price,
+        primary_image_url: bundle.image,
+        stock_quantity: 20,
+      },
+      variant: null,
+    });
+    if (added) {
+      setQuickAddedBundleId(bundle.id);
+      setTimeout(() => setQuickAddedBundleId(null), 1500);
     }
   };
 
@@ -158,22 +202,22 @@ export default function HomePage() {
                 num: "01",
                 title: "The Salvaged Timber",
                 desc: "We maintain a strict zero-felling policy. Every grain tells a story of mountain winters, meltwater rivers, and Himalayan winds. The wood cures naturally before it ever touches a tool.",
-                img: "/images/image11.png",
-                imgAlt: "Raw walnut grain timber",
+                img: "/images/sd-2.jpeg",
+                imgAlt: "ShiftDesk Stand crafted from aged Himalayan timber",
               },
               {
                 num: "02",
                 title: "The Master's Hands",
                 desc: "Generations of woodworkers in Kashmir carry an unspoken dialogue with timber. Using traditional gouges and chisels, each desk accessory is hand-shaped, sanded through six grits, and oiled with natural wax.",
-                img: "/images/image9.jpeg",
-                imgAlt: "Handcrafted Kashmir woodwork",
+                img: "/images/h-1.png",
+                imgAlt: "Artisan sculpted Solid Wood Headphone Stand",
               },
               {
                 num: "03",
                 title: "Your Thoughtful Workspace",
                 desc: "Technology is sterile and plastic. Dridha Crafts brings tactile soul back to your workspace. A gentle touch of organic wood that elevates your mindset every time you sit down to create.",
-                img: "/images/image2.jpeg",
-                imgAlt: "Premium wooden desk workspace",
+                img: "/images/ls-6.png",
+                imgAlt: "Handcrafted Multi-Angle Laptop Stand workspace setup",
               },
             ].map((chapter, i) => (
               <div
@@ -208,32 +252,46 @@ export default function HomePage() {
 
           {/* Packaging Promise */}
           <div className="bg-white rounded-3xl border border-warmgrey shadow-medium overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-12">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center">
               {/* Image */}
-              <div className="md:col-span-5 relative aspect-[4/3] md:aspect-auto min-h-[280px] overflow-hidden">
-                <Image
-                  src="/images/gift-card.jpg"
-                  alt="Dridha Crafts Packaging Thank You Card"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-brand-cream/20" />
+              <div className="md:col-span-5 relative w-full h-full min-h-[340px] sm:min-h-[440px] bg-[#dfd4be] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+                <div className="relative w-full h-full min-h-[320px] sm:min-h-[420px] aspect-[889/1024]">
+                  <Image
+                    src="/images/gift-card.jpg"
+                    alt="Dridha Crafts Packaging Thank You Card"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    priority
+                  />
+                </div>
               </div>
               {/* Content */}
               <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center space-y-4">
                 <Badge variant="handcrafted">Our Packaging Promise</Badge>
                 <h3 className="font-display text-3xl sm:text-4xl font-bold text-brand-green leading-tight">
-                  "Thank You for Being a Part of Our Journey"
+                  The Living Character of Handcrafted Wood
                 </h3>
-                <p className="font-body text-base text-charcoal/80 leading-relaxed italic border-l-2 border-brand-gold pl-4">
-                  "Every piece we create is a blend of nature, tradition and skilled hands.
-                  From the forests of Kashmir to your desk, we bring you handcrafted wood
-                  essentials — made to last."
-                </p>
-                <p className="font-accent text-brand-brown text-2xl">
+                <div className="space-y-3 font-body text-base text-charcoal/80 leading-relaxed">
+                  <p>
+                    When you unbox your Dridha Crafts piece, you may notice subtle
+                    uneven surfaces, organic grain ripples, or a gentle touch of natural
+                    rawness. These are not defects — they are the honest hallmarks of
+                    authentic mountain timber.
+                  </p>
+                  <p>
+                    Every piece is shaped by Kashmiri artisan hands directly from
+                    naturally fallen trees, carving what the valley has surrendered
+                    into the finest functional craft possible. That tactile rawness and
+                    natural imperfection is what gives each item its soul: bringing the
+                    living warmth and character of Kashmir pine to work beside you every
+                    day, responsibly created without contributing to deforestation.
+                  </p>
+                </div>
+                <p className="font-accent text-brand-brown text-2xl pt-1">
                   Crafted with care, just for you.
                 </p>
-                <p className="text-xs text-charcoal/50 pt-2">
+                <p className="text-xs text-charcoal/50 pt-2 border-t border-warmgrey/50">
                   Every Dridha Crafts order includes a personalized hand-stamped
                   thank-you note and authentic artisan seal.
                 </p>
@@ -348,12 +406,19 @@ export default function HomePage() {
 
                     <div className="pt-4 border-t border-warmgrey/60 flex items-center justify-between gap-3">
                       <div>
-                        <span className="font-display text-2xl font-bold text-brand-green">
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.compare_at_price && (
-                          <span className="text-xs text-charcoal/40 line-through ml-2">
-                            {formatPrice(product.compare_at_price)}
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-display text-2xl font-bold text-brand-green">
+                            {formatPrice(product.price)}
+                          </span>
+                          {product.compare_at_price && (
+                            <span className="text-xs text-charcoal/40 line-through">
+                              {formatPrice(product.compare_at_price)}
+                            </span>
+                          )}
+                        </div>
+                        {product.compare_at_price && product.compare_at_price > product.price && (
+                          <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                            Save ₹{product.compare_at_price - product.price}
                           </span>
                         )}
                       </div>
@@ -402,88 +467,133 @@ export default function HomePage() {
       <ShiftDesk3DSection />
       <MobileStand3DSection />
       <TabletStand3DSection />
+      <CustomCaddy3DSection />
 
-      {/* ── 5. BUNDLES ────────────────────────────────────── */}
-      <section className="py-24 lg:py-32 bg-brand-cream border-t border-warmgrey/50">
+      {/* ── 5. OFFICE DESK COLLECTION (COMBINATIONS OF TWO) ── */}
+      <section id="office-desk-collection" className="py-24 lg:py-32 bg-brand-cream border-t border-warmgrey/50">
         <Container>
-          <div className="max-w-2xl mx-auto text-center mb-16">
+          <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-gold block mb-3">
-              Complete Desk Harmonization
+              Special Duo Discount • 10% Off
             </span>
             <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-green leading-tight">
-              Work From Home
+              Office Desk
               <br />
-              <span className="italic font-normal text-brand-brown">Bundles</span>
+              <span className="italic font-normal text-brand-brown">Collection</span>
             </h2>
             <div className="w-12 h-0.5 bg-brand-gold mx-auto mt-6 mb-6" />
-            <p className="text-sm text-charcoal/70 leading-relaxed">
-              Curated desk essentials bundled for ergonomic synchronicity —
-              packaged together to save you up to ₹200.
+            <p className="text-sm sm:text-base text-charcoal/75 leading-relaxed">
+              Curated pairs of handcrafted Kashmir timber essentials.
+              Enjoy an automatic <span className="font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded">10% price reduction</span> on these complementary combinations of two.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {BUNDLES_DATA.map((bundle) => (
-              <div
-                key={bundle.id}
-                className="bg-white rounded-3xl overflow-hidden border border-warmgrey/80 shadow-soft hover:shadow-elevated transition-all duration-500 flex flex-col"
-              >
-                {/* Bundle Image */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-warmgrey/20">
-                  <Image
-                    src={bundle.image}
-                    alt={bundle.name}
-                    fill
-                    className="object-cover hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                    <Badge variant="bestseller">{bundle.badge}</Badge>
-                    <span className="text-xs font-bold text-sage bg-white px-2.5 py-1 rounded-full shadow-sm border border-sage/20">
-                      Save ₹{bundle.savings}
-                    </span>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            {BUNDLES_DATA.map((bundle) => {
+              const isAdded = quickAddedBundleId === bundle.id;
 
-                {/* Bundle Content */}
-                <div className="p-8 flex flex-col flex-1 justify-between gap-6">
-                  <div>
-                    <h3 className="font-display text-2xl font-bold text-brand-green mb-2">
-                      {bundle.name}
-                    </h3>
-                    <p className="text-xs text-charcoal/70 leading-relaxed mb-5">
-                      {bundle.description}
-                    </p>
-                    <ul className="space-y-2 pt-4 border-t border-warmgrey/60 text-xs text-charcoal/80">
-                      {bundle.items.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-brand-green shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+              return (
+                <div
+                  key={bundle.id}
+                  className="bg-white rounded-3xl overflow-hidden border border-warmgrey/80 shadow-soft hover:shadow-elevated transition-all duration-500 flex flex-col justify-between group"
+                >
+                  {/* Bundle Image */}
+                  <div className="relative aspect-[16/11] w-full overflow-hidden bg-warmgrey/20">
+                    <Image
+                      src={bundle.image}
+                      alt={bundle.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-smooth"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    />
 
-                  <div className="pt-4 border-t border-warmgrey/70">
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="font-display text-3xl font-bold text-brand-green">
-                        {formatPrice(bundle.price)}
-                      </span>
-                      <span className="text-xs text-charcoal/40 line-through">
-                        {formatPrice(bundle.original_price)}
+                    {/* Overlay Badges */}
+                    <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
+                      <Badge variant="bestseller">{bundle.badge}</Badge>
+                      <span className="text-[11px] font-bold text-emerald-800 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-emerald-300">
+                        Save 10% (₹{bundle.savings})
                       </span>
                     </div>
-                    <Link href="/shop" className="block w-full">
+
+                    {/* Dual item pills at bottom of image */}
+                    {bundle.item_images && bundle.item_images.length === 2 && (
+                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl shadow-xs border border-warmgrey/60 flex items-center gap-1.5 pointer-events-none">
+                        <div className="relative w-6 h-6 rounded-md overflow-hidden bg-warmgrey/30">
+                          <Image src={bundle.item_images[0]} alt="Item 1" fill className="object-cover" sizes="24px" />
+                        </div>
+                        <span className="text-[11px] font-bold text-brand-gold">+</span>
+                        <div className="relative w-6 h-6 rounded-md overflow-hidden bg-warmgrey/30">
+                          <Image src={bundle.item_images[1]} alt="Item 2" fill className="object-cover" sizes="24px" />
+                        </div>
+                        <span className="text-[10px] font-bold text-brand-green ml-0.5 uppercase tracking-wide">Duo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bundle Content */}
+                  <div className="p-6 flex flex-col flex-1 justify-between gap-5">
+                    <div>
+                      <div className="mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md inline-block">
+                          10% Price Reduction
+                        </span>
+                      </div>
+                      <h3 className="font-display text-xl font-bold text-brand-green group-hover:text-brand-brown transition-colors leading-snug">
+                        {bundle.name}
+                      </h3>
+                      <p className="text-xs text-charcoal/70 leading-relaxed mt-2 line-clamp-2">
+                        {bundle.description}
+                      </p>
+
+                      {/* Items checklist */}
+                      <ul className="space-y-1.5 pt-4 mt-3 border-t border-warmgrey/60 text-xs text-charcoal/80 font-medium">
+                        {bundle.items.map((item, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-brand-green shrink-0" />
+                            <span className="truncate">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-4 border-t border-warmgrey/70">
+                      <div className="flex items-baseline justify-between mb-4">
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-display text-2xl font-bold text-brand-green">
+                              {formatPrice(bundle.price)}
+                            </span>
+                            <span className="text-xs text-charcoal/40 line-through">
+                              {formatPrice(bundle.original_price)}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-700">
+                            Save ₹{bundle.savings} (10% OFF)
+                          </span>
+                        </div>
+                      </div>
+
                       <Button
-                        variant="primary"
+                        variant={isAdded ? "gold" : "primary"}
                         className="w-full"
+                        size="sm"
+                        onClick={() => handleAddToCartBundle(bundle)}
                       >
-                        Explore Set Pieces
+                        {isAdded ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1" /> Added to Cart
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add Duo to Cart
+                          </>
+                        )}
                       </Button>
-                    </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Container>
       </section>
@@ -616,55 +726,252 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 7b. Photo grid + CTA */}
-        <div className="py-16 lg:py-20">
+        {/* 7b. Social Media Hub & Community */}
+        <div className="py-20 lg:py-28 bg-[#102a1e] border-t border-white/10">
           <Container>
-            {/* Grid label */}
-            <div className="text-center mb-10">
-              <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold block mb-2">
+            {/* Header */}
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-brand-gold bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
                 Follow Our Journey
               </span>
-              <div className="w-10 h-0.5 bg-brand-gold mx-auto" />
+              <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                Behind the Chisel & the Himalayan Pine
+              </h3>
+              <p className="text-white/75 text-sm sm:text-base leading-relaxed">
+                Step inside our Kashmir workshop. Follow along on whichever channel you use regularly — or better yet, subscribe across all three so you never miss a daily carving reel, artisan documentary, or exclusive drop.
+              </p>
             </div>
 
-            {/* Instagram Photo Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-10">
-              {[
-                "/images/brand_img1.jpeg",
-                "/images/brand_img2.jpeg",
-                "/images/brand_img3.jpeg",
-                "/images/brand_img4.jpeg",
-                "/images/brand_img5.jpeg",
-                "/images/brand_img6.jpeg",
-              ].map((src, i) => (
-                <div
-                  key={i}
-                  className="relative aspect-square overflow-hidden rounded-2xl bg-warmgrey/30 group cursor-pointer"
-                >
-                  <Image
-                    src={src}
-                    alt={`Dridha Crafts Instagram ${i + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                  />
-                  <div className="absolute inset-0 bg-brand-green/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <InstagramIcon className="w-8 h-8 text-white" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div className="text-center">
+            {/* 3 Prominent Channel Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
+              {/* YouTube */}
               <a
-                href="https://instagram.com/dridhacrafts"
+                href={SOCIAL_LINKS.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-brand-green text-white rounded-full text-sm font-semibold uppercase tracking-wider hover:bg-brand-green-light transition-all duration-300 shadow-medium hover:shadow-elevated"
+                className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 rounded-3xl p-6 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
               >
-                <InstagramIcon className="w-5 h-5" />
-                Follow @dridhacrafts on Instagram
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <YouTubeIcon className="w-6 h-6 fill-current" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
+                      YouTube
+                    </span>
+                  </div>
+                  <h4 className="font-display text-xl font-bold text-white mb-1 group-hover:text-red-400 transition-colors">
+                    @dridha_crafts
+                  </h4>
+                  <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+                    Full artisan mini-documentaries, fallen timber foraging in Gulmarg, and step-by-step woodworking processes.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400 group-hover:gap-3 transition-all">
+                  <span>Subscribe on YouTube</span>
+                  <span>↗</span>
+                </div>
+              </a>
+
+              {/* Instagram */}
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-gold/60 rounded-3xl p-6 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-gold/20 text-brand-gold flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <InstagramIcon className="w-6 h-6 stroke-current" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-gold bg-brand-gold/10 px-3 py-1 rounded-full border border-brand-gold/25">
+                      Instagram
+                    </span>
+                  </div>
+                  <h4 className="font-display text-xl font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">
+                    @dridha_crafts
+                  </h4>
+                  <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+                    Daily reels from the carving bench, natural polish tests, workshop stories, and desk setup inspiration.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-gold group-hover:gap-3 transition-all">
+                  <span>Follow on Instagram</span>
+                  <span>↗</span>
+                </div>
+              </a>
+
+              {/* Facebook */}
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-3xl p-6 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FacebookIcon className="w-6 h-6 fill-current" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                      Facebook
+                    </span>
+                  </div>
+                  <h4 className="font-display text-xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                    Dridha Crafts
+                  </h4>
+                  <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+                    Community discussions, customer workspace reviews, batch launch announcements, and craft events.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-400 group-hover:gap-3 transition-all">
+                  <span>Connect on Facebook</span>
+                  <span>↗</span>
+                </div>
+              </a>
+            </div>
+
+            {/* Curated Social Feed Grid with Direct Embedded Links */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-white/90">
+                    Latest From Our Feeds
+                  </h4>
+                  <p className="text-xs text-white/50">Click any card to watch, like, and follow</p>
+                </div>
+                <div className="hidden sm:flex items-center gap-3 text-xs text-brand-gold">
+                  <span>#DridhaCrafts</span>
+                  <span className="text-white/30">·</span>
+                  <span>#KashmirWoodwork</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                {[
+                  {
+                    src: "/images/brand_img1.jpeg",
+                    platform: "Instagram",
+                    type: "Reel",
+                    caption: "Hand-chiseling the ShiftDesk stand",
+                    href: SOCIAL_LINKS.instagram,
+                    icon: InstagramIcon,
+                    accent: "border-brand-gold/40 text-brand-gold",
+                  },
+                  {
+                    src: "/images/brand_img2.jpeg",
+                    platform: "YouTube",
+                    type: "Video",
+                    caption: "The zero-deforestation pledge in Kashmir",
+                    href: SOCIAL_LINKS.youtube,
+                    icon: YouTubeIcon,
+                    accent: "border-red-500/40 text-red-400",
+                  },
+                  {
+                    src: "/images/brand_img3.jpeg",
+                    platform: "Instagram",
+                    type: "Story",
+                    caption: "Artisan hands smoothing through 6 grits",
+                    href: SOCIAL_LINKS.instagram,
+                    icon: InstagramIcon,
+                    accent: "border-brand-gold/40 text-brand-gold",
+                  },
+                  {
+                    src: "/images/brand_img4.jpeg",
+                    platform: "Facebook",
+                    type: "Community",
+                    caption: "Customer desk transformation with walnut riser",
+                    href: SOCIAL_LINKS.facebook,
+                    icon: FacebookIcon,
+                    accent: "border-blue-500/40 text-blue-400",
+                  },
+                  {
+                    src: "/images/brand_img5.jpeg",
+                    platform: "YouTube",
+                    type: "Short",
+                    caption: "Testing natural wax polish in sunlight",
+                    href: SOCIAL_LINKS.youtube,
+                    icon: YouTubeIcon,
+                    accent: "border-red-500/40 text-red-400",
+                  },
+                  {
+                    src: "/images/brand_img6.jpeg",
+                    platform: "Instagram",
+                    type: "Photo",
+                    caption: "Hand-stamping the artisan thank-you seal",
+                    href: SOCIAL_LINKS.instagram,
+                    icon: InstagramIcon,
+                    accent: "border-brand-gold/40 text-brand-gold",
+                  },
+                ].map((item, i) => (
+                  <a
+                    key={i}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative aspect-square overflow-hidden rounded-2xl bg-warmgrey/20 border border-white/10 hover:border-white/40 transition-all duration-300 cursor-pointer shadow-soft hover:shadow-elevated block"
+                  >
+                    <Image
+                      src={item.src}
+                      alt={item.caption}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    />
+                    {/* Top Platform Badge */}
+                    <div className="absolute top-2.5 left-2.5 z-10">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur-sm border ${item.accent}`}>
+                        <item.icon className="w-2.5 h-2.5" />
+                        {item.type}
+                      </span>
+                    </div>
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/95 via-charcoal/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 text-left">
+                      <p className="text-[11px] text-white/90 line-clamp-2 leading-tight font-medium mb-2">
+                        {item.caption}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-gold">
+                        Open on {item.platform} ↗
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick-Follow All Channels Bar */}
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-6 border-t border-white/10">
+              <span className="text-xs uppercase tracking-wider text-white/50 w-full sm:w-auto text-center">
+                Follow & Subscribe:
+              </span>
+              <a
+                href={SOCIAL_LINKS.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600/20 hover:bg-red-600 border border-red-500/30 hover:border-red-600 text-white text-xs font-semibold tracking-wide transition-all shadow-sm"
+              >
+                <YouTubeIcon className="w-4 h-4 fill-current text-red-500 group-hover:text-white" />
+                YouTube @dridha_crafts
+              </a>
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-gold/20 hover:bg-brand-gold hover:text-charcoal border border-brand-gold/40 text-brand-gold text-xs font-semibold tracking-wide transition-all shadow-sm"
+              >
+                <InstagramIcon className="w-4 h-4" />
+                Instagram @dridha_crafts
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600/20 hover:bg-blue-600 border border-blue-500/30 hover:border-blue-600 text-white text-xs font-semibold tracking-wide transition-all shadow-sm"
+              >
+                <FacebookIcon className="w-4 h-4 fill-current text-blue-400 group-hover:text-white" />
+                Facebook Dridha Crafts
               </a>
             </div>
           </Container>

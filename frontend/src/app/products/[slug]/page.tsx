@@ -3,8 +3,25 @@
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { Check, ChevronLeft, Heart, Minus, Plus, ShoppingBag, Shield, Star, Truck, RefreshCw, Loader2 } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  Heart,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Shield,
+  Star,
+  Truck,
+  RefreshCw,
+  Loader2,
+  Box,
+  Play,
+  Sparkles,
+  Ruler,
+} from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -13,6 +30,55 @@ import { getProductBySlug } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
+
+const CustomCaddyScene = dynamic(
+  () => import("@/components/3d/CustomCaddyScene").then((m) => m.CustomCaddyScene),
+  {
+    ssr: false,
+    loading: () => <Loading3DBox label="Bespoke Desk Caddy 3D Model" />,
+  }
+);
+const AtelierScene = dynamic(
+  () => import("@/components/3d/AtelierScene").then((m) => m.AtelierScene),
+  {
+    ssr: false,
+    loading: () => <Loading3DBox label="ShiftDesk 3D Model" />,
+  }
+);
+const MobileHolderScene = dynamic(
+  () => import("@/components/3d/MobileHolderScene").then((m) => m.MobileHolderScene),
+  {
+    ssr: false,
+    loading: () => <Loading3DBox label="Mobile Stand 3D Model" />,
+  }
+);
+const TabletStandScene = dynamic(
+  () => import("@/components/3d/TabletStandScene").then((m) => m.TabletStandScene),
+  {
+    ssr: false,
+    loading: () => <Loading3DBox label="Tablet Stand 3D Model" />,
+  }
+);
+
+function Loading3DBox({ label }: { label: string }) {
+  return (
+    <div className="w-full h-full min-h-[360px] flex flex-col items-center justify-center bg-[#f0e4d0] gap-3">
+      <div className="w-8 h-8 rounded-full border-2 border-[#123526]/30 border-t-[#123526] animate-spin" />
+      <span className="text-[11px] font-bold uppercase tracking-widest text-[#123526]/60">
+        Loading {label}…
+      </span>
+    </div>
+  );
+}
+
+const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
+  "custom-artisan-desk-caddy": CustomCaddyScene,
+  "shiftdesk-stand": AtelierScene,
+  "signature-shiftdesk-stand": AtelierScene,
+  "laptop-stand": TabletStandScene,
+  "mobile-stand": MobileHolderScene,
+  "tablet-stand": TabletStandScene,
+};
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -59,7 +125,9 @@ function ProductDetail({ product }: { product: StaticProduct }) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [viewMode, setViewMode] = useState<"photos" | "3d">("3d");
 
+  const ActiveScene = SCENE_COMPONENTS[product.slug];
   const activeVariant = product.variants?.find((v) => v.id === selectedVariantId) || null;
   const currentPrice = activeVariant?.price_override ?? product.price;
   const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity ?? 10;
@@ -135,51 +203,136 @@ function ProductDetail({ product }: { product: StaticProduct }) {
       <Container>
         <div className="py-10 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
 
-          {/* ── LEFT: Image Gallery ───────────────────────── */}
+          {/* ── LEFT: Media Viewer (Photos & Interactive 3D) ── */}
           <div className="lg:col-span-6 space-y-4">
-            {/* Main Image */}
-            <div
-              className={`relative aspect-[4/3] rounded-3xl overflow-hidden bg-warmgrey/20 cursor-zoom-in border border-warmgrey/60 shadow-medium transition-all duration-300 ${isZoomed ? "scale-[1.02]" : ""}`}
-              onClick={() => setIsZoomed(!isZoomed)}
-            >
-              <Image
-                src={images[selectedImage]?.url || "/images/image1.jpeg"}
-                alt={images[selectedImage]?.alt || product.name}
-                fill
-                className={`object-cover transition-transform duration-700 ${isZoomed ? "scale-125" : "scale-100"}`}
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-              {/* Zoom hint */}
-              <div className="absolute bottom-4 right-4 px-2.5 py-1 bg-white/80 backdrop-blur-sm rounded-full text-[10px] text-charcoal/70 font-medium">
-                {isZoomed ? "Click to zoom out" : "Click to zoom"}
-              </div>
-            </div>
-
-            {/* Thumbnail Strip */}
-            {images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
-                      selectedImage === idx
-                        ? "border-brand-green ring-2 ring-brand-green/20"
-                        : "border-warmgrey opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <Image src={img.url} alt={img.alt} fill className="object-cover" sizes="80px" />
-                  </button>
-                ))}
+            {/* View Mode Toggle Pill (when 3D is available) */}
+            {ActiveScene && (
+              <div className="flex items-center gap-1.5 p-1 bg-white border border-warmgrey/70 rounded-2xl w-fit shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("photos")}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                    viewMode === "photos"
+                      ? "bg-brand-green text-white shadow-sm"
+                      : "text-charcoal/60 hover:text-brand-green"
+                  }`}
+                >
+                  Gallery Photos ({images.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("3d")}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                    viewMode === "3d"
+                      ? "bg-brand-green text-white shadow-sm"
+                      : "text-charcoal/60 hover:text-brand-green"
+                  }`}
+                >
+                  <Box className="w-3.5 h-3.5 text-brand-gold" />
+                  Interactive 3D
+                </button>
               </div>
             )}
 
-            {/* Natural Material Note */}
-            <div className="p-4 bg-brand-cream border border-warmgrey/80 rounded-2xl text-xs text-charcoal/70 space-y-1">
-              <p className="font-semibold text-brand-green">Natural Timber Variance</p>
-              <p>Each piece is individually carved from fallen walnut trees. Grain patterns, knot placement, and rich tone gradients are unique to your individual piece.</p>
-            </div>
+            {/* 3D Canvas or Photo Viewer */}
+            {viewMode === "3d" && ActiveScene ? (
+              <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-[#ecdcc6] border border-warmgrey/60 shadow-medium">
+                <div className="absolute inset-0 w-full h-full">
+                  <ActiveScene />
+                </div>
+                <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] text-white font-medium select-none pointer-events-none">
+                  <Box className="w-3 h-3 text-[#dfa663]" />
+                  Drag to rotate • 360° Studio Model
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Main Media */}
+                <div
+                  className={`relative aspect-[4/3] rounded-3xl overflow-hidden bg-warmgrey/20 border border-warmgrey/60 shadow-medium transition-all duration-300 ${isZoomed ? "scale-[1.02]" : ""}`}
+                >
+                  {images[selectedImage]?.url.endsWith(".mp4") ? (
+                    <video
+                      key={images[selectedImage].url}
+                      src={images[selectedImage].url}
+                      controls
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <Image
+                        src={images[selectedImage]?.url || "/images/image1.jpeg"}
+                        alt={images[selectedImage]?.alt || product.name}
+                        fill
+                        className={`object-cover transition-transform duration-700 cursor-zoom-in ${isZoomed ? "scale-125" : "scale-100"}`}
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                        priority
+                        onClick={() => setIsZoomed(!isZoomed)}
+                      />
+                      {/* Zoom hint */}
+                      <div className="absolute bottom-4 right-4 px-2.5 py-1 bg-white/80 backdrop-blur-sm rounded-full text-[10px] text-charcoal/70 font-medium select-none pointer-events-none">
+                        {isZoomed ? "Click to zoom out" : "Click to zoom"}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnail Strip */}
+                {images.length > 1 && (
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedImage(idx)}
+                        className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
+                          selectedImage === idx
+                            ? "border-brand-green ring-2 ring-brand-green/20"
+                            : "border-warmgrey opacity-70 hover:opacity-100"
+                        }`}
+                        title={img.alt}
+                      >
+                        {img.url.endsWith(".mp4") ? (
+                          <div className="w-full h-full bg-[#123526] flex flex-col items-center justify-center text-brand-gold gap-1">
+                            <Play className="w-5 h-5 fill-brand-gold" />
+                            <span className="text-[8px] uppercase tracking-wider font-bold text-white">Video</span>
+                          </div>
+                        ) : (
+                          <Image src={img.url} alt={img.alt} fill className="object-cover" sizes="80px" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Custom Commission Specifications & Wood Note */}
+            {product.slug === "custom-artisan-desk-caddy" ? (
+              <div className="p-5 bg-[#faf5eb] border border-[#d8963e]/30 rounded-2xl text-xs space-y-2">
+                <div className="flex items-center gap-2 text-brand-green font-bold text-sm">
+                  <Sparkles className="w-4 h-4 text-[#d8963e]" />
+                  Bespoke Dimensions & Handcrafted Specifications
+                </div>
+                <p className="text-charcoal/80 leading-relaxed">
+                  Crafted to order from solid timber: a hollow semi-cylinder tray featuring an artisan inward-carved lower contour at the far end, with a hollow side cylinder resting on its right surface area featuring a top aperture hole and natural knothole grain.
+                </p>
+                <div className="pt-2 flex flex-wrap gap-2 text-[11px] font-mono text-[#123526]">
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-warmgrey/60">Semi-Cylinder: 24 × 9.5 × 6.5 cm</span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-warmgrey/60">Side Cylinder: Ø 6.2 cm (Top Hole)</span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-warmgrey/60">Inward-Carved End Profile</span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-warmgrey/60">Free Custom Engraving</span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-brand-cream border border-warmgrey/80 rounded-2xl text-xs text-charcoal/70 space-y-1">
+                <p className="font-semibold text-brand-green">Natural Timber Variance</p>
+                <p>Each piece is individually carved from fallen timber. Grain patterns, knot placement, and rich tone gradients are unique to your individual piece.</p>
+              </div>
+            )}
           </div>
 
           {/* ── RIGHT: Product Details ─────────────────────── */}
@@ -265,17 +418,29 @@ function ProductDetail({ product }: { product: StaticProduct }) {
             {product.variants && product.variants.length > 0 && (
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-widest text-charcoal/60">
-                  Select {product.variants[0].variant_type || "Option"}
+                  Select Finish & Polish
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.map((v) => (
                     <button
                       key={v.id}
                       type="button"
-                      onClick={() => setSelectedVariantId(v.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
+                      onClick={() => {
+                        setSelectedVariantId(v.id);
+                        if (v.image_url) {
+                          const idx = images.findIndex((img) => img.url === v.image_url);
+                          if (idx !== -1) {
+                            setSelectedImage(idx);
+                            setViewMode("photos");
+                          }
+                        } else {
+                          // Return to first image for unpolished
+                          setSelectedImage(0);
+                        }
+                      }}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${
                         selectedVariantId === v.id
-                          ? "border-brand-green bg-brand-green/10 text-brand-green"
+                          ? "border-brand-green bg-brand-green/10 text-brand-green shadow-xs"
                           : "border-warmgrey bg-white text-charcoal/70 hover:border-brand-green/40"
                       }`}
                     >

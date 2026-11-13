@@ -1,6 +1,39 @@
 import { createClient } from "@/lib/supabase";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * Resolve the target API URL based on runtime environment:
+ * 1. Server-side in Vercel function: reads bound service URL (process.env.BACKEND_URL).
+ * 2. Explicit public URL: reads process.env.NEXT_PUBLIC_API_URL if configured.
+ * 3. Client-side in browser: uses same-origin relative path (/api/...) routed by Vercel rewrites.
+ * 4. Local SSR fallback: defaults to http://localhost:8000.
+ */
+function getApiUrl(endpoint: string): string {
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    return endpoint;
+  }
+
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
+  // 1. Server-side in Vercel function runtime via service binding
+  if (typeof window === "undefined" && process.env.BACKEND_URL) {
+    const base = process.env.BACKEND_URL.replace(/\/$/, "");
+    return `${base}${cleanEndpoint}`;
+  }
+
+  // 2. Explicit public API URL override
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    return `${base}${cleanEndpoint}`;
+  }
+
+  // 3. Client-side browser: relative path on same domain
+  if (typeof window !== "undefined") {
+    return cleanEndpoint;
+  }
+
+  // 4. Local SSR development fallback
+  return `http://localhost:8000${cleanEndpoint}`;
+}
 
 interface FetchOptions extends RequestInit {
   token?: string;
@@ -44,7 +77,8 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
     (headers as Record<string, string>)["Authorization"] = `Bearer ${resolvedToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = getApiUrl(endpoint);
+  const response = await fetch(url, {
     ...fetchOptions,
     headers,
   });

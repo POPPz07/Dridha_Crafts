@@ -23,7 +23,7 @@ const AtelierScene = dynamic(
 
 export function ShiftDesk3DSection() {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] min-h-[680px] lg:min-h-[750px] bg-[#ebdfcb] border-t border-warmgrey/50 overflow-hidden">
+    <section id="shiftdesk-3d" className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] min-h-[680px] lg:min-h-[750px] bg-[#ebdfcb] border-t border-warmgrey/50 overflow-hidden">
       {/* Left: Interactive 3D Canvas */}
       <div
         className="relative min-h-[480px] sm:min-h-[560px] lg:min-h-[750px] overflow-hidden"
