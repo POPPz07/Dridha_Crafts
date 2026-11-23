@@ -6,7 +6,13 @@ import { useMemo, useRef } from "react";
 import { ExtrudeGeometry, Shape } from "three";
 import type { Group } from "three";
 
-const pineWarm = "#dfa663";
+import {
+  type FinishOption,
+  WOOD_FINISH_THEMES,
+  STUDIO_3D_ENV,
+} from "./woodMaterials";
+
+export type { FinishOption };
 
 /**
  * Piece 1: Upright Spine / Backrest
@@ -18,7 +24,8 @@ const pineWarm = "#dfa663";
  * - Solid on the LEFT half (x from -1.3 to 0)
  * - Arched foot cutout at the bottom resting at ground level
  */
-function SpinePiece() {
+function SpinePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
+  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -75,9 +82,9 @@ function SpinePiece() {
       rotation={[0, 0, 0]}
     >
       <meshStandardMaterial
-        color={pineWarm}
-        roughness={0.54}
-        metalness={0.01}
+        color={theme.primary}
+        roughness={theme.roughness}
+        metalness={theme.metalness}
       />
     </mesh>
   );
@@ -85,18 +92,9 @@ function SpinePiece() {
 
 /**
  * Piece 2: Horizontal Cradle / Perch
- * Features:
- * - Extended rear support (L_rear = 2.55) calibrated so rear edge touches ground level with the feet
- * - Hand-rasped chamfers with organic workshop variances
- * - Mating slot on the LEFT half (x from -1.31 to 0.008)
- * - 5 radially angled triangular cutouts carved with artisanal saw tolerances:
- *   1. Extreme-left pointed triangle (points outward to the left)
- *   2. Left-slanting triangle (tilts diagonally between left & center)
- *   3. Middle triangle (cable notch, hand-centered)
- *   4. Right-slanting triangle (tilts diagonally between center & right)
- *   5. Extreme-right pointed triangle (points outward to the right)
  */
-function CradlePiece() {
+function CradlePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
+  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -189,9 +187,9 @@ function CradlePiece() {
       rotation={[0, 0, 0]}
     >
       <meshStandardMaterial
-        color={pineWarm}
-        roughness={0.54}
-        metalness={0.01}
+        color={theme.primary}
+        roughness={theme.roughness}
+        metalness={theme.metalness}
       />
     </mesh>
   );
@@ -199,13 +197,8 @@ function CradlePiece() {
 
 /**
  * Assembled Mobile Stand:
- * 1. Slightly widened flat phone resting ledge in front of the vertical backrest.
- * 2. 5 progressively angled triangular cutouts (extreme left, slanting left, straight center cable notch, slanting right, extreme right).
- * 3. Left half (x: -1.3 to 0): Horizontal cradle's notch is subtly visible in front (~0.05 units).
- * 4. Right half (x: 0 to 1.3): Vertical backrest's notch is subtly visible above the cradle (~0.05 units).
- * 5. The rear edge and the front feet rest on the exact same ground level.
  */
-function MobileStandAssembly() {
+function MobileStandAssembly({ finish = "unpolished" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
 
   // Slow continuous turntable rotation
@@ -223,13 +216,13 @@ function MobileStandAssembly() {
       >
         {/* Piece 1: Upright Backrest (Spine) — tilted backwards ~22° with subtle organic roll */}
         <group position={[0, 0, 0]} rotation={[-0.38, 0.006, -0.005]}>
-          <SpinePiece />
+          <SpinePiece finish={finish} />
         </group>
 
         {/* Piece 2: Horizontal Cradle (Perch) — interlocks through the slot with authentic hand-cut joint tolerance */}
         <group position={[0, 0, 0]} rotation={[Math.PI / 2 - 0.40, 0.007, 0.009]}>
           <group position={[0.006, 0.05, 0]}>
-            <CradlePiece />
+            <CradlePiece finish={finish} />
           </group>
         </group>
       </group>
@@ -237,7 +230,7 @@ function MobileStandAssembly() {
   );
 }
 
-export function MobileHolderScene() {
+export function MobileHolderScene({ finish = "unpolished" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows
@@ -259,7 +252,7 @@ export function MobileHolderScene() {
         intensity={0.75}
         color="#d9924c"
       />
-      <MobileStandAssembly />
+      <MobileStandAssembly finish={finish} />
       <ContactShadows
         position={[0, -1.05, 0]}
         opacity={0.42}

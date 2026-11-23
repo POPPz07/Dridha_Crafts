@@ -56,6 +56,9 @@ export function MaterialSection() {
                 muted
                 loop
                 playsInline
+                controlsList="nodownload"
+                disablePictureInPicture
+                onContextMenu={(e) => e.preventDefault()}
                 poster="/media/product-angle-b.jpeg"
                 className="w-full h-full object-cover"
               />

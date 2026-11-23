@@ -35,7 +35,11 @@ export const useCartStore = create<CartState>()(
       addItem: (item) =>
         set((state) => {
           const existingIndex = state.items.findIndex(
-            (i) => i.product_id === item.product_id && i.variant_id === item.variant_id
+            (i) =>
+              i.id === item.id ||
+              (i.product_id === item.product_id &&
+                i.variant_id === item.variant_id &&
+                i.variant?.variant_name === item.variant?.variant_name)
           );
           if (existingIndex >= 0) {
             const updated = [...state.items];

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Eye, EyeOff, Loader2 } from "lucide-react";
+import { X, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
@@ -14,6 +14,10 @@ import { createClient } from "@/lib/supabase";
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+const forgotSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
 });
 
 const signupSchema = z
@@ -29,6 +33,7 @@ const signupSchema = z
   });
 
 type LoginForm = z.infer<typeof loginSchema>;
+type ForgotForm = z.infer<typeof forgotSchema>;
 type SignupForm = z.infer<typeof signupSchema>;
 
 // ── Auth Modal Component ───────────────────────────────────────
@@ -41,12 +46,42 @@ export function AuthModal() {
   const [errorMsg, setErrorMsg] = useState("");
 
   const isLogin = authModalView === "login";
+  const isForgot = authModalView === "forgot_password";
   const isOpen = isAuthModalOpen;
 
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
   const signupForm = useForm<SignupForm>({ resolver: zodResolver(signupSchema) });
+  const forgotForm = useForm<ForgotForm>({ resolver: zodResolver(forgotSchema) });
 
   if (!isOpen) return null;
+
+  const handleForgotPassword = async (data: ForgotForm) => {
+    setIsLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const supabase = createClient();
+      const redirectUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/reset-password`
+          : "/reset-password";
+
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      setSuccessMsg("Password reset email sent! Check your inbox for instructions to set a new password.");
+    } catch {
+      setErrorMsg("Failed to send password reset email. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (data: LoginForm) => {
     setIsLoading(true);
@@ -64,6 +99,7 @@ export function AuthModal() {
       }
 
       if (authData.user) {
+        const appRole = (authData.user.app_metadata?.role as "admin" | "customer") || "customer";
         setUser({
           id: authData.user.id,
           email: authData.user.email || data.email,
@@ -72,7 +108,7 @@ export function AuthModal() {
             authData.user.email?.split("@")[0] ||
             "User",
           phone: authData.user.phone || null,
-          role: "customer",
+          role: appRole,
           created_at: authData.user.created_at,
         });
 
@@ -83,11 +119,14 @@ export function AuthModal() {
           useCartStore.getState().openCart();
         }
 
-        setSuccessMsg("Signed in successfully!");
+        setSuccessMsg(appRole === "admin" ? "Signed in as Admin! Redirecting..." : "Signed in successfully!");
         setTimeout(() => {
           setSuccessMsg("");
           closeAuthModal();
-        }, 1000);
+          if (appRole === "admin") {
+            window.location.href = "/admin";
+          }
+        }, 800);
       }
     } catch {
       setErrorMsg("An error occurred during sign in. Please try again.");
@@ -173,40 +212,62 @@ export function AuthModal() {
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => {
-                  setErrorMsg("");
-                  setSuccessMsg("");
-                  openAuthModal("login");
-                }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
-                }`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => {
-                  setErrorMsg("");
-                  setSuccessMsg("");
-                  openAuthModal("signup");
-                }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  !isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
-            <h2 className="font-display text-2xl font-bold text-white">
-              {isLogin ? "Welcome Back" : "Join Dridha Crafts"}
-            </h2>
-            <p className="text-sm text-brand-cream/70 mt-1">
-              {isLogin
-                ? "Sign in to your account to view orders and wishlist."
-                : "Create an account to track orders and save your wishlist."}
-            </p>
+            {isForgot ? (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg("");
+                    setSuccessMsg("");
+                    openAuthModal("login");
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#e5c89d] hover:text-white transition-colors mb-3 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
+                </button>
+                <h2 className="font-display text-2xl font-bold text-white">Reset Password</h2>
+                <p className="text-sm text-brand-cream/70 mt-1">
+                  Enter your registered email address and we&apos;ll send you a recovery link.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => {
+                      setErrorMsg("");
+                      setSuccessMsg("");
+                      openAuthModal("login");
+                    }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
+                    }`}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      setErrorMsg("");
+                      setSuccessMsg("");
+                      openAuthModal("signup");
+                    }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      !isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
+                <h2 className="font-display text-2xl font-bold text-white">
+                  {isLogin ? "Welcome Back" : "Join Dridha Crafts"}
+                </h2>
+                <p className="text-sm text-brand-cream/70 mt-1">
+                  {isLogin
+                    ? "Sign in to your account to view orders and wishlist."
+                    : "Create an account to track orders and save your wishlist."}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Body */}
@@ -222,7 +283,34 @@ export function AuthModal() {
               </div>
             )}
 
-            {isLogin ? (
+            {isForgot ? (
+              <form onSubmit={forgotForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                <FloatingInput
+                  id="forgot-email"
+                  type="email"
+                  label="Email Address"
+                  autoComplete="email"
+                  error={forgotForm.formState.errors.email?.message}
+                  {...forgotForm.register("email")}
+                />
+                <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
+                  {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
+                </Button>
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMsg("");
+                      setSuccessMsg("");
+                      openAuthModal("login");
+                    }}
+                    className="text-xs text-charcoal/60 hover:text-brand-green font-medium cursor-pointer"
+                  >
+                    Remember your password? Sign in
+                  </button>
+                </div>
+              </form>
+            ) : isLogin ? (
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <FloatingInput
                   id="login-email"
@@ -249,9 +337,21 @@ export function AuthModal() {
                   }
                   {...loginForm.register("password")}
                 />
+                <div className="flex items-center justify-end -mt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMsg("");
+                      setSuccessMsg("");
+                      openAuthModal("forgot_password");
+                    }}
+                    className="text-xs text-brand-green hover:underline font-medium cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Sign In
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             ) : (
@@ -298,7 +398,7 @@ export function AuthModal() {
                   {...signupForm.register("confirm_password")}
                 />
                 <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
-                  Create Account
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             )}

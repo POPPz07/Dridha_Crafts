@@ -6,22 +6,19 @@ import { useMemo, useRef } from "react";
 import { ExtrudeGeometry, Path, Shape } from "three";
 import type { Group } from "three";
 
-const pineWarm = "#dfa663";
-const pineStopper = "#c68644";
-const dowelColor = "#d69858";
+import {
+  type FinishOption,
+  WOOD_FINISH_THEMES,
+  STUDIO_3D_ENV,
+} from "./woodMaterials";
+
+export type { FinishOption };
 
 /**
  * Piece 1: Main Sloping Deck (Tablet / Laptop Board)
- * Authentic details matching handcrafted reference photos:
- * - Outer boundary: Width = 4.2 (X: -2.1 to +2.1), Length = 4.8 (Y: -2.4 to +2.4)
- * - 4 corners chamfered at 45°
- * - Two lateral edge notches with horizontal wooden dowel pins across them
- * - Cutout 1: Front rectangular window smoothly curving around the central wooden tongue
- * - Cutout 2: Sharp 4-point Diamond (Rhombus) through-hole in the center of the wooden tongue
- * - Cutouts 3-8: 3 pairs of round adjustment holes on the side wings (X = ±1.30, Y = 1.22, 1.60, 1.98)
- * - Raised front stopper block mounted on the front rail to retain a tablet or laptop
  */
-function TabletDeckPiece() {
+function TabletDeckPiece({ finish = "unpolished" }: { finish?: FinishOption }) {
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -54,7 +51,7 @@ function TabletDeckPiece() {
     // Top-left chamfer
     shape.lineTo(-2.095, 1.79);
 
-    // Left outer edge (organic line along timber grain back to bottom chamfer)
+    // Left outer edge (organic line along pine wood grain back to bottom chamfer)
     shape.lineTo(-2.12, 0.05);
     shape.lineTo(-2.11, -1.78);
 
@@ -120,9 +117,9 @@ function TabletDeckPiece() {
         position={[0, 0, -0.11]}
       >
         <meshStandardMaterial
-          color={pineWarm}
-          roughness={0.54}
-          metalness={0.01}
+          color={cfg.primary}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
         />
       </mesh>
 
@@ -137,9 +134,9 @@ function TabletDeckPiece() {
         smoothness={2}
       >
         <meshStandardMaterial
-          color={pineStopper}
-          roughness={0.52}
-          metalness={0.01}
+          color={cfg.accent}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
         />
       </RoundedBox>
     </group>
@@ -148,12 +145,15 @@ function TabletDeckPiece() {
 
 /**
  * Piece 2: Arched Support Leg / Prop
- * Placed entirely on the underside of the deck:
- * - Flat top edge positioned beneath Hole 1
- * - Arched cutout between two pointed feet that touch the table surface
- * - Does not penetrate the deck slab; stays strictly behind/below it
  */
-function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
+function TabletSupportLeg({
+  legLength = 1.61,
+  finish = "unpolished",
+}: {
+  legLength?: number;
+  finish?: FinishOption;
+}) {
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -197,9 +197,9 @@ function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
       position={[0, 0, -0.18]}
     >
       <meshStandardMaterial
-        color={pineWarm}
-        roughness={0.54}
-        metalness={0.01}
+        color={cfg.primary}
+        roughness={cfg.roughness}
+        metalness={cfg.metalness}
       />
     </mesh>
   );
@@ -207,14 +207,10 @@ function TabletSupportLeg({ legLength = 1.61 }: { legLength?: number }) {
 
 /**
  * Assembled Tablet Stand:
- * 1. Deck is tilted at 25.5° comfortable laptop / tablet typing incline.
- * 2. Front lip rests directly on the ground plane (Y = -0.85).
- * 3. Support leg props underneath from Hole 1, tilting back 14.1° to ground (Y = -0.85).
- * 4. Hand-fitted wooden dowel pins with natural micro-variations.
- * 5. Subtle hand-joint tolerances (0.3° - 0.4° artisanal skew) for organic woodworking feel.
  */
-function TabletStandAssembly() {
+function TabletStandAssembly({ finish = "unpolished" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
 
   // Slow continuous turntable rotation
   useFrame((_state, delta) => {
@@ -229,33 +225,33 @@ function TabletStandAssembly() {
         rotation={[0.08, -0.52, 0]}
         scale={0.76}
       >
-        {/* Piece 1: Sloping Main Deck — inclined at 25.5° with slight organic hand-settling tilt */}
+        {/* Piece 1: Sloping Main Deck — inclined at 25.5° */}
         <group position={[0, 0.2825, 0]} rotation={[-1.1257, 0.005, 0.007]}>
-          <TabletDeckPiece />
+          <TabletDeckPiece finish={finish} />
 
-          {/* Tenon Pin 1 (Right): Hand-turned wooden dowel peg filling Hole 1 */}
+          {/* Tenon Pin 1 (Right): Hand-turned wooden dowel peg */}
           <mesh position={[1.292, 1.225, 0.016]} rotation={[Math.PI / 2 + 0.007, 0.004, 0]}>
             <cylinderGeometry args={[0.111, 0.113, 0.245, 16]} />
-            <meshStandardMaterial color={dowelColor} roughness={0.58} />
+            <meshStandardMaterial color={cfg.detail} roughness={cfg.roughness} />
           </mesh>
 
-          {/* Tenon Pin 2 (Left): Hand-turned wooden dowel peg filling Hole 1 */}
+          {/* Tenon Pin 2 (Left): Hand-turned wooden dowel peg */}
           <mesh position={[-1.305, 1.215, 0.019]} rotation={[Math.PI / 2 - 0.005, -0.003, 0]}>
             <cylinderGeometry args={[0.114, 0.112, 0.238, 16]} />
-            <meshStandardMaterial color={dowelColor} roughness={0.58} />
+            <meshStandardMaterial color={cfg.detail} roughness={cfg.roughness} />
           </mesh>
         </group>
 
-        {/* Piece 2: Arched Support Leg — propped underneath Hole 1 with artisan joint tolerance */}
+        {/* Piece 2: Arched Support Leg */}
         <group position={[0, 0.7085, -1.1485]} rotation={[0.2461, -0.004, 0.006]}>
-          <TabletSupportLeg legLength={1.61} />
+          <TabletSupportLeg legLength={1.61} finish={finish} />
         </group>
       </group>
     </Float>
   );
 }
 
-export function TabletStandScene() {
+export function TabletStandScene({ finish = "unpolished" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows
@@ -264,20 +260,26 @@ export function TabletStandScene() {
       aria-label="Interactive 3D model of the Dridha multi-angle wooden tablet stand and easel"
       className="w-full h-full cursor-grab active:cursor-grabbing"
     >
-      <color attach="background" args={["#eedfc8"]} />
-      <hemisphereLight args={["#fff4dd", "#23432c", 1.8]} />
+      <color attach="background" args={[STUDIO_3D_ENV.backgroundColor]} />
+      <hemisphereLight
+        args={[
+          STUDIO_3D_ENV.hemisphereSky,
+          STUDIO_3D_ENV.hemisphereGround,
+          STUDIO_3D_ENV.hemisphereIntensity,
+        ]}
+      />
       <directionalLight
         castShadow
-        position={[5, 7.5, 4.5]}
-        intensity={2.3}
+        position={STUDIO_3D_ENV.keyLightPos}
+        intensity={STUDIO_3D_ENV.keyLightIntensity}
         shadow-mapSize={[1024, 1024]}
       />
       <directionalLight
-        position={[-4.5, 2.5, -3]}
-        intensity={0.75}
-        color="#d9924c"
+        position={STUDIO_3D_ENV.fillLightPos}
+        intensity={STUDIO_3D_ENV.fillLightIntensity}
+        color={STUDIO_3D_ENV.fillLightColor}
       />
-      <TabletStandAssembly />
+      <TabletStandAssembly finish={finish} />
       <ContactShadows
         position={[0, -0.80, 0]}
         opacity={0.42}

@@ -46,7 +46,7 @@ export default function WishlistPage() {
               Your wishlist is empty
             </h2>
             <p className="text-xs text-charcoal/60 leading-relaxed">
-              Save your favorite Kashmiri walnut accessories as you browse the collection.
+              Save your favorite handcrafted wooden accessories as you browse the collection.
             </p>
             <Link href="/shop" className="inline-block mt-2">
               <Button variant="primary">Browse Collection</Button>

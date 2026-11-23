@@ -3,16 +3,16 @@ Dridha Crafts - Wishlist Router
 Toggle-based wishlist management for authenticated users.
 """
 
-import uuid as _uuid
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.middleware.auth import get_current_user
-from app.models.product import Product, ProductImage
+from app.models.product import Product
 from app.models.review import Wishlist
 from app.models.user import User
 from app.schemas.wishlist import WishlistItemResponse, WishlistResponse
@@ -61,7 +61,7 @@ async def get_wishlist(
 
 @router.post("/{product_id}", status_code=status.HTTP_200_OK)
 async def toggle_wishlist(
-    product_id: _uuid.UUID,
+    product_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -106,7 +106,7 @@ async def toggle_wishlist(
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_from_wishlist(
-    product_id: _uuid.UUID,
+    product_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

@@ -4,14 +4,14 @@ Review and Wishlist models.
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, UniqueConstraint
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, UniqueConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.database import Base
 
 
 class Review(Base):
-    """Product review submitted by a customer."""
+    """Product review submitted by a verified customer."""
 
     __tablename__ = "reviews"
 
@@ -25,7 +25,10 @@ class Review(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     rating: Mapped[int] = mapped_column(Integer, nullable=False)  # 1-5
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     comment: Mapped[str] = mapped_column(Text, nullable=False)
+    images: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)  # Up to 4 image URLs
+    video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

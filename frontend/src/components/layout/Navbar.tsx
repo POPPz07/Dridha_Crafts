@@ -1,35 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, User as UserIcon, X, Heart, Menu } from "lucide-react";
+import { ShoppingBag, User as UserIcon, X, Heart, Menu, LogOut, Package, Shield } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { PRODUCTS_DATA, BUNDLES_DATA } from "@/lib/products-data";
+import { createClient } from "@/lib/supabase";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop" },
   { label: "Our Story", href: "/story" },
-  { label: "Kashmir", href: "/story#kashmir" },
   { label: "Help", href: "/help" },
 ];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userMenuOpen]);
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      useAuthStore.getState().logout();
+      useCartStore.getState().clearCart();
+      setUserMenuOpen(false);
+      setMobileMenuOpen(false);
+    } catch {
+      useAuthStore.getState().logout();
+      useCartStore.getState().clearCart();
+      setUserMenuOpen(false);
+      setMobileMenuOpen(false);
+    }
+  };
 
   const cartItems = useCartStore((s) => s.items);
-  const totalCartItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalCartItems = useMemo(
+    () => cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0),
+    [cartItems]
+  );
   const toggleCart = useCartStore((s) => s.toggleCart);
   const user = useAuthStore((s) => s.user);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const productIds = useWishlistStore((s) => s.productIds);
   // Ensure we only count active catalog items
-  const wishlistCount = productIds.filter((id) => PRODUCTS_DATA.some((p) => p.id === id)).length;
+  const wishlistCount = useMemo(
+    () => productIds.filter((id) => PRODUCTS_DATA.some((p) => p.id === id)).length,
+    [productIds]
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -126,14 +164,87 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* Account */}
-            <button
-              onClick={() => openAuthModal(user ? undefined : "login")}
-              className={iconClass}
-              aria-label="Account"
-            >
-              <UserIcon className="w-[18px] h-[18px]" />
-            </button>
+            {/* Account / User Menu */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => {
+                  if (user) {
+                    setUserMenuOpen(!userMenuOpen);
+                  } else {
+                    openAuthModal("login");
+                  }
+                }}
+                className={`relative ${iconClass}`}
+                aria-label="Account"
+              >
+                <UserIcon className="w-[18px] h-[18px]" />
+                {mounted && user && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0e2a1e]" />
+                )}
+              </button>
+
+              {/* User Dropdown Menu */}
+              {mounted && user && userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white border border-warmgrey/80 shadow-elevated py-2 z-50 animate-scale-in text-charcoal">
+                  <div className="px-4 py-2.5 border-b border-warmgrey/50">
+                    <p className="text-xs font-bold text-brand-green truncate">
+                      {user.full_name || "Customer"}
+                    </p>
+                    <p className="text-[11px] text-charcoal/60 truncate">{user.email}</p>
+                  </div>
+
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-charcoal/80 hover:bg-warmgrey/20 hover:text-brand-green transition-colors"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-brand-gold" />
+                      My Profile &amp; Details
+                    </Link>
+
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-charcoal/80 hover:bg-warmgrey/20 hover:text-brand-green transition-colors"
+                    >
+                      <Package className="w-3.5 h-3.5 text-brand-gold" />
+                      My Orders &amp; Tracking
+                    </Link>
+
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-charcoal/80 hover:bg-warmgrey/20 hover:text-brand-green transition-colors"
+                    >
+                      <Heart className="w-3.5 h-3.5 text-brand-gold" />
+                      Wishlist ({wishlistCount})
+                    </Link>
+
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-charcoal/80 hover:bg-warmgrey/20 hover:text-brand-green transition-colors"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-purple-600" />
+                        Admin Dashboard
+                      </Link>
+                    )}
+                  </div>
+
+                  <div className="border-t border-warmgrey/50 pt-1 mt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-terracotta hover:bg-terracotta/10 transition-colors text-left cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Cart */}
             <button onClick={toggleCart} className={`relative ${iconClass}`} aria-label="Cart">
@@ -192,26 +303,75 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="flex gap-5 pt-5">
-              <Link
-                href="/wishlist"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-[#e5c89d]"
-              >
-                <Heart className="w-4 h-4" /> Wishlist
-                {mounted && wishlistCount > 0 && (
-                  <span className="bg-[#e5c89d] text-[#0e2a1e] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-              <button
-                onClick={() => { openAuthModal(user ? undefined : "login"); setMobileMenuOpen(false); }}
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-[#e5c89d]"
-              >
-                <UserIcon className="w-4 h-4" /> Account
-              </button>
-            </div>
+            {mounted && user ? (
+              <div className="flex flex-col gap-3 pt-5 border-t border-white/10">
+                <div className="text-white/80 text-xs">
+                  Signed in as <strong className="text-brand-gold">{user.full_name || user.email}</strong>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm text-white/80 hover:text-[#e5c89d] py-1"
+                  >
+                    <UserIcon className="w-4 h-4 text-brand-gold" /> My Profile &amp; Details
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm text-white/80 hover:text-[#e5c89d] py-1"
+                  >
+                    <Package className="w-4 h-4 text-brand-gold" /> My Orders &amp; Tracking
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm text-white/80 hover:text-[#e5c89d] py-1"
+                  >
+                    <Heart className="w-4 h-4 text-brand-gold" /> Wishlist ({wishlistCount})
+                  </Link>
+                  {user.role === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-sm text-purple-300 hover:text-purple-200 py-1"
+                    >
+                      <Shield className="w-4 h-4 text-purple-400" /> Admin Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-sm text-terracotta hover:text-red-300 py-1 mt-1 text-left cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-5 pt-5 border-t border-white/10">
+                <Link
+                  href="/wishlist"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 text-sm text-white/60 hover:text-[#e5c89d]"
+                >
+                  <Heart className="w-4 h-4" /> Wishlist
+                  {mounted && wishlistCount > 0 && (
+                    <span className="bg-[#e5c89d] text-[#0e2a1e] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
+                <button
+                  onClick={() => {
+                    openAuthModal("login");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-sm text-white/60 hover:text-[#e5c89d] cursor-pointer"
+                >
+                  <UserIcon className="w-4 h-4" /> Sign In / Register
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       )}

@@ -6,12 +6,13 @@ admin order status updates, and inventory reservation reconciliation.
 
 import hashlib
 import json
+import secrets
 import uuid
-import uuid as _uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
+from app.services.email import send_order_notification_email
 from sqlalchemy import func, select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +31,7 @@ from app.models.order import (
     InventoryReservation,
     ReservationStatus,
 )
-from app.models.product import Product, ProductVariant
+from app.models.product import Product, ProductVariant, Bundle
 from app.models.user import Address, User
 from app.schemas.order import (
     OrderCreate,
@@ -143,6 +144,7 @@ async def release_expired_reservations(db: AsyncSession) -> int:
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(
     data: OrderCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -235,9 +237,60 @@ async def create_order(
             )
             product = prod_result.scalar_one_or_none()
             if not product:
+                # Check if this item is a curated Bundle (Duo or Trio combo)
+                bundle_result = await db.execute(
+                    select(Bundle).where(Bundle.id == item_in.product_id, Bundle.is_active == True)
+                )
+                bundle = bundle_result.scalar_one_or_none()
+                if bundle:
+                    unit_price = bundle.price
+                    line_total = unit_price * item_in.quantity
+                    subtotal += line_total
+                    order_items.append(
+                        OrderItem(
+                            id=uuid.uuid4(),
+                            product_id=None,
+                            variant_id=None,
+                            product_name=bundle.name,
+                            product_slug=bundle.slug,
+                            variant_name=item_in.variant_name or "Curated Set",
+                            price=unit_price,
+                            quantity=item_in.quantity,
+                            total=line_total,
+                            image_url=bundle.image_url,
+                        )
+                    )
+                    continue
+
+                # Fallback check against known bundles
+                try:
+                    from scripts.sync_bundles import BUNDLES_TO_SYNC
+                    matched_b = next((b for b in BUNDLES_TO_SYNC if b["id"] == item_in.product_id), None)
+                    if matched_b:
+                        unit_price = matched_b["price"]
+                        line_total = unit_price * item_in.quantity
+                        subtotal += line_total
+                        order_items.append(
+                            OrderItem(
+                                id=uuid.uuid4(),
+                                product_id=None,
+                                variant_id=None,
+                                product_name=matched_b["name"],
+                                product_slug=matched_b["slug"],
+                                variant_name=item_in.variant_name or "Curated Set",
+                                price=unit_price,
+                                quantity=item_in.quantity,
+                                total=line_total,
+                                image_url=matched_b.get("image_url"),
+                            )
+                        )
+                        continue
+                except Exception:
+                    pass
+
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Product '{item_in.product_id}' not found or inactive",
+                    detail=f"Product or bundle '{item_in.product_id}' not found or inactive",
                 )
 
             variant = None
@@ -265,7 +318,16 @@ async def create_order(
                     detail=f"Insufficient stock for '{product.name}'. Available: {available}",
                 )
 
-            unit_price = variant.price_override if variant and variant.price_override else product.price
+            if variant and variant.price_override:
+                unit_price = variant.price_override
+            else:
+                unit_price = product.price
+                # Check for combo bundle polish surcharges (+₹20 per polished piece)
+                if item_in.variant_name:
+                    polished_count = item_in.variant_name.count("Polished")
+                    if polished_count > 0:
+                        unit_price += Decimal(str(polished_count * 20))
+
             line_total = unit_price * item_in.quantity
             subtotal += line_total
 
@@ -283,7 +345,7 @@ async def create_order(
                     variant_id=variant.id if variant else None,
                     product_name=product.name,
                     product_slug=product.slug,
-                    variant_name=variant.variant_name if variant else None,
+                    variant_name=variant.variant_name if variant else item_in.variant_name,
                     price=unit_price,
                     quantity=item_in.quantity,
                     total=line_total,
@@ -389,6 +451,12 @@ async def create_order(
         initial_order_status = OrderStatus.CONFIRMED.value
         res_status = ReservationStatus.COMMITTED.value
         expires_at = None
+    elif payment_method_value == "whatsapp_upi":
+        initial_payment_status = PaymentStatus.MANUAL_VERIFICATION.value
+        initial_order_status = OrderStatus.PAYMENT_VERIFICATION.value
+        res_status = ReservationStatus.RESERVED.value
+        # 48-hour reservation window for customer to chat on WhatsApp and send payment
+        expires_at = now + timedelta(hours=48)
     else:
         initial_payment_status = PaymentStatus.PENDING.value
         initial_order_status = OrderStatus.PAYMENT_PENDING.value
@@ -396,8 +464,8 @@ async def create_order(
         # 30-minute reservation window for pending online / manual payments
         expires_at = now + timedelta(minutes=30)
 
-    # Free shipping
-    shipping_cost = Decimal("0.00")
+    # Pan-India delivery charges (₹39)
+    shipping_cost = Decimal("39.00")
     total = subtotal + shipping_cost
 
     customer_email = data.customer_email or current_user.email
@@ -482,6 +550,8 @@ async def create_order(
         )
 
     await db.refresh(order, attribute_names=["items"])
+    # Asynchronously dispatch email notifications (Admin alert & Customer receipt)
+    background_tasks.add_task(send_order_notification_email, order, order.items)
     return order
 
 
@@ -518,7 +588,12 @@ async def list_orders(
             payment_method=order.payment_method,
             payment_status=order.payment_status,
             item_count=len(order.items),
+            tracking_number=order.tracking_number,
+            carrier=getattr(order, "carrier", None),
+            tracking_status_note=getattr(order, "tracking_status_note", None),
+            delivered_at=getattr(order, "delivered_at", None),
             created_at=order.created_at,
+            updated_at=getattr(order, "updated_at", None),
         )
         for order in orders
     ]
@@ -528,7 +603,7 @@ async def list_orders(
 
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order_detail(
-    order_id: _uuid.UUID,
+    order_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -551,7 +626,7 @@ async def get_order_detail(
 
 @router.put("/{order_id}/confirm-payment", response_model=OrderResponse)
 async def confirm_payment(
-    order_id: _uuid.UUID,
+    order_id: uuid.UUID,
     data: PaymentConfirmation,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -616,7 +691,7 @@ async def confirm_payment(
 
 @router.put("/{order_id}/status", response_model=OrderResponse)
 async def update_order_status(
-    order_id: _uuid.UUID,
+    order_id: uuid.UUID,
     data: OrderStatusUpdate,
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
@@ -744,9 +819,9 @@ async def trigger_expire_reservations(
     2. A valid X-Cron-Key header matching settings.CRON_SECRET.
     """
     is_authorized = False
-    if current_admin and current_admin.role == "admin":
+    if current_admin and current_admin.role == "admin" and current_admin.is_active:
         is_authorized = True
-    elif settings.CRON_SECRET and x_cron_key == settings.CRON_SECRET:
+    elif settings.CRON_SECRET and x_cron_key and secrets.compare_digest(x_cron_key, settings.CRON_SECRET):
         is_authorized = True
 
     if not is_authorized:

@@ -2,9 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Help & FAQ — Dridha Crafts",
+  title: "Help & FAQ — Handcrafted Wooden Desk Accessories | Dridha Crafts",
   description:
-    "Answers to common questions about our handcrafted wooden desk accessories, shipping, returns, and care.",
+    "Find answers about Dridha Crafts handcrafted pine desk accessories, Pan-India shipping, custom artisan engraving, and wood care instructions.",
+  alternates: {
+    canonical: "https://dridhacrafts.com/help",
+  },
+  openGraph: {
+    title: "Help & FAQ — Dridha Crafts",
+    description:
+      "Answers to common questions about handcrafted wooden desk accessories, shipping across India, custom engraving, and wood care.",
+    url: "https://dridhacrafts.com/help",
+    siteName: "Dridha Crafts",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Help & FAQ — Dridha Crafts",
+    description:
+      "Answers to common questions about handcrafted wooden desk accessories, shipping across India, and wood care.",
+  },
 };
 
 const FAQ_CATEGORIES = [
@@ -13,11 +30,11 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "Are Dridha Crafts products truly handmade?",
-        a: "Every piece is hand-shaped, sanded through six grits and finished with natural oil wax by artisans in the Kashmir Valley. No two pieces are identical — slight variations in grain and tone are a feature, not a flaw.",
+        a: "Every piece is hand-shaped and finished with natural oil wax by artisans in the Kashmir Valley. Subtle organic ripples, natural rawness, and slight variations in grain and tone are authentic hallmarks of living mountain pine — a feature, not a flaw.",
       },
       {
         q: "What wood do you use?",
-        a: "Our current collection is made from fallen pine sourced sustainably in small batches. We maintain a strict zero-deforestation policy — we only work with naturally fallen or reclaimed timber. Future collections will include walnut and walnut-burl.",
+        a: "Our current collection is made from fallen pine sourced sustainably in small batches. We maintain a strict zero-deforestation policy — we only work with naturally fallen or reclaimed wood from mountain trees.",
       },
       {
         q: "How do I care for my piece?",
@@ -34,11 +51,11 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "Do you ship pan-India?",
-        a: "Yes — free shipping on every order, every time, anywhere in India. No minimum order. No hidden charges.",
+        a: "Yes — we deliver pan-India on every order, safely packaged directly from our Kashmir workshop.",
       },
       {
         q: "How long does delivery take?",
-        a: "Orders are dispatched from Pune within 2–3 business days. Delivery typically takes 4–7 business days depending on your location.",
+        a: "Orders are hand-inspected and dispatched within 2–3 business days. Delivery typically takes 4–7 business days depending on your pin code across India.",
       },
       {
         q: "Can I track my order?",
@@ -55,53 +72,59 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "What payment methods do you accept?",
-        a: "We currently accept Cash on Delivery (COD) and UPI / Google Pay. More options coming soon.",
+        a: "We currently accept UPI payments via WhatsApp (GPay, PhonePe, Paytm). After placing your order, you will be redirected to WhatsApp where our team will share our official QR code for instant, verified payment.",
       },
       {
-        q: "Is COD available everywhere?",
-        a: "COD is available at most pin codes across India. During checkout you will see whether COD is available for your address.",
-      },
-    ],
-  },
-  {
-    heading: "Returns & Warranty",
-    items: [
-      {
-        q: "What is your return policy?",
-        a: "We offer a 7-day hassle-free return window from the date of delivery. Products must be unused and in original packaging. Reach out to us at support@dridhacrafts.com to initiate a return.",
-      },
-      {
-        q: "What if my product arrives damaged?",
-        a: "Please photograph the damage and email us within 48 hours of delivery. We will arrange a free replacement or full refund — whichever you prefer.",
-      },
-      {
-        q: "Is there a warranty?",
-        a: "We stand behind our craft. All products carry a 6-month warranty against manufacturing defects. Normal wear, accidental damage, and improper care are not covered.",
+        q: "Is Cash on Delivery (COD) available?",
+        a: "We do not offer Cash on Delivery. To maintain handcrafted quality and direct-to-artisan transparency, all orders are fulfilled via secure prepaid UPI on WhatsApp.",
       },
     ],
   },
   {
-    heading: "Other Questions",
+    heading: "Gifting & Bespoke Commissions",
     items: [
       {
-        q: "Can I get a custom or personalised piece?",
-        a: "Yes! We take limited custom orders. Email us at custom@dridhacrafts.com with your idea, dimensions, and timeline. We will come back to you within 3 business days.",
+        q: "Do you offer corporate or milestone gifting sets?",
+        a: "Yes. Every Dridha Crafts product and combo is securely packed for safe transit, accompanied by our signature thank-you note and authentic artisan seal. For team gifting, executive milestones, or housewarmings (10+ sets), reach out to us at craftsdridha@gmail.com or via WhatsApp for curated arrangements.",
       },
       {
-        q: "Do you offer bulk or corporate gifting?",
-        a: "We love gifting enquiries. For bulk orders of 10+ pieces, reach out to us at gifting@dridhacrafts.com for special pricing and bespoke packaging.",
+        q: "Can I request custom dimensions, designs, or personalized woodcraft?",
+        a: "Yes, on a selective basis. Because each piece is carved by hand from naturally fallen mountain pine, custom designs, tailored laptop dimensions, or personalized engravings depend on workshop feasibility. Message us on WhatsApp or email craftsdridha@gmail.com with your vision and dimensions to discuss feasibility with our craftsman.",
+      },
+      {
+        q: "Are Dridha Crafts products part of a matching desk ecosystem?",
+        a: "Yes. Our collection is conceived as a one-stop desk atelier. Our laptop stands, interlocking mobile holders, dual headphone audio cradles, and pine bookends all share matching Kashmir pine wood grain and warm tones, allowing you to curate a cohesive, unified workspace where every accessory belongs together.",
       },
       {
         q: "How can I contact support?",
-        a: "Email us at support@dridhacrafts.com or use the form below. We aim to respond within 24 hours on business days.",
+        a: "Email us at craftsdridha@gmail.com or message us directly on WhatsApp (+91 97678 07889). We aim to respond within 24 hours on business days.",
       },
     ],
   },
 ];
 
 export default function HelpPage() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_CATEGORIES.flatMap((category) =>
+      category.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      }))
+    ),
+  };
+
   return (
     <main className="min-h-screen bg-[#fbf9f1]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       {/* Header */}
       <section
         className="pt-36 pb-20 text-center"
@@ -192,10 +215,10 @@ export default function HelpPage() {
             within 24 hours on business days.
           </p>
           <Link
-            href="mailto:support@dridhacrafts.com"
+            href="mailto:craftsdridha@gmail.com"
             className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#e5c89d] text-[#092417] text-sm font-bold uppercase tracking-wider rounded-full hover:bg-white transition-all duration-300"
           >
-            support@dridhacrafts.com
+            craftsdridha@gmail.com
           </Link>
         </div>
       </section>

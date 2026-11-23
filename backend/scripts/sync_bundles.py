@@ -14,32 +14,32 @@ from sqlalchemy import select, delete
 BUNDLES_TO_SYNC = [
     {
         "id": uuid.UUID("da923af9-bc88-4b02-ab20-2ef88ba74fd4"),
-        "name": "ShiftDesk + Headphone Stand",
+        "name": "ShiftDesk + Dropzone Stand",
         "slug": "shiftdesk-headphone-stand",
-        "description": "Multi-angle ergonomic wooden ShiftDesk riser paired with our handcrafted solid timber Headphone Stand for an organized, premium workstation.",
-        "price": Decimal("988.00"),
-        "original_price": Decimal("1098.00"),
+        "description": "Multi-angle ergonomic wooden ShiftDesk riser paired with our Dropzone dual headphone & phone stand for an organized, premium workstation.",
+        "price": Decimal("808.00"),
+        "original_price": Decimal("898.00"),
         "image_url": "/images/bundles/bundle-shiftdesk-headphone.jpg",
         "is_active": True,
         "is_featured": True,
         "items": [
             {"product_slug": "shiftdesk-stand", "quantity": 1},
-            {"product_slug": "headphone-stand", "quantity": 1},
+            {"product_slug": "dropzone", "quantity": 1},
         ],
     },
     {
         "id": uuid.UUID("4506690d-fb08-4f9e-9db9-7c820befea09"),
-        "name": "Laptop Stand + Headphone Stand",
+        "name": "Laptop Stand + Dropzone Stand",
         "slug": "laptop-headphone-stand",
-        "description": "Slotted Himalayan pine Laptop Stand paired with our solid timber Headphone Stand. Maximum airflow elevation with dedicated audio gear display.",
-        "price": Decimal("898.00"),
-        "original_price": Decimal("998.00"),
+        "description": "Slotted Himalayan pine Laptop Stand paired with our Dropzone dual headphone & phone stand. Maximum airflow elevation with dedicated audio gear display.",
+        "price": Decimal("718.00"),
+        "original_price": Decimal("798.00"),
         "image_url": "/images/bundles/bundle-laptop-headphone.jpg",
         "is_active": True,
         "is_featured": True,
         "items": [
             {"product_slug": "laptop-stand", "quantity": 1},
-            {"product_slug": "headphone-stand", "quantity": 1},
+            {"product_slug": "dropzone", "quantity": 1},
         ],
     },
     {
@@ -61,7 +61,7 @@ BUNDLES_TO_SYNC = [
         "id": uuid.UUID("9e41736e-1d44-4118-bb88-7cee7987e6b7"),
         "name": "Laptop Stand + Mobile Stand",
         "slug": "laptop-mobile-stand",
-        "description": "Ergonomic ventilation-cutout Laptop Stand paired with the interlocking Mobile Stand. Our signature Himalayan timber duo for compact productivity.",
+        "description": "Ergonomic ventilation-cutout Laptop Stand paired with the interlocking Mobile Stand. Our signature Himalayan pine duo for compact productivity.",
         "price": Decimal("628.00"),
         "original_price": Decimal("698.00"),
         "image_url": "/images/bundles/bundle-laptop-mobile.jpg",
@@ -72,18 +72,66 @@ BUNDLES_TO_SYNC = [
             {"product_slug": "mobile-stand", "quantity": 1},
         ],
     },
+    {
+        "id": uuid.UUID("b1a10001-c888-4f01-b333-7cee7987e001"),
+        "name": "ShiftDesk + Laptop Stand + Mobile Stand",
+        "slug": "shiftdesk-laptop-mobile-trio",
+        "description": "The complete multi-screen workstation: dynamic ShiftDesk riser, ventilated Multi-Angle Laptop Stand, and interlocking Mobile Stand for maximum ergonomic comfort.",
+        "price": Decimal("1060.00"),
+        "original_price": Decimal("1247.00"),
+        "image_url": "/images/bundles/bundle-shiftdesk-mobile.jpg",
+        "is_active": True,
+        "is_featured": True,
+        "items": [
+            {"product_slug": "shiftdesk-stand", "quantity": 1},
+            {"product_slug": "laptop-stand", "quantity": 1},
+            {"product_slug": "mobile-stand", "quantity": 1},
+        ],
+    },
+    {
+        "id": uuid.UUID("b1a10002-c888-4f01-b333-7cee7987e002"),
+        "name": "ShiftDesk + Dropzone + Mobile Stand",
+        "slug": "shiftdesk-dropzone-mobile-trio",
+        "description": "The ultimate creator setup: adjustable ShiftDesk laptop riser, Dropzone dual headphone & phone cradle, and interlocking Mobile Stand for total desk organization.",
+        "price": Decimal("975.00"),
+        "original_price": Decimal("1147.00"),
+        "image_url": "/images/bundles/bundle-shiftdesk-headphone.jpg",
+        "is_active": True,
+        "is_featured": True,
+        "items": [
+            {"product_slug": "shiftdesk-stand", "quantity": 1},
+            {"product_slug": "dropzone", "quantity": 1},
+            {"product_slug": "mobile-stand", "quantity": 1},
+        ],
+    },
+    {
+        "id": uuid.UUID("b1a10003-c888-4f01-b333-7cee7987e003"),
+        "name": "Laptop Stand + Dropzone + Mobile Stand",
+        "slug": "laptop-dropzone-mobile-trio",
+        "description": "Lightweight, slotted Himalayan Pine Laptop Stand combined with our Dropzone headphone dock and interlocking Mobile Stand for streamlined efficiency.",
+        "price": Decimal("890.00"),
+        "original_price": Decimal("1047.00"),
+        "image_url": "/images/bundles/bundle-laptop-headphone.jpg",
+        "is_active": True,
+        "is_featured": True,
+        "items": [
+            {"product_slug": "laptop-stand", "quantity": 1},
+            {"product_slug": "dropzone", "quantity": 1},
+            {"product_slug": "mobile-stand", "quantity": 1},
+        ],
+    },
 ]
 
 async def sync():
     async with async_session() as session:
-        # Also ensure headphone-stand has its H1 and H2 images assigned in DB
-        hp = (await session.execute(select(Product).where(Product.slug == "headphone-stand"))).scalar_one_or_none()
+        # Also ensure dropzone has its H1 and H2 images assigned in DB
+        hp = (await session.execute(select(Product).where(Product.slug.in_(["dropzone", "headphone-stand"])))).scalar_one_or_none()
         if hp:
             await session.execute(delete(ProductImage).where(ProductImage.product_id == hp.id))
-            session.add(ProductImage(product_id=hp.id, image_url="/images/h-1.png", alt_text="Headphone Stand Angled View", is_primary=True, sort_order=0))
-            session.add(ProductImage(product_id=hp.id, image_url="/images/h-2.png", alt_text="Headphone Stand Front View", is_primary=False, sort_order=1))
+            session.add(ProductImage(product_id=hp.id, image_url="/images/h-1.png", alt_text="Dropzone Angled View", is_primary=True, sort_order=0))
+            session.add(ProductImage(product_id=hp.id, image_url="/images/h-2.png", alt_text="Dropzone Front View", is_primary=False, sort_order=1))
             await session.flush()
-            print("Updated headphone-stand images (H1, H2) in DB.")
+            print("Updated Dropzone images (H1, H2) in DB.")
 
         target_ids = {b["id"] for b in BUNDLES_TO_SYNC}
         existing_bundles = (await session.execute(select(Bundle))).scalars().all()

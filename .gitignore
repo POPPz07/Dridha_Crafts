@@ -11,6 +11,10 @@ build/
 
 # Environment Variables
 .env
+.env*
+*.env*
+.env.example
+*.env.example
 .env.local
 .env.production
 .env.*.local
@@ -18,6 +22,7 @@ build/
 # Node
 node_modules/
 .next/
+.next_dev/
 out/
 .cache/
 
@@ -52,3 +57,13 @@ PHASE_6_CASHFREE_HOSTED_CHECKOUT.md
 PHASE_7_CASHFREE_WEBHOOK_PROCESSING.md
 PHASE_8_PAYMENT_STATUS_PAGE.md
 docs/
+FINAL_PRE_DEPLOYMENT_INSPECTION.md
+PROJECT_READINESS_AND_SECURITY_DOCUMENTATION.md
+
+dridha_crafts_info/
+create_admin.py
+backend/create_admin.py
+Dridha_Crafts_Cashfree_Implementation_Plan.md
+public/
+
+GEMINI.md

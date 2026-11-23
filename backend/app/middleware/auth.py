@@ -64,12 +64,12 @@ async def get_current_admin(
     user: User = Depends(get_current_user),
 ) -> User:
     """
-    Dependency: same as get_current_user but also verifies admin role.
+    Dependency: same as get_current_user but strictly enforces active admin account.
 
     Raises:
-        HTTPException 403: If user is not an admin.
+        HTTPException 403: If user is not an active admin.
     """
-    if user.role != "admin":
+    if user.role != "admin" or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",

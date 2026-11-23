@@ -26,7 +26,7 @@ class Product(Base):
     category: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     compare_at_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    wood_type: Mapped[str] = mapped_column(String(100), default="Walnut", nullable=False)
+    wood_type: Mapped[str] = mapped_column(String(100), default="Pine", nullable=False)
     finish: Mapped[str] = mapped_column(String(100), default="Classic", nullable=False)
     weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     dimensions: Mapped[str | None] = mapped_column(String(200), nullable=True)

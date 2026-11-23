@@ -42,6 +42,7 @@ class OrderItemCreate(BaseModel):
     product_id: uuid.UUID
     variant_id: Optional[uuid.UUID] = None
     quantity: int = Field(default=1, ge=1, le=10)
+    variant_name: Optional[str] = None
 
 
 class OrderCreate(BaseModel):
@@ -50,7 +51,7 @@ class OrderCreate(BaseModel):
     address_id: Optional[uuid.UUID] = Field(None, description="Shipping address ID")
     shipping_address: Optional[AddressCreate] = Field(None, description="Inline shipping address")
     payment_method: str = Field(
-        ..., pattern=r"^(cod|google_pay|upi|online|cashfree)$", description="Payment method: 'cod', 'google_pay', 'upi', 'online', 'cashfree'"
+        ..., pattern=r"^(cod|google_pay|upi|online|cashfree|whatsapp_upi)$", description="Payment method: 'cod', 'google_pay', 'upi', 'online', 'cashfree', 'whatsapp_upi'"
     )
     notes: Optional[str] = Field(None, max_length=500, description="Optional order notes")
     items: Optional[list[OrderItemCreate]] = Field(None, description="Optional cart items from client")
@@ -87,6 +88,10 @@ class OrderResponse(BaseModel):
     cancel_reason: Optional[str] = None
     notes: Optional[str] = None
     tracking_number: Optional[str] = None
+    carrier: Optional[str] = None
+    tracking_url: Optional[str] = None
+    tracking_status_note: Optional[str] = None
+    delivered_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     items: list[OrderItemResponse] = []
@@ -104,9 +109,32 @@ class OrderListResponse(BaseModel):
     payment_method: str
     payment_status: str
     item_count: int = 0
+    tracking_number: Optional[str] = None
+    carrier: Optional[str] = None
+    tracking_status_note: Optional[str] = None
+    delivered_at: Optional[datetime] = None
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class TrackingUpdateBody(BaseModel):
+    """Admin schema for updating tracking and status note."""
+
+    tracking_number: Optional[str] = Field(None, max_length=100)
+    carrier: Optional[str] = Field(None, max_length=100)
+    tracking_url: Optional[str] = Field(None, max_length=500)
+    status_note: Optional[str] = Field(None, max_length=500)
+    status: Optional[str] = Field(None, pattern=r"^(shipped|delivered|processing|confirmed)$")
+    model_config = {"extra": "forbid"}
+
+
+class DeliverBody(BaseModel):
+    """Admin schema for marking order as delivered."""
+
+    status_note: Optional[str] = Field(None, max_length=500)
+    model_config = {"extra": "forbid"}
 
 
 class OrderStatusUpdate(BaseModel):

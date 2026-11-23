@@ -1,21 +1,68 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   ArrowRight,
   Check,
   ShoppingBag,
   Heart,
   ChevronDown,
+  Boxes,
+  Sparkles,
+  Shield,
+  Gift,
 } from "lucide-react";
 import { ImageHero } from "@/components/sections/ImageHero";
 import { MaterialSection } from "@/components/sections/MaterialSection";
-import { ShiftDesk3DSection } from "@/components/sections/ShiftDesk3DSection";
-import { MobileStand3DSection } from "@/components/sections/MobileStand3DSection";
-import { TabletStand3DSection } from "@/components/sections/TabletStand3DSection";
-import { CustomCaddy3DSection } from "@/components/sections/CustomCaddy3DSection";
+
+const ShiftDesk3DSection = dynamic(
+  () => import("@/components/sections/ShiftDesk3DSection").then((m) => m.ShiftDesk3DSection),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full min-h-[480px] bg-brand-cream/60 flex flex-col items-center justify-center p-8 text-charcoal/40">
+        <div className="w-8 h-8 rounded-full border-2 border-brand-green/30 border-t-brand-green animate-spin mb-3" />
+        <span className="text-xs uppercase tracking-widest font-bold text-brand-green/60">Loading ShiftDesk 3D Studio…</span>
+      </div>
+    ),
+  }
+);
+
+const MobileStand3DSection = dynamic(
+  () => import("@/components/sections/MobileStand3DSection").then((m) => m.MobileStand3DSection),
+  {
+    ssr: false,
+    loading: () => <div className="w-full min-h-[400px] bg-brand-cream/40" />,
+  }
+);
+
+const TabletStand3DSection = dynamic(
+  () => import("@/components/sections/TabletStand3DSection").then((m) => m.TabletStand3DSection),
+  {
+    ssr: false,
+    loading: () => <div className="w-full min-h-[400px] bg-brand-cream/40" />,
+  }
+);
+
+const Dropzone3DSection = dynamic(
+  () => import("@/components/sections/Dropzone3DSection").then((m) => m.Dropzone3DSection),
+  {
+    ssr: false,
+    loading: () => <div className="w-full min-h-[400px] bg-brand-cream/40" />,
+  }
+);
+
+const CustomCaddy3DSection = dynamic(
+  () => import("@/components/sections/CustomCaddy3DSection").then((m) => m.CustomCaddy3DSection),
+  {
+    ssr: false,
+    loading: () => <div className="w-full min-h-[400px] bg-brand-cream/40" />,
+  }
+);
 
 // Social SVG icons & links
 function InstagramIcon({ className }: { className?: string }) {
@@ -68,6 +115,7 @@ import { useWishlistStore } from "@/stores/wishlistStore";
 import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 
 export default function HomePage() {
+  const router = useRouter();
   const [products, setProducts] = useState<StaticProduct[]>(PRODUCTS_DATA);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
@@ -93,10 +141,18 @@ export default function HomePage() {
     "Book Organizers",
   ];
 
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  const featuredHomeProducts = useMemo(() => {
+    const featuredSlugs = ["shiftdesk-stand", "dropzone"];
+    const found = products.filter((p) => featuredSlugs.includes(p.slug));
+    return found.length >= 2 ? found : products.slice(0, 2);
+  }, [products]);
+
+  const featuredHomeBundles = useMemo(() => {
+    // Show 1 featured Duo (10% Off) and 1 featured Trio (15% Off) on the homepage
+    const featuredDuo = BUNDLES_DATA.find((b) => b.slug === "shiftdesk-headphone-stand") || BUNDLES_DATA[0];
+    const featuredTrio = BUNDLES_DATA.find((b) => b.slug === "shiftdesk-dropzone-mobile-trio") || BUNDLES_DATA[4];
+    return [featuredDuo, featuredTrio];
+  }, []);
 
   const handleAddToCart = async (product: StaticProduct) => {
     const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
@@ -157,10 +213,10 @@ export default function HomePage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-brand-gold/20">
             {[
-              { icon: "🌲", text: "Zero Deforestation", sub: "Fallen Trees Only" },
-              { icon: "✋", text: "Generational Craft", sub: "Kashmir Heritage" },
-              { icon: "📦", text: "Pune QA & Dispatch", sub: "Individually Inspected" },
-              { icon: "✨", text: "Free Pan-India", sub: "Delivery Nationwide" },
+              { icon: "🌲", text: "Zero Deforestation", sub: "Fallen Mountain Pine" },
+              { icon: "🏛️", text: "One-Stop Desk Atelier", sub: "Laptop, Phone, Audio & Books" },
+              { icon: "🎁", text: "Heirloom Gifting", sub: "Meaningful Desk Keepsakes" },
+              { icon: "✍️", text: "Bespoke Commissions", sub: "Upon Artisan Feasibility" },
             ].map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row items-center justify-center gap-3 px-4 py-4 text-center sm:text-left">
                 <span className="text-2xl">{item.icon}</span>
@@ -178,7 +234,7 @@ export default function HomePage() {
       <section id="story" className="py-24 lg:py-32 bg-brand-cream overflow-hidden">
         <Container>
           {/* Section Header */}
-          <div className="max-w-3xl mx-auto text-center mb-20" data-animate="fade-up">
+          <div className="max-w-3xl mx-auto text-center mb-20" data-animate="fade-up" suppressHydrationWarning>
             <span className="font-accent text-brand-brown text-2xl block mb-3">
               — Our Humble Beginning —
             </span>
@@ -189,26 +245,26 @@ export default function HomePage() {
             </h2>
             <div className="w-16 h-0.5 bg-brand-gold mx-auto mt-6 mb-6" />
             <p className="text-charcoal/70 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              In the heart of the Kashmir Valley, nature commands patience. Ancient walnut
+              In the heart of the Kashmir Valley, nature commands patience. Ancient mountain
               trees yield aged wood naturally. We gather what nature has surrendered —
               breathing new life into every contour.
             </p>
           </div>
 
           {/* Story Chapter Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20" data-animate="stagger">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20" data-animate="stagger" suppressHydrationWarning>
             {[
               {
                 num: "01",
-                title: "The Salvaged Timber",
+                title: "The Salvaged Pine",
                 desc: "We maintain a strict zero-felling policy. Every grain tells a story of mountain winters, meltwater rivers, and Himalayan winds. The wood cures naturally before it ever touches a tool.",
                 img: "/images/sd-2.jpeg",
-                imgAlt: "ShiftDesk Stand crafted from aged Himalayan timber",
+                imgAlt: "ShiftDesk Stand crafted from aged Himalayan pine",
               },
               {
                 num: "02",
                 title: "The Master's Hands",
-                desc: "Generations of woodworkers in Kashmir carry an unspoken dialogue with timber. Using traditional gouges and chisels, each desk accessory is hand-shaped, sanded through six grits, and oiled with natural wax.",
+                desc: "Generations of woodworkers in Kashmir carry an unspoken dialogue with pine. Using traditional gouges and chisels, each desk accessory is hand-shaped, sanded through six grits, and oiled with natural wax.",
                 img: "/images/h-1.png",
                 imgAlt: "Artisan sculpted Solid Wood Headphone Stand",
               },
@@ -224,6 +280,7 @@ export default function HomePage() {
                 key={i}
                 className="bg-white rounded-3xl overflow-hidden border border-warmgrey/70 shadow-soft hover:shadow-elevated transition-all duration-500 group"
                 data-animate="stagger-child"
+                suppressHydrationWarning
               >
                 {/* Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-warmgrey/20">
@@ -268,7 +325,7 @@ export default function HomePage() {
               </div>
               {/* Content */}
               <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center space-y-4">
-                <Badge variant="handcrafted">Our Packaging Promise</Badge>
+                <Badge variant="handcrafted">Care &amp; Delivery</Badge>
                 <h3 className="font-display text-3xl sm:text-4xl font-bold text-brand-green leading-tight">
                   The Living Character of Handcrafted Wood
                 </h3>
@@ -277,7 +334,7 @@ export default function HomePage() {
                     When you unbox your Dridha Crafts piece, you may notice subtle
                     uneven surfaces, organic grain ripples, or a gentle touch of natural
                     rawness. These are not defects — they are the honest hallmarks of
-                    authentic mountain timber.
+                    authentic mountain pine.
                   </p>
                   <p>
                     Every piece is shaped by Kashmiri artisan hands directly from
@@ -285,15 +342,14 @@ export default function HomePage() {
                     into the finest functional craft possible. That tactile rawness and
                     natural imperfection is what gives each item its soul: bringing the
                     living warmth and character of Kashmir pine to work beside you every
-                    day, responsibly created without contributing to deforestation.
+                    day.
                   </p>
                 </div>
                 <p className="font-accent text-brand-brown text-2xl pt-1">
                   Crafted with care, just for you.
                 </p>
                 <p className="text-xs text-charcoal/50 pt-2 border-t border-warmgrey/50">
-                  Every Dridha Crafts order includes a personalized hand-stamped
-                  thank-you note and authentic artisan seal.
+                  Every Dridha Crafts order is packed with protective care for safe transit, accompanied by our signature thank-you note and authentic artisan seal.
                 </p>
               </div>
             </div>
@@ -319,28 +375,22 @@ export default function HomePage() {
                 <span className="italic font-normal text-brand-brown">Collection</span>
               </h2>
             </div>
-
-            {/* Category Filter */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 ${
-                    selectedCategory === cat
-                      ? "bg-brand-green text-white shadow-soft"
-                      : "bg-brand-cream text-charcoal/70 hover:bg-warmgrey border border-warmgrey"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="text-left md:text-right">
+              <p className="text-xs text-charcoal/60 uppercase tracking-wider font-semibold mb-1">
+                Featured Flagships • 2 of 5 Essentials
+              </p>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-brown transition-colors group"
+              >
+                Explore Full 5-Piece Catalog <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
             </div>
           </div>
 
-          {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" data-animate="stagger">
-            {filteredProducts.map((product) => {
+          {/* Product Grid - 2 Featured Highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto" data-animate="stagger" suppressHydrationWarning>
+            {featuredHomeProducts.map((product) => {
               const isHovered = hoveredProduct === product.id;
               const hasAlternate = product.images.length > 1;
               const currentImage =
@@ -351,10 +401,19 @@ export default function HomePage() {
               return (
                 <div
                   key={product.id}
+                  onClick={() => router.push(`/products/${product.slug}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      router.push(`/products/${product.slug}`);
+                    }
+                  }}
+                  role="link"
+                  tabIndex={0}
                   onMouseEnter={() => setHoveredProduct(product.id)}
                   onMouseLeave={() => setHoveredProduct(null)}
-                  className="group bg-brand-cream rounded-3xl overflow-hidden border border-warmgrey/70 hover:border-brand-gold/60 transition-all duration-500 hover:shadow-elevated flex flex-col"
+                  className="cursor-pointer group bg-brand-cream rounded-3xl overflow-hidden border border-warmgrey/70 hover:border-brand-gold/60 transition-all duration-500 hover:shadow-elevated flex flex-col focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
                   data-animate="stagger-child"
+                  suppressHydrationWarning
                 >
                   {/* Image */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-warmgrey/20">
@@ -376,8 +435,12 @@ export default function HomePage() {
 
                     {/* Wishlist */}
                     <button
-                      onClick={() => toggleWishlist(product.id)}
-                      className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(product.id);
+                      }}
+                      className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 z-10 ${
                         inWishlist
                           ? "bg-brand-gold text-charcoal shadow-md scale-110"
                           : "bg-white/80 text-charcoal hover:bg-white hover:scale-110"
@@ -391,15 +454,15 @@ export default function HomePage() {
                   </div>
 
                   {/* Details */}
-                  <div className="p-6 flex flex-col flex-1 justify-between gap-4">
+                  <div className="p-6 sm:p-8 flex flex-col flex-1 justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold mb-1">
                         {product.wood_type} · {product.category}
                       </p>
-                      <h3 className="font-display text-xl font-bold text-brand-green group-hover:text-brand-brown transition-colors leading-snug">
+                      <h3 className="font-display text-xl sm:text-2xl font-bold text-brand-green group-hover:text-brand-brown transition-colors leading-snug">
                         {product.name}
                       </h3>
-                      <p className="text-xs text-charcoal/65 line-clamp-2 mt-2 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-charcoal/65 line-clamp-2 mt-2 leading-relaxed">
                         {product.short_description}
                       </p>
                     </div>
@@ -426,8 +489,11 @@ export default function HomePage() {
                       <Button
                         variant={isAdded ? "gold" : "primary"}
                         size="sm"
-                        onClick={() => handleAddToCart(product)}
-                        className="shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
+                        className="shrink-0 relative z-10"
                       >
                         {isAdded ? (
                           <>
@@ -440,12 +506,10 @@ export default function HomePage() {
                         )}
                       </Button>
                     </div>
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="block text-center text-xs text-charcoal/50 hover:text-brand-green transition-colors mt-2 underline-offset-2 hover:underline"
-                    >
-                      View Details →
-                    </Link>
+                    <div className="flex items-center justify-center gap-1 text-center text-xs font-medium text-charcoal/50 group-hover:text-brand-green transition-colors mt-2">
+                      <span>View Details</span>
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -456,7 +520,7 @@ export default function HomePage() {
           <div className="text-center mt-14">
             <Link href="/shop">
               <Button variant="outline" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                View Full Collection
+                View Full Collection (5 Products)
               </Button>
             </Link>
           </div>
@@ -467,14 +531,92 @@ export default function HomePage() {
       <ShiftDesk3DSection />
       <MobileStand3DSection />
       <TabletStand3DSection />
+      <Dropzone3DSection />
       <CustomCaddy3DSection />
 
-      {/* ── 5. OFFICE DESK COLLECTION (COMBINATIONS OF TWO) ── */}
+      {/* ── 4c. THE DRIDHA DISTINCTION (UNIFIED ECOSYSTEM, HEIRLOOM GIFTING & BESPOKE CRAFT) ── */}
+      <section className="py-20 lg:py-28 bg-white border-t border-warmgrey/70">
+        <Container>
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-gold block mb-2.5">
+              The Artisan Standard
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-green leading-tight">
+              The Dridha Distinction
+            </h2>
+            <div className="w-12 h-0.5 bg-brand-gold mx-auto mt-5 mb-5" />
+            <p className="text-sm sm:text-base text-charcoal/70 leading-relaxed">
+              Every detail is shaped with calm intention — from individual ergonomic pieces to complete workstation suites and heirloom gift sets.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Pillar 1: One-Stop Desk Ecosystem */}
+            <div className="p-8 rounded-3xl bg-brand-cream/50 border border-warmgrey/80 flex flex-col justify-between hover:shadow-soft hover:border-brand-green/30 transition-all duration-300">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green mb-6">
+                  <Boxes className="w-6 h-6 text-brand-green" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-brand-green mb-3">
+                  The Complete Desk Atelier
+                </h3>
+                <p className="text-xs sm:text-sm text-charcoal/75 leading-relaxed">
+                  A unified one-stop ecosystem for your entire workspace. Multi-angle laptop stands, interlocking mobile docks, dual headphone cradles, and pine bookends — all sharing the same Himalayan grain and organic warmth.
+                </p>
+              </div>
+              <div className="pt-6 mt-6 border-t border-warmgrey/60 flex items-center gap-2 text-xs font-bold text-brand-green uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold" />
+                <span>One Harmonious Aesthetic</span>
+              </div>
+            </div>
+
+            {/* Pillar 2: Gifting */}
+            <div className="p-8 rounded-3xl bg-brand-cream/50 border border-warmgrey/80 flex flex-col justify-between hover:shadow-soft hover:border-brand-gold/50 transition-all duration-300">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-brand-gold/15 flex items-center justify-center text-brand-gold mb-6">
+                  <Gift className="w-6 h-6 text-brand-gold" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-brand-green mb-3">
+                  Heirloom &amp; Thoughtful Gifting
+                </h3>
+                <p className="text-xs sm:text-sm text-charcoal/75 leading-relaxed">
+                  A meaningful, functional gift that sits proudly on the desk for years. Each individual piece and curated combo is crafted from fallen pine and dispatched with protective transit packing, an artisan seal, and our note card.
+                </p>
+              </div>
+              <div className="pt-6 mt-6 border-t border-warmgrey/60 flex items-center gap-2 text-xs font-bold text-brand-green uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold" />
+                <span>Timeless Desk Keepsakes</span>
+              </div>
+            </div>
+
+            {/* Pillar 3: Bespoke Craft */}
+            <div className="p-8 rounded-3xl bg-brand-cream/50 border border-warmgrey/80 flex flex-col justify-between hover:shadow-soft hover:border-brand-brown/40 transition-all duration-300">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-brand-brown/10 flex items-center justify-center text-brand-brown mb-6">
+                  <Shield className="w-6 h-6 text-brand-brown" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-brand-green mb-3">
+                  Bespoke Commissions
+                </h3>
+                <p className="text-xs sm:text-sm text-charcoal/75 leading-relaxed">
+                  Have unique workstation dimensions, specialized equipment requirements, or custom wood engraving requests? We periodically accept custom commissions based on artisan workshop feasibility.
+                </p>
+              </div>
+              <div className="pt-6 mt-6 border-t border-warmgrey/60 flex items-center gap-2 text-xs font-bold text-brand-green uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold" />
+                <span>Artisan Feasibility Inquiries</span>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* ── 5. OFFICE DESK COLLECTION (COMBINATIONS OF TWO & THREE) ── */}
       <section id="office-desk-collection" className="py-24 lg:py-32 bg-brand-cream border-t border-warmgrey/50">
         <Container>
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-gold block mb-3">
-              Special Duo Discount • 10% Off
+              Curated Suites &amp; Gift Sets • 10% to 15% Off
             </span>
             <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-green leading-tight">
               Office Desk
@@ -483,19 +625,29 @@ export default function HomePage() {
             </h2>
             <div className="w-12 h-0.5 bg-brand-gold mx-auto mt-6 mb-6" />
             <p className="text-sm sm:text-base text-charcoal/75 leading-relaxed">
-              Curated pairs of handcrafted Kashmir timber essentials.
-              Enjoy an automatic <span className="font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded">10% price reduction</span> on these complementary combinations of two.
+              Thoughtfully curated pairs and trios of Kashmir pine essentials — designed as complete workstation ecosystems and distinguished heirloom gift sets.
+              Enjoy an automatic <span className="font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded">10% off Duos</span> and <span className="font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded">15% off Trios</span> for a harmonized, productive workspace.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            {BUNDLES_DATA.map((bundle) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {featuredHomeBundles.map((bundle) => {
               const isAdded = quickAddedBundleId === bundle.id;
+              const isTrio = bundle.type === "trio" || bundle.items.length === 3;
+              const discountPct = bundle.discount_percentage || (isTrio ? 15 : 10);
 
               return (
                 <div
                   key={bundle.id}
-                  className="bg-white rounded-3xl overflow-hidden border border-warmgrey/80 shadow-soft hover:shadow-elevated transition-all duration-500 flex flex-col justify-between group"
+                  onClick={() => router.push(`/products/${bundle.slug}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      router.push(`/products/${bundle.slug}`);
+                    }
+                  }}
+                  role="link"
+                  tabIndex={0}
+                  className="cursor-pointer bg-white rounded-3xl overflow-hidden border border-warmgrey/80 shadow-soft hover:shadow-elevated transition-all duration-500 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
                 >
                   {/* Bundle Image */}
                   <div className="relative aspect-[16/11] w-full overflow-hidden bg-warmgrey/20">
@@ -504,44 +656,47 @@ export default function HomePage() {
                       alt={bundle.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-700 ease-smooth"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 50vw"
                     />
 
                     {/* Overlay Badges */}
                     <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
                       <Badge variant="bestseller">{bundle.badge}</Badge>
                       <span className="text-[11px] font-bold text-emerald-800 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-emerald-300">
-                        Save 10% (₹{bundle.savings})
+                        Save {discountPct}% (₹{bundle.savings})
                       </span>
                     </div>
 
-                    {/* Dual item pills at bottom of image */}
-                    {bundle.item_images && bundle.item_images.length === 2 && (
+                    {/* Dual/Trio item pills at bottom of image */}
+                    {bundle.item_images && bundle.item_images.length > 0 && (
                       <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl shadow-xs border border-warmgrey/60 flex items-center gap-1.5 pointer-events-none">
-                        <div className="relative w-6 h-6 rounded-md overflow-hidden bg-warmgrey/30">
-                          <Image src={bundle.item_images[0]} alt="Item 1" fill className="object-cover" sizes="24px" />
-                        </div>
-                        <span className="text-[11px] font-bold text-brand-gold">+</span>
-                        <div className="relative w-6 h-6 rounded-md overflow-hidden bg-warmgrey/30">
-                          <Image src={bundle.item_images[1]} alt="Item 2" fill className="object-cover" sizes="24px" />
-                        </div>
-                        <span className="text-[10px] font-bold text-brand-green ml-0.5 uppercase tracking-wide">Duo</span>
+                        {bundle.item_images.map((img, idx) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            {idx > 0 && <span className="text-[10px] font-bold text-brand-gold">+</span>}
+                            <div className="relative w-6 h-6 rounded-md overflow-hidden bg-warmgrey/30">
+                              <Image src={img} alt={`Item ${idx + 1}`} fill className="object-cover" sizes="24px" />
+                            </div>
+                          </div>
+                        ))}
+                        <span className="text-[10px] font-bold text-brand-green ml-1 uppercase tracking-wide">
+                          {isTrio ? "Trio" : "Duo"}
+                        </span>
                       </div>
                     )}
                   </div>
 
                   {/* Bundle Content */}
-                  <div className="p-6 flex flex-col flex-1 justify-between gap-5">
+                  <div className="p-6 sm:p-8 flex flex-col flex-1 justify-between gap-5">
                     <div>
                       <div className="mb-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md inline-block">
-                          10% Price Reduction
+                          {isTrio ? "15% Price Reduction" : "10% Price Reduction"}
                         </span>
                       </div>
-                      <h3 className="font-display text-xl font-bold text-brand-green group-hover:text-brand-brown transition-colors leading-snug">
+                      <h3 className="font-display text-xl sm:text-2xl font-bold text-brand-green group-hover:text-brand-brown transition-colors leading-snug">
                         {bundle.name}
                       </h3>
-                      <p className="text-xs text-charcoal/70 leading-relaxed mt-2 line-clamp-2">
+                      <p className="text-xs sm:text-sm text-charcoal/70 leading-relaxed mt-2 line-clamp-2">
                         {bundle.description}
                       </p>
 
@@ -567,17 +722,23 @@ export default function HomePage() {
                               {formatPrice(bundle.original_price)}
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold text-emerald-700">
-                            Save ₹{bundle.savings} (10% OFF)
+                          <span className="text-[10px] font-bold text-emerald-700 block">
+                            Save ₹{bundle.savings} (Extra {discountPct}% Combo OFF)
+                          </span>
+                          <span className="text-[10px] text-charcoal/50 block">
+                            Bought separately: {formatPrice(bundle.original_price)}
                           </span>
                         </div>
                       </div>
 
                       <Button
                         variant={isAdded ? "gold" : "primary"}
-                        className="w-full"
+                        className="w-full relative z-10"
                         size="sm"
-                        onClick={() => handleAddToCartBundle(bundle)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCartBundle(bundle);
+                        }}
                       >
                         {isAdded ? (
                           <>
@@ -585,15 +746,28 @@ export default function HomePage() {
                           </>
                         ) : (
                           <>
-                            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add Duo to Cart
+                            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> {isTrio ? "Add Trio to Cart" : "Add Duo to Cart"}
                           </>
                         )}
                       </Button>
+                      <div className="flex items-center justify-center gap-1 text-center text-xs font-medium text-charcoal/50 group-hover:text-brand-green transition-colors mt-3">
+                        <span>{isTrio ? "View Trio Details" : "View Duo Details"}</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* View All Combos CTA */}
+          <div className="text-center mt-14">
+            <Link href="/shop#combos">
+              <Button variant="outline" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                View All Office Desk Combos (7 Sets)
+              </Button>
+            </Link>
           </div>
         </Container>
       </section>
@@ -625,7 +799,7 @@ export default function HomePage() {
               {
                 step: "01",
                 title: "Salvaged Harvest",
-                desc: "We patrol natural walnut groves for wind-fallen branches and retired trees, honoring the valley ecosystem.",
+                desc: "We patrol natural forest groves for wind-fallen branches and retired trees, honoring the valley ecosystem.",
               },
               {
                 step: "02",
@@ -634,13 +808,13 @@ export default function HomePage() {
               },
               {
                 step: "03",
-                title: "Multi-Grit Polish",
-                desc: "Hand-sanded up to 600 grit to achieve an ultra-smooth touch that feels organic, silky, and warm.",
+                title: "Organic Texture & Finish",
+                desc: "Hand-finished to celebrate the pine's natural grain ripples, tactile character, and living mountain rawness — preserving authentic wood character over artificial uniformity.",
               },
               {
                 step: "04",
-                title: "Pune QA & Ship",
-                desc: "Consignments arrive in Pune for individual inspection, 5-ply box packing with kraft paper, and prompt dispatch.",
+                title: "Custom Products",
+                desc: "Custom products accepted and tailored to your workspace specifications, alongside our signature catalog pieces.",
               },
             ].map((item, i) => (
               <div key={i} className="relative pl-6 border-l border-brand-gold/30">
@@ -671,6 +845,9 @@ export default function HomePage() {
             muted
             loop
             playsInline
+            controlsList="nodownload"
+            disablePictureInPicture
+            onContextMenu={(e) => e.preventDefault()}
             className="absolute inset-0 w-full h-full object-cover"
             poster="/images/image1.jpeg"
           >
@@ -712,15 +889,15 @@ export default function HomePage() {
 
             {/* Tagline */}
             <p className="font-heading text-lg sm:text-xl lg:text-2xl italic text-brand-cream/85 mb-2">
-              Where Ancient Timber Meets Modern Desks
+              Where Ancient Pine Meets Modern Desks
             </p>
             <p className="font-body text-xs text-white/50 tracking-widest uppercase mb-8">
-              Zero Deforestation · Pure Artisan Craft · Free Pan-India Delivery
+              Zero Deforestation · Pure Artisan Craft · Pan-India Delivery
             </p>
 
             {/* Subtext */}
             <p className="text-white/60 text-sm max-w-md leading-relaxed">
-              See raw timber being chiseled, woodworkers sharing their stories,
+              See raw pine being chiseled, woodworkers sharing their stories,
               and real customer desk setups.
             </p>
           </div>
@@ -765,7 +942,7 @@ export default function HomePage() {
                     @dridha_crafts
                   </h4>
                   <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
-                    Full artisan mini-documentaries, fallen timber foraging in Gulmarg, and step-by-step woodworking processes.
+                    Full artisan mini-documentaries, fallen pine foraging in Gulmarg, and step-by-step woodworking processes.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400 group-hover:gap-3 transition-all">
@@ -882,7 +1059,7 @@ export default function HomePage() {
                     src: "/images/brand_img4.jpeg",
                     platform: "Facebook",
                     type: "Community",
-                    caption: "Customer desk transformation with walnut riser",
+                    caption: "Customer desk transformation with wooden riser",
                     href: SOCIAL_LINKS.facebook,
                     icon: FacebookIcon,
                     accent: "border-blue-500/40 text-blue-400",
@@ -985,8 +1162,8 @@ export default function HomePage() {
             {[
               { value: "100%", label: "Naturally Fallen Wood", icon: "🌲" },
               { value: "Zero", label: "Plastic in Packaging", icon: "♻️" },
-              { value: "Free", label: "Pan-India Delivery", icon: "🚚" },
-              { value: "COD", label: "Cash On Delivery & GPay", icon: "💳" },
+              { value: "Direct", label: "Pan-India Delivery", icon: "🚚" },
+              { value: "UPI", label: "Safe UPI Payment via WhatsApp", icon: "📱" },
             ].map((trust, i) => (
               <div key={i} className="space-y-2">
                 <span className="text-3xl block">{trust.icon}</span>

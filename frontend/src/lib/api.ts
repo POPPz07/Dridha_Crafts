@@ -68,13 +68,17 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
     }
   }
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...customHeaders,
+  const headers: Record<string, string> = {
+    ...((customHeaders as Record<string, string>) || {}),
   };
 
+  const isFormData = typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
+  if (!isFormData && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
   if (resolvedToken) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${resolvedToken}`;
+    headers["Authorization"] = `Bearer ${resolvedToken}`;
   }
 
   const url = getApiUrl(endpoint);
@@ -112,6 +116,13 @@ export const api = {
       ...options,
       method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  upload: <T>(endpoint: string, formData: FormData, options?: FetchOptions) =>
+    fetchApi<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: formData,
     }),
 
   delete: <T>(endpoint: string, options?: FetchOptions) =>

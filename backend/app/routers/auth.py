@@ -3,7 +3,7 @@ Dridha Crafts - Auth Router
 Handles user registration, login, profile, and logout via Supabase Auth.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import create_client
@@ -13,6 +13,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.middleware.auth import get_current_user
+from app.utils.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -30,12 +31,14 @@ def _get_supabase_anon_client():
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(get_settings().RATE_LIMIT_AUTH)
 async def signup(
+    request: Request,
     data: UserCreate,
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Register a new user.
+    Register a new user with strict rate-limiting.
 
     1. Creates user in Supabase Auth.
     2. Creates a profile row in the local users table.
@@ -69,11 +72,13 @@ async def signup(
             detail=f"Failed to create auth user: {exc}",
         )
 
-    # Create profile in our database
+    # Create profile in our database (defaults to role='customer')
     user = User(
         auth_id=auth_response.user.id,
         email=data.email,
         full_name=data.full_name,
+        role="customer",
+        is_active=True,
     )
     db.add(user)
     await db.flush()
@@ -82,12 +87,14 @@ async def signup(
 
 
 @router.post("/login")
+@limiter.limit(get_settings().RATE_LIMIT_AUTH)
 async def login(
+    request: Request,
     email: str,
     password: str,
 ):
     """
-    Authenticate a user via Supabase Auth.
+    Authenticate a user via Supabase Auth with brute-force rate-limiting.
 
     Returns access_token, refresh_token, and user metadata.
     """
@@ -141,8 +148,11 @@ async def update_profile(
             detail="No fields to update",
         )
 
+    # Strict defensive whitelist prevents privilege escalation
+    ALLOWED_UPDATE_FIELDS = {"full_name", "phone"}
     for field, value in update_data.items():
-        setattr(current_user, field, value)
+        if field in ALLOWED_UPDATE_FIELDS:
+            setattr(current_user, field, value)
 
     await db.flush()
     return current_user

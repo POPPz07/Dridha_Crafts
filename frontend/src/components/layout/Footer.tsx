@@ -93,9 +93,7 @@ export function Footer() {
               Our Story & Channels
             </h4>
             <p className="text-sm text-brand-cream/70 leading-relaxed font-body">
-              Every piece is a blend of nature, tradition, and skilled hands.
-              From the fallen trees of Kashmir to your desk, we bring you
-              handcrafted wood essentials — made to last a lifetime.
+              A unified Kashmir woodcraft atelier. Uniting laptops, phones, audio gear, and literature under one warm organic pine aesthetic. Available individually, as complete curated gift suites, and through bespoke craft commissions.
             </p>
             <div className="space-y-2 pt-1">
               <span className="text-[11px] uppercase tracking-wider text-brand-cream/40 block">
@@ -176,6 +174,22 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/shop#combos"
+                  className="hover:text-brand-gold hover:pl-1 transition-all duration-200"
+                >
+                  Workstation Combos &amp; Gift Sets
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/help"
+                  className="hover:text-brand-gold hover:pl-1 transition-all duration-200"
+                >
+                  Help &amp; Bespoke FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/wishlist"
                   className="hover:text-brand-gold hover:pl-1 transition-all duration-200"
                 >
@@ -193,11 +207,15 @@ export function Footer() {
             <div className="space-y-3 text-sm text-brand-cream/70">
               <p className="flex items-start gap-2">
                 <span className="text-brand-gold mt-0.5">✉</span>
-                <span>hello@dridhacrafts.com</span>
+                <span>craftsdridha@gmail.com</span>
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-brand-gold mt-0.5">📍</span>
-                <span>Shipped from Pune · Made in Kashmir</span>
+                <span className="text-brand-gold mt-0.5">🪵</span>
+                <span>One-Stop Desk Atelier · Bespoke Inquiries Upon Feasibility</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="text-brand-gold mt-0.5">📦</span>
+                <span>Secure Transit Packaging · Corporate &amp; Milestone Gifting</span>
               </p>
             </div>
             <div className="pt-3 border-t border-white/10">
@@ -209,10 +227,10 @@ export function Footer() {
                   <span>📱</span> GPay QR
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-brand-cream/70 font-medium">
-                  <span>💵</span> Cash on Delivery
+                  <span>💬</span> UPI via WhatsApp
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-brand-cream/70 font-medium">
-                  <span>🚚</span> Free Shipping
+                  <span>🚚</span> Pan-India Delivery
                 </span>
               </div>
             </div>
@@ -223,7 +241,7 @@ export function Footer() {
         <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-cream/40 gap-3">
           <p>© 2026 Dridha Crafts. All rights reserved.</p>
           <p className="text-center">
-            Crafted with ❤️ in Kashmir &amp; Pune
+            Handcrafted with ❤️ in Kashmir · One-Stop Desk Atelier · Bespoke Commissions
           </p>
           <p className="text-right text-brand-cream/30">
             Zero Deforestation · Pure Craft

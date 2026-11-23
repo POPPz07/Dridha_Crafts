@@ -5,15 +5,15 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthModalOpen: boolean;
-  authModalView: "login" | "signup";
+  authModalView: "login" | "signup" | "forgot_password";
   pendingCartItem: CartItem | null;
 
   // Actions
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
-  openAuthModal: (view?: "login" | "signup") => void;
+  openAuthModal: (view?: "login" | "signup" | "forgot_password") => void;
   closeAuthModal: () => void;
-  setAuthModalView: (view: "login" | "signup") => void;
+  setAuthModalView: (view: "login" | "signup" | "forgot_password") => void;
   setPendingCartItem: (item: CartItem | null) => void;
   consumePendingCartItem: () => CartItem | null;
   logout: () => void;

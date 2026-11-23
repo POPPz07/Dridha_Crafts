@@ -40,6 +40,8 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
 
+    model_config = {"extra": "forbid"}
+
 
 # ── Address Schemas ──────────────────────────────────────────────────────────
 

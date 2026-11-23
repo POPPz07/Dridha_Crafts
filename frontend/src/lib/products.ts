@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { PRODUCTS_DATA, StaticProduct } from "@/lib/products-data";
+import { PRODUCTS_DATA, StaticProduct, findProductOrBundleBySlug } from "@/lib/products-data";
 
 export interface ProductVariantItem {
   id: string;
@@ -11,7 +11,7 @@ export interface ProductVariantItem {
 
 export async function getProducts(): Promise<StaticProduct[]> {
   try {
-    const res = await api.get<{ items: any[] }>("/api/products?per_page=50");
+    const res = await api.get<{ items: any[] }>("/api/products?per_page=50&sort_by=sort_order&sort_order=asc");
     if (res && res.items && res.items.length > 0) {
       return res.items.map((apiP) => {
         const fallback = PRODUCTS_DATA.find((p) => p.slug === apiP.slug || p.id === apiP.id);
@@ -29,7 +29,7 @@ export async function getProducts(): Promise<StaticProduct[]> {
           category: apiP.category,
           price: Number(apiP.price),
           compare_at_price: apiP.compare_at_price ? Number(apiP.compare_at_price) : fallback?.compare_at_price,
-          wood_type: apiP.wood_type || fallback?.wood_type || "Kashmir Walnut",
+          wood_type: apiP.wood_type || fallback?.wood_type || "Kashmir Pine",
           finish: apiP.finish || fallback?.finish || "Natural Oil",
           weight_kg: Number(apiP.weight_kg) || fallback?.weight_kg || 0.5,
           dimensions: apiP.dimensions || fallback?.dimensions,
@@ -54,10 +54,11 @@ export async function getProducts(): Promise<StaticProduct[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<StaticProduct | null> {
+  const localMatch = findProductOrBundleBySlug(slug);
   try {
     const apiP = await api.get<any>(`/api/products/${slug}`);
     if (apiP && apiP.id) {
-      const fallback = PRODUCTS_DATA.find((p) => p.slug === apiP.slug || p.id === apiP.id);
+      const fallback = localMatch;
       const images =
         apiP.images && apiP.images.length > 0
           ? apiP.images.map((img: any) => ({ url: img.image_url, alt: img.alt_text }))
@@ -72,7 +73,7 @@ export async function getProductBySlug(slug: string): Promise<StaticProduct | nu
         category: apiP.category,
         price: Number(apiP.price),
         compare_at_price: apiP.compare_at_price ? Number(apiP.compare_at_price) : fallback?.compare_at_price,
-        wood_type: apiP.wood_type || fallback?.wood_type || "Kashmir Walnut",
+        wood_type: apiP.wood_type || fallback?.wood_type || "Kashmir Pine",
         finish: apiP.finish || fallback?.finish || "Natural Oil",
         weight_kg: Number(apiP.weight_kg) || fallback?.weight_kg || 0.5,
         dimensions: apiP.dimensions || fallback?.dimensions,
@@ -92,6 +93,6 @@ export async function getProductBySlug(slug: string): Promise<StaticProduct | nu
   } catch (err) {
     console.warn(`Could not fetch product '${slug}' from API, using local fallback:`, err);
   }
-  return PRODUCTS_DATA.find((p) => p.slug === slug) || null;
+  return localMatch;
 }
 

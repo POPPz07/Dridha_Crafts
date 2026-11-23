@@ -3,9 +3,11 @@ Dridha Crafts - Backend Configuration
 Centralized settings using Pydantic Settings for type-safe environment variable management.
 """
 
+import json
 import os
 from functools import lru_cache
-from pydantic import Field
+from typing import Any
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 _env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -43,17 +45,38 @@ class Settings(BaseSettings):
     )
 
     # ── Security ─────────────────────────────────────────
-    CORS_ORIGINS: list[str] = Field(
-        default=["http://localhost:3000"],
+    CORS_ORIGINS: list[str] | str = Field(
+        default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
         description="Allowed CORS origins (frontend URLs)",
     )
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, tuple)):
+            return list(v)
+        raise ValueError(v)
     RATE_LIMIT_AUTH: str = "5/minute"
     RATE_LIMIT_GENERAL: str = "60/minute"
     CRON_SECRET: str | None = Field(default=None, description="Secret token for triggering cron endpoints")
 
-    # ── Email (Resend) ───────────────────────────────────
+    # ── Email & Notifications ──────────────────────────────
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = "craftsdridha@gmail.com"
+    SMTP_PASSWORD: str = ""  # 16-letter Google App Password
+    ADMIN_NOTIFICATION_EMAIL: str = "craftsdridha@gmail.com"
+    ADMIN_PHONE: str = "9767807889"
+    WHATSAPP_NUMBER: str = "919767807889"
     RESEND_API_KEY: str = ""
-    FROM_EMAIL: str = "orders@dridhacrafts.com"
+    FROM_EMAIL: str = "craftsdridha@gmail.com"
 
     # ── Payment ──────────────────────────────────────────
     UPI_ID: str = "dridhacrafts@upi"

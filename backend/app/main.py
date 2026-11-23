@@ -10,15 +10,19 @@ import logging
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.config import get_settings
-from app.database import async_session
+from app.database import async_session, engine
+from app.utils.limiter import limiter
+from app.middleware.request_id import RequestIDMiddleware
 from app.routers.orders import release_expired_reservations
 from app.routers import (
     addresses,
+    admin,
     auth,
     cart,
     orders,
@@ -33,8 +37,6 @@ logging.basicConfig(level=logging.INFO)
 
 settings = get_settings()
 
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIMIT_GENERAL])
 
 
 async def reservation_expiry_worker():
@@ -60,6 +62,29 @@ async def reservation_expiry_worker():
 async def lifespan(app: FastAPI):
     """Lifecycle events: startup and shutdown."""
     logger.info("Starting up Dridha Crafts API in %s mode...", settings.ENVIRONMENT)
+
+    # Self-healing database verification (ensure tracking fields and indexes exist)
+    try:
+        from sqlalchemy import text
+        statements = [
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS carrier VARCHAR(100)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(500)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_status_note VARCHAR(500)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
+            "CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC) WHERE user_id IS NOT NULL",
+            "CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders(status, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_products_active ON products(id, slug, category) WHERE is_active = TRUE",
+            "CREATE INDEX IF NOT EXISTS idx_products_active_category ON products(category, created_at DESC) WHERE is_active = TRUE",
+            "CREATE INDEX IF NOT EXISTS idx_reservations_active ON inventory_reservations(expires_at ASC) WHERE status = 'reserved'",
+            "CREATE INDEX IF NOT EXISTS idx_reviews_product_created ON reviews(product_id, created_at DESC)",
+        ]
+        async with engine.begin() as conn:
+            for stmt in statements:
+                await conn.execute(text(stmt))
+            logger.info("Database schema and performance composite indexes verified.")
+    except Exception as e:
+        logger.warning("Database schema verification notice: %s", e)
+
     expiry_task = asyncio.create_task(reservation_expiry_worker())
     yield
     expiry_task.cancel()
@@ -77,11 +102,24 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    openapi_url="/openapi.json" if settings.ENVIRONMENT != "production" else None,
 )
 
-# Attach rate limiter
+# Request ID & Structured Access Logging Middleware (Outer layer for full cycle tracing)
+app.add_middleware(RequestIDMiddleware)
+
+# Attach rate limiter & ASGI middleware (Enforces global rate limits across all routes)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# Trusted Host Middleware (Host header poisoning & cache poisoning defense)
+allowed_hosts = ["localhost", "127.0.0.1", "*.localhost", "testserver"]
+if settings.ENVIRONMENT == "production":
+    allowed_hosts.extend(["dridhacrafts.com", "*.dridhacrafts.com", "*.onrender.com", "*.vercel.app"])
+else:
+    allowed_hosts.append("*")
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
 # CORS Middleware (strict origin whitelist from settings)
 app.add_middleware(
@@ -91,6 +129,18 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+# Security Headers Middleware (OWASP defensive headers)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if settings.ENVIRONMENT == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 
 # Global Exception Handler for unexpected errors (Prevents sensitive internal stack traces from leaking)
@@ -105,6 +155,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Health check
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for Render/uptime monitoring."""
     return {
@@ -127,3 +178,4 @@ app.include_router(reviews.router, prefix=api_prefix)
 app.include_router(wishlist.router, prefix=api_prefix)
 app.include_router(addresses.router, prefix=api_prefix)
 app.include_router(payments.router, prefix=api_prefix)
+app.include_router(admin.router, prefix=api_prefix)

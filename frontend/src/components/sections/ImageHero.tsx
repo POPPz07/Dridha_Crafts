@@ -70,10 +70,9 @@ export function ImageHero() {
 
           {/* Aside caption — desktop only */}
           <div
-            className="hidden lg:block w-48 border-t border-white/40 pt-4 text-white/70 text-[11px] leading-relaxed"
+            className="hidden lg:block w-52 border-t border-white/40 pt-4 text-white/70 text-[11px] leading-relaxed"
           >
-            The first collection is taking shape. Discover handmade desk pieces
-            with the calm, warmth and character of natural wood.
+            A unified desk atelier. Individual essentials, complete curated gift sets, and bespoke commissions carved from fallen Kashmir pine.
           </div>
         </div>
       </div>

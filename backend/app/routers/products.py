@@ -6,12 +6,13 @@ Public endpoints for browsing products, bundles, and categories.
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
+from app.utils.cache import get_or_set_cached
 from app.models.product import Bundle, BundleItem, Product, ProductImage, ProductVariant
 from app.models.review import Review
 from app.schemas.product import (
@@ -30,6 +31,7 @@ category_router = APIRouter(prefix="/categories", tags=["Categories"])
 
 @router.get("", response_model=PaginatedResponse[ProductListResponse])
 async def list_products(
+    response: Response,
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(12, ge=1, le=50, description="Items per page"),
     category: Optional[str] = Query(None, description="Filter by category"),
@@ -43,81 +45,93 @@ async def list_products(
 ):
     """
     List products with pagination, filtering, and sorting.
-
-    Supports filtering by category, price range, search term, and wood type.
+    Cached for high throughput with conditional HTTP Cache-Control.
     """
-    # Base query — only active products
-    query = select(Product).where(Product.is_active == True)  # noqa: E712
-    count_query = select(func.count(Product.id)).where(Product.is_active == True)  # noqa: E712
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
+    cache_key = f"products:list:{page}:{per_page}:{category}:{search}:{min_price}:{max_price}:{wood_type}:{sort_by}:{sort_order}"
 
-    # Apply filters
-    if category:
-        query = query.where(Product.category == category)
-        count_query = count_query.where(Product.category == category)
-    if search:
-        search_filter = or_(
-            Product.name.ilike(f"%{search}%"),
-            Product.short_description.ilike(f"%{search}%"),
-        )
-        query = query.where(search_filter)
-        count_query = count_query.where(search_filter)
-    if min_price is not None:
-        query = query.where(Product.price >= min_price)
-        count_query = count_query.where(Product.price >= min_price)
-    if max_price is not None:
-        query = query.where(Product.price <= max_price)
-        count_query = count_query.where(Product.price <= max_price)
-    if wood_type:
-        query = query.where(Product.wood_type == wood_type)
-        count_query = count_query.where(Product.wood_type == wood_type)
+    async def _fetch():
+        # Base query — only active products
+        query = select(Product).where(Product.is_active == True)  # noqa: E712
+        count_query = select(func.count(Product.id)).where(Product.is_active == True)  # noqa: E712
 
-    # Total count
-    total = (await db.execute(count_query)).scalar() or 0
-
-    # Sorting
-    sort_column = getattr(Product, sort_by)
-    query = query.order_by(sort_column.desc() if sort_order == "desc" else sort_column.asc())
-
-    # Pagination
-    offset = (page - 1) * per_page
-    query = query.offset(offset).limit(per_page)
-
-    # Eager-load images for primary_image_url
-    query = query.options(selectinload(Product.images))
-
-    result = await db.execute(query)
-    products = result.scalars().all()
-
-    # Build response items
-    items = []
-    for product in products:
-        primary_image = next(
-            (img.image_url for img in product.images if img.is_primary),
-            product.images[0].image_url if product.images else None,
-        )
-        items.append(
-            ProductListResponse(
-                id=product.id,
-                name=product.name,
-                slug=product.slug,
-                short_description=product.short_description,
-                category=product.category,
-                price=product.price,
-                compare_at_price=product.compare_at_price,
-                wood_type=product.wood_type,
-                finish=product.finish,
-                is_featured=product.is_featured,
-                stock_quantity=product.stock_quantity,
-                primary_image_url=primary_image,
+        # Apply filters
+        if category:
+            query = query.where(Product.category == category)
+            count_query = count_query.where(Product.category == category)
+        if search:
+            escaped_search = (
+                search.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+                .strip()
             )
+            if escaped_search:
+                search_filter = or_(
+                    Product.name.ilike(f"%{escaped_search}%"),
+                    Product.short_description.ilike(f"%{escaped_search}%"),
+                )
+                query = query.where(search_filter)
+                count_query = count_query.where(search_filter)
+        if min_price is not None:
+            query = query.where(Product.price >= min_price)
+            count_query = count_query.where(Product.price >= min_price)
+        if max_price is not None:
+            query = query.where(Product.price <= max_price)
+            count_query = count_query.where(Product.price <= max_price)
+        if wood_type:
+            query = query.where(Product.wood_type == wood_type)
+            count_query = count_query.where(Product.wood_type == wood_type)
+
+        # Total count
+        total = (await db.execute(count_query)).scalar() or 0
+
+        # Sorting
+        sort_column = getattr(Product, sort_by)
+        query = query.order_by(sort_column.desc() if sort_order == "desc" else sort_column.asc())
+
+        # Pagination
+        offset = (page - 1) * per_page
+        query = query.offset(offset).limit(per_page)
+
+        # Eager-load images for primary_image_url
+        query = query.options(selectinload(Product.images))
+
+        result = await db.execute(query)
+        products = result.scalars().all()
+
+        # Build response items
+        items = []
+        for product in products:
+            primary_image = next(
+                (img.image_url for img in product.images if img.is_primary),
+                product.images[0].image_url if product.images else None,
+            )
+            items.append(
+                ProductListResponse(
+                    id=product.id,
+                    name=product.name,
+                    slug=product.slug,
+                    short_description=product.short_description,
+                    category=product.category,
+                    price=product.price,
+                    compare_at_price=product.compare_at_price,
+                    wood_type=product.wood_type,
+                    finish=product.finish,
+                    is_featured=product.is_featured,
+                    stock_quantity=product.stock_quantity,
+                    primary_image_url=primary_image,
+                )
+            )
+
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            per_page=per_page,
         )
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        per_page=per_page,
-    )
+    return await get_or_set_cached(cache_key, 300, _fetch)
 
 
 @router.get("/featured", response_model=list[ProductListResponse])
@@ -164,64 +178,70 @@ async def get_featured_products(
 @router.get("/{slug}", response_model=ProductResponse)
 async def get_product_detail(
     slug: str,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get full product details by slug.
-
-    Includes images, variants, and review summary (average rating + count).
+    Cached for 10 minutes with HTTP Cache-Control.
     """
-    query = (
-        select(Product)
-        .where(Product.slug == slug, Product.is_active == True)  # noqa: E712
-        .options(
-            selectinload(Product.images),
-            selectinload(Product.variants),
+    response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=60"
+    cache_key = f"products:detail:{slug}"
+
+    async def _fetch():
+        query = (
+            select(Product)
+            .where(Product.slug == slug, Product.is_active == True)  # noqa: E712
+            .options(
+                selectinload(Product.images),
+                selectinload(Product.variants),
+            )
         )
-    )
-    result = await db.execute(query)
-    product = result.scalar_one_or_none()
+        result = await db.execute(query)
+        product = result.scalar_one_or_none()
 
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product not found",
+        if not product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Product not found",
+            )
+
+        # Review aggregation
+        review_stats = await db.execute(
+            select(
+                func.coalesce(func.avg(Review.rating), 0).label("avg_rating"),
+                func.count(Review.id).label("review_count"),
+            ).where(Review.product_id == product.id)
+        )
+        stats = review_stats.one()
+
+        return ProductResponse(
+            id=product.id,
+            name=product.name,
+            slug=product.slug,
+            short_description=product.short_description,
+            long_description=product.long_description,
+            category=product.category,
+            price=product.price,
+            compare_at_price=product.compare_at_price,
+            wood_type=product.wood_type,
+            finish=product.finish,
+            weight_kg=product.weight_kg,
+            dimensions=product.dimensions,
+            care_instructions=product.care_instructions,
+            is_active=product.is_active,
+            is_featured=product.is_featured,
+            stock_quantity=product.stock_quantity,
+            sort_order=product.sort_order,
+            created_at=product.created_at,
+            updated_at=product.updated_at,
+            images=product.images,
+            variants=[v for v in product.variants if v.is_active],
+            average_rating=round(float(stats.avg_rating), 1),
+            review_count=stats.review_count,
         )
 
-    # Review aggregation
-    review_stats = await db.execute(
-        select(
-            func.coalesce(func.avg(Review.rating), 0).label("avg_rating"),
-            func.count(Review.id).label("review_count"),
-        ).where(Review.product_id == product.id)
-    )
-    stats = review_stats.one()
-
-    return ProductResponse(
-        id=product.id,
-        name=product.name,
-        slug=product.slug,
-        short_description=product.short_description,
-        long_description=product.long_description,
-        category=product.category,
-        price=product.price,
-        compare_at_price=product.compare_at_price,
-        wood_type=product.wood_type,
-        finish=product.finish,
-        weight_kg=product.weight_kg,
-        dimensions=product.dimensions,
-        care_instructions=product.care_instructions,
-        is_active=product.is_active,
-        is_featured=product.is_featured,
-        stock_quantity=product.stock_quantity,
-        sort_order=product.sort_order,
-        created_at=product.created_at,
-        updated_at=product.updated_at,
-        images=product.images,
-        variants=[v for v in product.variants if v.is_active],
-        average_rating=round(float(stats.avg_rating), 1),
-        review_count=stats.review_count,
-    )
+    return await get_or_set_cached(cache_key, 600, _fetch)
 
 
 # ── Bundle Endpoints ─────────────────────────────────────────────────────────
@@ -229,17 +249,23 @@ async def get_product_detail(
 
 @bundle_router.get("", response_model=list[BundleListResponse])
 async def list_bundles(
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """List all active bundles."""
-    query = (
-        select(Bundle)
-        .where(Bundle.is_active == True)  # noqa: E712
-        .order_by(Bundle.created_at.desc())
-    )
-    result = await db.execute(query)
-    bundles = result.scalars().all()
-    return bundles
+    """List all active bundles with caching."""
+    response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=60"
+    cache_key = "bundles:list"
+
+    async def _fetch():
+        query = (
+            select(Bundle)
+            .where(Bundle.is_active == True)  # noqa: E712
+            .order_by(Bundle.created_at.desc())
+        )
+        result = await db.execute(query)
+        return result.scalars().all()
+
+    return await get_or_set_cached(cache_key, 600, _fetch)
 
 
 @bundle_router.get("/{slug}", response_model=BundleResponse)

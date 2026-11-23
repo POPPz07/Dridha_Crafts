@@ -9,9 +9,13 @@ import type { Group } from "three";
 type Vec3 = [number, number, number];
 type Aperture = { x: number; z: number; width: number; length: number };
 
-const oak = "#c88747";
-const oakLight = "#e0a25e";
-const oakEdge = "#77401f";
+import {
+  type FinishOption,
+  WOOD_FINISH_THEMES,
+  STUDIO_3D_ENV,
+} from "./woodMaterials";
+
+export type { FinishOption };
 
 function artisanBoardPath(shape: Shape, width: number, length: number) {
   const hw = width / 2;
@@ -56,7 +60,7 @@ function artisanAperturePath(
   path.closePath();
 }
 
-/** A flat timber board with genuine hand-cut through-apertures and artisan edge softens. */
+/** A flat pine wood board with genuine hand-cut through-apertures and artisan edge softens. */
 function PerforatedBoard({
   width,
   length,
@@ -64,7 +68,9 @@ function PerforatedBoard({
   apertures,
   position,
   rotation,
-  color = oakLight,
+  color = "#e0a25e",
+  roughness = 0.56,
+  metalness = 0.01,
 }: {
   width: number;
   length: number;
@@ -73,6 +79,8 @@ function PerforatedBoard({
   position: Vec3;
   rotation: Vec3;
   color?: string;
+  roughness?: number;
+  metalness?: number;
 }) {
   const geometry = useMemo(() => {
     const board = new Shape();
@@ -103,7 +111,7 @@ function PerforatedBoard({
 
   return (
     <mesh castShadow receiveShadow geometry={geometry} position={position} rotation={rotation}>
-      <meshStandardMaterial color={color} roughness={0.56} metalness={0.01} />
+      <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
     </mesh>
   );
 }
@@ -112,18 +120,22 @@ function Timber({
   args,
   position,
   rotation = [0, 0, 0],
-  color = oak,
+  color = "#c88747",
   radius = 0.035,
+  roughness = 0.53,
+  metalness = 0.01,
 }: {
   args: Vec3;
   position: Vec3;
   rotation?: Vec3;
   color?: string;
   radius?: number;
+  roughness?: number;
+  metalness?: number;
 }) {
   return (
     <RoundedBox castShadow receiveShadow args={args} position={position} rotation={rotation} radius={radius} smoothness={3}>
-      <meshStandardMaterial color={color} roughness={0.53} metalness={0.01} />
+      <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
     </RoundedBox>
   );
 }
@@ -134,9 +146,10 @@ function Timber({
  *  2. plain rectangular support handle;
  *  3. flat base: 4 rear slots and two raised front prongs/stoppers.
  */
-function ShiftDeskStand() {
+function ShiftDeskStand({ finish = "unpolished" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
   const deckAngle = 0.56;
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
 
   useFrame((_state, delta) => {
     if (model.current) model.current.rotation.y += delta * 0.1;
@@ -169,25 +182,58 @@ function ShiftDeskStand() {
           apertures={baseApertures}
           position={[0, 0, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
+          color={cfg.primary}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
         />
 
-        {/* Its two integral front prongs pass through the deck's two square
-            holes. Their exposed ends become the photographed laptop stoppers.
-            Hand-aligned with natural artisan workshop tolerances. */}
-        <Timber args={[0.545, 0.64, 0.42]} position={[-1.055, 0.31, 2.095]} rotation={[0.005, -0.007, 0.006]} color={oak} radius={0.042} />
-        <Timber args={[0.538, 0.638, 0.425]} position={[1.045, 0.308, 2.105]} rotation={[-0.004, 0.006, -0.005]} color={oak} radius={0.038} />
-        <Timber args={[0.54, 0.2, 0.76]} position={[-1.055, 0.04, 2.355]} color={oak} radius={0.03} />
-        <Timber args={[0.54, 0.2, 0.76]} position={[1.045, 0.04, 2.365]} color={oak} radius={0.03} />
+        {/* The two bottom resters poke out directly from the two square holes */}
+        <Timber
+          args={[0.54, 0.22, 1.35]}
+          position={[-1.055, 0.28, 1.98]}
+          rotation={[0.06, -0.007, 0.006]}
+          color={cfg.accent}
+          radius={0.035}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
+        />
+        <Timber
+          args={[0.54, 0.38, 0.26]}
+          position={[-1.055, 0.52, 2.46]}
+          rotation={[0.06, -0.007, 0.006]}
+          color={cfg.accent}
+          radius={0.038}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
+        />
 
-        {/* Piece 2: the plain, solid support handle. It runs from the chosen
-            base slot to the chosen upper-deck slot with slight hand-joint resting tilt. */}
+        <Timber
+          args={[0.535, 0.22, 1.35]}
+          position={[1.045, 0.28, 1.99]}
+          rotation={[0.06, 0.006, -0.005]}
+          color={cfg.accent}
+          radius={0.035}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
+        />
+        <Timber
+          args={[0.535, 0.38, 0.26]}
+          position={[1.045, 0.52, 2.47]}
+          rotation={[0.06, 0.006, -0.005]}
+          color={cfg.accent}
+          radius={0.038}
+          roughness={cfg.roughness}
+          metalness={cfg.metalness}
+        />
+
+        {/* Piece 2: support handle */}
         <group position={[0.006, 1.16, -0.73]} rotation={[0.085, 0.007, -0.005]}>
-          <Timber args={[1.045, 2.28, 0.22]} position={[0, 0, 0]} color={oak} radius={0.055} />
-          <Timber args={[1.12, 0.16, 0.28]} position={[0.004, -1.05, 0.02]} color={oakEdge} radius={0.025} />
-          <Timber args={[1.12, 0.16, 0.28]} position={[-0.005, 1.05, 0.02]} color={oakEdge} radius={0.025} />
+          <Timber args={[1.045, 2.28, 0.22]} position={[0, 0, 0]} color={cfg.accent} radius={0.055} roughness={cfg.roughness} metalness={cfg.metalness} />
+          <Timber args={[1.12, 0.16, 0.28]} position={[0.004, -1.05, 0.02]} color={cfg.detail} radius={0.025} roughness={cfg.roughness} metalness={cfg.metalness} />
+          <Timber args={[1.12, 0.16, 0.28]} position={[-0.005, 1.05, 0.02]} color={cfg.detail} radius={0.025} roughness={cfg.roughness} metalness={cfg.metalness} />
         </group>
 
-        {/* Piece 1: the deck rises from the two front prongs with subtle artisan settling. */}
+        {/* Piece 1: the deck rises from the two front prongs */}
         <group position={[0, 1.5, 0.4]} rotation={[deckAngle, 0.005, -0.004]}>
           <PerforatedBoard
             width={3.95}
@@ -196,17 +242,19 @@ function ShiftDeskStand() {
             apertures={deckApertures}
             position={[0, 0, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
+            color={cfg.primary}
+            roughness={cfg.roughness}
+            metalness={cfg.metalness}
           />
 
-          {/* The handle is shown engaged in the second upper deck slot. */}
-          <Timber args={[1.16, 0.14, 0.29]} position={[0.005, -0.13, -1.22]} rotation={[0, 0, 0.006]} color={oakEdge} radius={0.02} />
+          <Timber args={[1.16, 0.14, 0.29]} position={[0.005, -0.13, -1.22]} rotation={[0, 0, 0.006]} color={cfg.detail} radius={0.02} roughness={cfg.roughness} metalness={cfg.metalness} />
         </group>
       </group>
     </Float>
   );
 }
 
-export function AtelierScene() {
+export function AtelierScene({ finish = "unpolished" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows
@@ -215,11 +263,26 @@ export function AtelierScene() {
       aria-label="Interactive 3D model of the Dridha adjustable three-piece laptop stand"
       className="w-full h-full cursor-grab active:cursor-grabbing"
     >
-      <color attach="background" args={["#e7cfae"]} />
-      <hemisphereLight args={["#fff4dd", "#23432c", 1.7]} />
-      <directionalLight castShadow position={[4.6, 7, 4]} intensity={2.4} shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[-4, 2, -3]} intensity={0.7} color="#d9924c" />
-      <ShiftDeskStand />
+      <color attach="background" args={[STUDIO_3D_ENV.backgroundColor]} />
+      <hemisphereLight
+        args={[
+          STUDIO_3D_ENV.hemisphereSky,
+          STUDIO_3D_ENV.hemisphereGround,
+          STUDIO_3D_ENV.hemisphereIntensity,
+        ]}
+      />
+      <directionalLight
+        castShadow
+        position={STUDIO_3D_ENV.keyLightPos}
+        intensity={STUDIO_3D_ENV.keyLightIntensity}
+        shadow-mapSize={[1024, 1024]}
+      />
+      <directionalLight
+        position={STUDIO_3D_ENV.fillLightPos}
+        intensity={STUDIO_3D_ENV.fillLightIntensity}
+        color={STUDIO_3D_ENV.fillLightColor}
+      />
+      <ShiftDeskStand finish={finish} />
       <ContactShadows position={[0, -1.13, 0]} opacity={0.38} scale={9.5} blur={2.45} far={4} />
       <OrbitControls enablePan={false} enableZoom={false} minPolarAngle={0.78} maxPolarAngle={1.84} />
     </Canvas>

@@ -32,6 +32,7 @@ class PaymentMethod(str, enum.Enum):
     UPI = "upi"
     ONLINE = "online"
     CASHFREE = "cashfree"
+    WHATSAPP_UPI = "whatsapp_upi"
 
 
 class PaymentStatus(str, enum.Enum):
@@ -103,6 +104,10 @@ class Order(Base):
     cancel_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     tracking_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    carrier: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    tracking_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    tracking_status_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

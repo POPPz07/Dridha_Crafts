@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2, Smartphone, Building2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2 } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import { getCashfree, CashfreeCheckoutResponse } from "@/lib/cashfree";
+// import { getCashfree, CashfreeCheckoutResponse } from "@/lib/cashfree"; // Dormant - re-enable when Cashfree is active
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/stores/cartStore";
@@ -27,14 +27,16 @@ const addressSchema = z.object({
 
 type AddressForm = z.infer<typeof addressSchema>;
 
-type PaymentMethod = "online" | "cod";
+type PaymentMethod = "whatsapp_upi";
 type CheckoutStep = "address" | "payment" | "confirmation";
 
 export default function CheckoutPage() {
   const [step, setStep] = useState<CheckoutStep>("address");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [isPlacing, setIsPlacing] = useState(false);
+  const [isWakingServer, setIsWakingServer] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [waUrl, setWaUrl] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [idempotencyKey] = useState<string>(() => {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -51,14 +53,55 @@ export default function CheckoutPage() {
   const subtotal = useCartStore((s) => s.subtotal());
   const totalItems = useCartStore((s) => s.totalItems());
   const clearCart = useCartStore((s) => s.clearCart);
-  const hasBundleItems = items.some((i) => i.id?.includes("bundle") || !i.product_id);
+
+  const DELIVERY_CHARGES = 39;
+  const deliveryCharges = items.length > 0 ? DELIVERY_CHARGES : 0;
+  const totalAmount = subtotal + deliveryCharges;
 
   const {
     register,
     handleSubmit,
     getValues,
+    setValue,
+    watch,
+    reset,
     formState: { errors },
   } = useForm<AddressForm>({ resolver: zodResolver(addressSchema) });
+
+  // 1. Auto-fill from cached local draft or logged-in user profile
+  useEffect(() => {
+    try {
+      const savedDraft = typeof window !== "undefined" ? localStorage.getItem("dridha_checkout_address") : null;
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed && typeof parsed === "object") {
+          reset(parsed);
+          return;
+        }
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+
+    if (user) {
+      if (user.full_name) setValue("full_name", user.full_name);
+      if (user.phone) setValue("phone", user.phone);
+    }
+  }, [user, reset, setValue]);
+
+  // 2. Persist filled fields to localStorage so refreshing never loses entered data
+  useEffect(() => {
+    const subscription = watch((values) => {
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dridha_checkout_address", JSON.stringify(values));
+        }
+      } catch {
+        // ignore localStorage quota/disabled errors
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   // 1. Auth Guard: Require an authenticated Supabase user before checkout
   if (!isAuthLoading && !user && step !== "confirmation") {
@@ -107,22 +150,19 @@ export default function CheckoutPage() {
   }
 
   const onAddressSubmit = () => {
-    if (hasBundleItems) {
-      setErrorMessage("Your cart contains a curated set. Please remove the set and select individual items to proceed with checkout.");
-      return;
-    }
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePlaceOrder = async () => {
-    if (hasBundleItems) {
-      setErrorMessage("Your cart contains a curated set. Please remove the set and select individual items to proceed with checkout.");
-      return;
-    }
-
     setIsPlacing(true);
+    setIsWakingServer(false);
     setErrorMessage(null);
+
+    // Warm-up timeout indicator for Render cold start
+    const wakeTimer = setTimeout(() => {
+      setIsWakingServer(true);
+    }, 2500);
 
     const addressData = getValues();
     const shippingAddressPayload = {
@@ -138,59 +178,52 @@ export default function CheckoutPage() {
     const itemsPayload = items.map((i) => ({
       product_id: i.product_id,
       variant_id: i.variant_id || null,
+      variant_name: i.variant?.variant_name || null,
       quantity: i.quantity,
     }));
 
     try {
-      if (paymentMethod === "online") {
-        // Phase 6: Cashfree Hosted Checkout initiation
-        const checkoutPayload = {
-          shipping_address: shippingAddressPayload,
-          idempotency_key: idempotencyKey,
-          customer_email: user?.email || undefined,
-          customer_phone: addressData.phone,
-          items: itemsPayload,
-        };
-
-        const res = await api.post<CashfreeCheckoutResponse>(
-          "/api/payments/checkout",
-          checkoutPayload
-        );
-
-        if (!res?.payment_session_id) {
-          throw new Error("No payment session was returned by the server.");
-        }
-
-        const cashfree = await getCashfree(res.environment);
-        if (!cashfree) {
-          throw new Error("Unable to initialize Cashfree payment SDK.");
-        }
-
-        // Launch Cashfree Hosted Checkout redirect flow
-        await cashfree.checkout({
-          paymentSessionId: res.payment_session_id,
-          redirectTarget: "_self",
-        });
-
-        // Cart is retained until return payment verification (Phase 8)
-        return;
-      }
-
-      // COD payment flow
       const orderPayload = {
         shipping_address: shippingAddressPayload,
-        payment_method: paymentMethod,
+        payment_method: "whatsapp_upi",
         idempotency_key: idempotencyKey,
         customer_email: user?.email || undefined,
         customer_phone: addressData.phone,
         items: itemsPayload,
       };
 
-      const res = await api.post<{ order_number: string; id: string }>("/api/orders", orderPayload);
-      setOrderNumber(res.order_number);
+      let orderNum = `DC-${Date.now().toString().slice(-6)}`;
+      try {
+        const res = await api.post<{ order_number: string; id: string }>("/api/orders", orderPayload);
+        if (res && res.order_number) {
+          orderNum = res.order_number;
+          setOrderNumber(res.order_number);
+          setOrderId(res.id);
+        }
+      } catch (apiErr) {
+        console.warn("Backend order sync notice (proceeding via direct WhatsApp order):", apiErr);
+        setOrderNumber(orderNum);
+      }
+
+      // Build WhatsApp message
+      const itemsText = items
+        .map((i) => `  • ${i.product.name}${i.variant?.variant_name ? ` (${i.variant.variant_name})` : ""} × ${i.quantity} — ₹${((i.variant?.price_override ?? i.product.price) * i.quantity).toFixed(0)}`)
+        .join("\n");
+      const addr = addressData;
+      const waMessage =
+        `Namaste Dridha Crafts! 🌲\nI'd like to complete my order:\n\n• Order Number: #${orderNum}\n${itemsText}\n• Subtotal: ₹${subtotal.toFixed(0)}\n• Delivery Charges: ₹${deliveryCharges.toFixed(0)}\n• Total: ₹${totalAmount.toFixed(0)}\n• Name: ${addr.full_name}\n• Phone: ${addr.phone}\n• Address: ${addr.address_line_1}${addr.address_line_2 ? ", " + addr.address_line_2 : ""}, ${addr.city}, ${addr.state} - ${addr.pincode}\n\nPlease share your GPay/PhonePe QR code so I can complete payment! 🙏`;
+
+      const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919767807889";
+      const generatedWaUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+
+      setWaUrl(generatedWaUrl);
       clearCart();
       setStep("confirmation");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      // Open WhatsApp in new tab (slight delay so user sees confirmation first)
+      setTimeout(() => {
+        window.open(generatedWaUrl, "_blank");
+      }, 800);
     } catch (err: unknown) {
       console.error("Order placement failed:", err);
       let detail = "Failed to place order. Please try again.";
@@ -201,7 +234,9 @@ export default function CheckoutPage() {
       }
       setErrorMessage(detail);
     } finally {
+      clearTimeout(wakeTimer);
       setIsPlacing(false);
+      setIsWakingServer(false);
     }
   };
 
@@ -254,15 +289,62 @@ export default function CheckoutPage() {
                 </div>
                 <form onSubmit={handleSubmit(onAddressSubmit)} className="px-8 py-6 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField label="Full Name" id="full_name" error={errors.full_name?.message} {...register("full_name")} />
-                    <FormField label="Phone Number" id="phone" type="tel" error={errors.phone?.message} {...register("phone")} />
+                    <FormField
+                      label="Full Name"
+                      id="full_name"
+                      autoComplete="name"
+                      error={errors.full_name?.message}
+                      {...register("full_name")}
+                    />
+                    <FormField
+                      label="Phone Number"
+                      id="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      error={errors.phone?.message}
+                      {...register("phone")}
+                    />
                   </div>
-                  <FormField label="Address Line 1" id="address_line_1" error={errors.address_line_1?.message} {...register("address_line_1")} placeholder="House no., Street, Locality" />
-                  <FormField label="Address Line 2 (Optional)" id="address_line_2" error={errors.address_line_2?.message} {...register("address_line_2")} placeholder="Landmark, Apartment, etc." />
+                  <FormField
+                    label="Address Line 1"
+                    id="address_line_1"
+                    autoComplete="street-address"
+                    error={errors.address_line_1?.message}
+                    {...register("address_line_1")}
+                    placeholder="House no., Street, Locality"
+                  />
+                  <FormField
+                    label="Address Line 2 (Optional)"
+                    id="address_line_2"
+                    autoComplete="address-line2"
+                    error={errors.address_line_2?.message}
+                    {...register("address_line_2")}
+                    placeholder="Landmark, Apartment, etc."
+                  />
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FormField label="City" id="city" error={errors.city?.message} {...register("city")} />
-                    <FormField label="State" id="state" error={errors.state?.message} {...register("state")} />
-                    <FormField label="PIN Code" id="pincode" error={errors.pincode?.message} {...register("pincode")} placeholder="6 digits" maxLength={6} />
+                    <FormField
+                      label="City"
+                      id="city"
+                      autoComplete="address-level2"
+                      error={errors.city?.message}
+                      {...register("city")}
+                    />
+                    <FormField
+                      label="State"
+                      id="state"
+                      autoComplete="address-level1"
+                      error={errors.state?.message}
+                      {...register("state")}
+                    />
+                    <FormField
+                      label="PIN Code"
+                      id="pincode"
+                      autoComplete="postal-code"
+                      error={errors.pincode?.message}
+                      {...register("pincode")}
+                      placeholder="6 digits"
+                      maxLength={6}
+                    />
                   </div>
                   <div className="pt-2 flex items-center justify-between">
                     <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
@@ -282,60 +364,37 @@ export default function CheckoutPage() {
                 <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-soft overflow-hidden">
                   <div className="px-8 py-6 bg-brand-green">
                     <h2 className="font-display text-2xl font-bold text-white">Payment Method</h2>
-                    <p className="text-brand-cream/70 text-sm mt-1">Choose how you&apos;d like to pay</p>
+                    <p className="text-brand-cream/70 text-sm mt-1">Safe & personal checkout via WhatsApp</p>
                   </div>
-                  <div className="px-8 py-6 space-y-4">
-                    {/* Online Payment (UPI & Net Banking via Cashfree) */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("online")}
-                      className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
-                        paymentMethod === "online"
-                          ? "border-brand-green bg-brand-green/5"
-                          : "border-warmgrey hover:border-brand-green/40"
-                      }`}
-                    >
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === "online" ? "border-brand-green" : "border-warmgrey"}`}>
-                        {paymentMethod === "online" && <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />}
+                  <div className="px-8 py-6">
+                    {/* WhatsApp UPI Card */}
+                    <div className="w-full flex items-start gap-4 p-5 rounded-2xl border-2 border-brand-green bg-brand-green/5 text-left">
+                      {/* WhatsApp SVG icon */}
+                      <div className="shrink-0 mt-0.5">
+                        <svg viewBox="0 0 24 24" className="w-8 h-8 fill-[#25D366]" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-brand-green">Pay Online (UPI & Net Banking)</span>
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-brand-green/10 text-brand-green px-2 py-0.5 rounded-full">Cashfree</span>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="font-semibold text-brand-green text-lg">Pay via WhatsApp &amp; UPI</span>
                         </div>
-                        <p className="text-xs text-charcoal/60 mt-1">Instant, secure checkout via Google Pay, PhonePe, Paytm, BHIM UPI and major Indian banks.</p>
-                        <div className="flex items-center gap-2 mt-2.5">
+                        <p className="text-sm text-charcoal/70 mb-3">
+                          Place your order → We&apos;ll redirect you to WhatsApp → Share our GPay/PhonePe QR → Done!
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-charcoal/70 bg-warmgrey/50 px-2.5 py-0.5 rounded-full">
-                            <Smartphone className="w-3 h-3 text-brand-green" /> UPI Apps
+                            🔒 Safe &amp; Personal
                           </span>
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-charcoal/70 bg-warmgrey/50 px-2.5 py-0.5 rounded-full">
-                            <Building2 className="w-3 h-3 text-brand-green" /> Net Banking
+                            ⏱ 48-hr Confirmation Window
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-charcoal/70 bg-warmgrey/50 px-2.5 py-0.5 rounded-full">
+                            📸 Screenshot Proof
                           </span>
                         </div>
                       </div>
-                    </button>
-
-                    {/* COD Option */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("cod")}
-                      className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
-                        paymentMethod === "cod"
-                          ? "border-brand-green bg-brand-green/5"
-                          : "border-warmgrey hover:border-brand-green/40"
-                      }`}
-                    >
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === "cod" ? "border-brand-green" : "border-warmgrey"}`}>
-                        {paymentMethod === "cod" && <div className="w-2.5 h-2.5 rounded-full bg-brand-green" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-5 h-5 text-brand-green" />
-                          <span className="font-semibold text-brand-green">Cash on Delivery (COD)</span>
-                        </div>
-                        <p className="text-xs text-charcoal/60 mt-1">Pay when your order arrives. No advance payment needed.</p>
-                      </div>
-                    </button>
+                    </div>
                   </div>
                 </div>
 
@@ -351,20 +410,27 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-2">
-                  <button onClick={() => setStep("address")} className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Back to Address
-                  </button>
-                  <Button variant="primary" size="lg" onClick={handlePlaceOrder} isLoading={isPlacing}>
-                    {isPlacing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        {paymentMethod === "online" ? "Connecting to Cashfree..." : "Placing Order..."}
-                      </>
-                    ) : (
-                      paymentMethod === "online" ? "Pay Online with Cashfree" : "Place Order"
-                    )}
-                  </Button>
+                <div className="flex flex-col items-end gap-2 pt-2">
+                  <div className="flex items-center justify-between w-full">
+                    <button onClick={() => setStep("address")} className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Back to Address
+                    </button>
+                    <Button variant="primary" size="lg" onClick={handlePlaceOrder} isLoading={isPlacing}>
+                      {isPlacing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        "Place Order & Open WhatsApp →"
+                      )}
+                    </Button>
+                  </div>
+                  {isWakingServer && (
+                    <p className="text-xs text-brand-green/80 animate-pulse text-right">
+                      Connecting to secure order server... Please wait a few moments ✨
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -377,15 +443,30 @@ export default function CheckoutPage() {
                   <Check className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-display text-4xl font-bold text-brand-green mb-2">Order Placed!</h1>
-                  <p className="text-charcoal/70">Your order number is</p>
-                  <p className="font-display text-2xl font-bold text-brand-brown mt-1">{orderNumber}</p>
+                  <h1 className="font-display text-4xl font-bold text-brand-green mb-2">Order #{orderNumber} Placed! 🎉</h1>
+                  <p className="text-charcoal/70">WhatsApp is opening automatically. If it didn&apos;t open, tap the button below.</p>
                 </div>
+
+                {/* Open WhatsApp button */}
+                {waUrl && (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#25D366] text-white font-semibold shadow-md hover:bg-[#1ebe5d] transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    Open WhatsApp to Pay
+                  </a>
+                )}
+
                 <div className="bg-white rounded-2xl border border-warmgrey p-6 text-left max-w-sm mx-auto shadow-soft">
                   <p className="text-sm text-charcoal/70 mb-2 font-semibold">What&apos;s next?</p>
                   <ul className="space-y-2 text-sm text-charcoal/70">
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Order confirmed and being prepared</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Packed in eco-friendly 5-ply box</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Order pending payment confirmation via WhatsApp</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-brand-green shrink-0" /> Carefully packaged for safe transit</li>
                     <li className="flex items-center gap-2"><Truck className="w-4 h-4 text-brand-green shrink-0" /> Dispatched within 3–5 business days</li>
                   </ul>
                 </div>
@@ -418,28 +499,22 @@ export default function CheckoutPage() {
                         <p className="text-sm font-semibold text-brand-green truncate">{item.product.name}</p>
                         <p className="text-xs text-charcoal/50">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-bold text-brand-green shrink-0">{formatPrice(item.product.price * item.quantity)}</p>
+                      <p className="text-sm font-bold text-brand-green shrink-0">{formatPrice((item.variant?.price_override ?? item.product.price) * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
-                {hasBundleItems && (
-                  <div className="px-6 py-3 bg-amber-50 border-t border-b border-amber-200 text-amber-800 text-xs">
-                    <p className="font-semibold">Curated Set in Cart</p>
-                    <p className="mt-0.5 text-amber-700">Curated sets are coming soon as single packages. Please remove the set and select individual items to proceed.</p>
-                  </div>
-                )}
                 <div className="px-6 py-5 space-y-3 border-t border-warmgrey/60 bg-warmgrey/10">
                   <div className="flex justify-between text-sm text-charcoal/70">
                     <span>Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-charcoal/70">
-                    <span>Shipping</span>
-                    <span className="text-brand-green font-semibold">FREE</span>
+                    <span>Delivery Charges</span>
+                    <span className="font-semibold text-charcoal">{formatPrice(deliveryCharges)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-brand-green border-t border-warmgrey/60 pt-3 text-base">
                     <span className="font-display text-lg">Total</span>
-                    <span className="font-display text-xl">{formatPrice(subtotal)}</span>
+                    <span className="font-display text-xl">{formatPrice(totalAmount)}</span>
                   </div>
                 </div>
               </div>
