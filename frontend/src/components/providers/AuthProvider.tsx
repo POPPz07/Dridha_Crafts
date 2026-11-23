@@ -25,8 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleSessionChange = async (session: any) => {
       if (session?.user) {
         const prevUser = useAuthStore.getState().user;
-        if (prevUser && prevUser.id !== session.user.id) {
-          // Different user signed in, clear previous user's cart
+        const currentEmail = session.user.email?.trim().toLowerCase();
+        const prevEmail = prevUser?.email?.trim().toLowerCase();
+
+        // Only clear cart if a genuinely DIFFERENT user account signed in
+        if (prevUser && prevEmail && currentEmail && prevEmail !== currentEmail) {
           useCartStore.getState().clearCart();
         }
 
@@ -64,10 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           useAuthStore.getState().closeAuthModal();
         }
       } else {
-        const prevUser = useAuthStore.getState().user;
-        if (prevUser) {
-          useCartStore.getState().clearCart();
-        }
+        // If session is null/logged out, clear auth user state only.
+        // DO NOT wipe the cart here — tab switches, background token refresh, or offline blips
+        // must never delete a customer's items!
         setUser(null);
       }
       setLoading(false);

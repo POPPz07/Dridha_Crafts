@@ -45,7 +45,18 @@ class ApiError extends Error {
     public statusText: string,
     public data: unknown
   ) {
-    super(`API Error: ${status} ${statusText}`);
+    let msg = `API Error: ${status} ${statusText}`;
+    if (data && typeof data === "object") {
+      const d = data as Record<string, any>;
+      if (typeof d.detail === "string") {
+        msg = d.detail;
+      } else if (Array.isArray(d.detail) && d.detail.length > 0) {
+        msg = d.detail
+          .map((err: any) => `${err.loc?.slice(-1)[0] || "field"}: ${err.msg}`)
+          .join(", ");
+      }
+    }
+    super(msg);
     this.name = "ApiError";
   }
 }

@@ -121,3 +121,6 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Cached settings instance — loaded once, reused across requests."""
     return Settings()
+
+
+settings = get_settings()

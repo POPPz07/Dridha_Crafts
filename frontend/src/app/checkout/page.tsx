@@ -31,7 +31,33 @@ type PaymentMethod = "whatsapp_upi";
 type CheckoutStep = "address" | "payment" | "confirmation";
 
 export default function CheckoutPage() {
-  const [step, setStep] = useState<CheckoutStep>("address");
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [step, setStep] = useState<CheckoutStep>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("dridha_checkout_step");
+        if (saved === "payment" || saved === "address") return saved as CheckoutStep;
+      } catch {}
+    }
+    return "address";
+  });
+
+  const updateStep = (newStep: CheckoutStep) => {
+    setStep(newStep);
+    try {
+      if (typeof window !== "undefined") {
+        if (newStep === "confirmation") {
+          sessionStorage.removeItem("dridha_checkout_step");
+        } else {
+          sessionStorage.setItem("dridha_checkout_step", newStep);
+        }
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
   const [isPlacing, setIsPlacing] = useState(false);
   const [isWakingServer, setIsWakingServer] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
@@ -103,8 +129,22 @@ export default function CheckoutPage() {
     return () => subscription.unsubscribe();
   }, [watch]);
 
+  // 0. Initial Hydration & Auth Check Guard
+  if (!hasHydrated || isAuthLoading) {
+    return (
+      <main className="min-h-screen bg-brand-cream flex items-center justify-center pt-28">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-green" />
+          <p className="text-xs uppercase tracking-wider font-semibold text-charcoal/50">
+            Preparing your checkout…
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   // 1. Auth Guard: Require an authenticated Supabase user before checkout
-  if (!isAuthLoading && !user && step !== "confirmation") {
+  if (!user && step !== "confirmation") {
     return (
       <main className="min-h-screen bg-brand-cream flex items-center justify-center p-4 pt-28 pb-16">
         <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-soft p-8 max-w-md w-full text-center space-y-5">
@@ -150,7 +190,7 @@ export default function CheckoutPage() {
   }
 
   const onAddressSubmit = () => {
-    setStep("payment");
+    updateStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -218,7 +258,7 @@ export default function CheckoutPage() {
 
       setWaUrl(generatedWaUrl);
       clearCart();
-      setStep("confirmation");
+      updateStep("confirmation");
       window.scrollTo({ top: 0, behavior: "smooth" });
       // Open WhatsApp in new tab (slight delay so user sees confirmation first)
       setTimeout(() => {
@@ -412,7 +452,7 @@ export default function CheckoutPage() {
 
                 <div className="flex flex-col items-end gap-2 pt-2">
                   <div className="flex items-center justify-between w-full">
-                    <button onClick={() => setStep("address")} className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
+                    <button onClick={() => updateStep("address")} className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
                       <ArrowLeft className="w-4 h-4" /> Back to Address
                     </button>
                     <Button variant="primary" size="lg" onClick={handlePlaceOrder} isLoading={isPlacing}>
