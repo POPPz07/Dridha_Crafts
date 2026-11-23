@@ -54,6 +54,36 @@ export function AuthModal() {
   const signupForm = useForm<SignupForm>({ resolver: zodResolver(signupSchema) });
   const forgotForm = useForm<ForgotForm>({ resolver: zodResolver(forgotSchema) });
 
+  const switchToSignup = () => {
+    const email = loginForm.getValues("email") || forgotForm.getValues("email");
+    if (email) {
+      signupForm.setValue("email", email, { shouldValidate: true });
+    }
+    setErrorMsg("");
+    setSuccessMsg("");
+    openAuthModal("signup");
+  };
+
+  const switchToLogin = () => {
+    const email = signupForm.getValues("email") || forgotForm.getValues("email");
+    if (email) {
+      loginForm.setValue("email", email, { shouldValidate: true });
+    }
+    setErrorMsg("");
+    setSuccessMsg("");
+    openAuthModal("login");
+  };
+
+  const switchToForgot = () => {
+    const email = loginForm.getValues("email") || signupForm.getValues("email");
+    if (email) {
+      forgotForm.setValue("email", email, { shouldValidate: true });
+    }
+    setErrorMsg("");
+    setSuccessMsg("");
+    openAuthModal("forgot_password");
+  };
+
   if (!isOpen) return null;
 
   const handleForgotPassword = async (data: ForgotForm) => {
@@ -218,11 +248,7 @@ export function AuthModal() {
               <div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setErrorMsg("");
-                    setSuccessMsg("");
-                    openAuthModal("login");
-                  }}
+                  onClick={switchToLogin}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#e5c89d] hover:text-white transition-colors mb-3 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
@@ -236,11 +262,8 @@ export function AuthModal() {
               <>
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => {
-                      setErrorMsg("");
-                      setSuccessMsg("");
-                      openAuthModal("login");
-                    }}
+                    type="button"
+                    onClick={switchToLogin}
                     className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                       isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
                     }`}
@@ -248,11 +271,8 @@ export function AuthModal() {
                     Login
                   </button>
                   <button
-                    onClick={() => {
-                      setErrorMsg("");
-                      setSuccessMsg("");
-                      openAuthModal("signup");
-                    }}
+                    type="button"
+                    onClick={switchToSignup}
                     className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                       !isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
                     }`}
@@ -286,8 +306,9 @@ export function AuthModal() {
             )}
 
             {isForgot ? (
-              <form onSubmit={forgotForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+              <form key="modal-forgot-form" onSubmit={forgotForm.handleSubmit(handleForgotPassword)} className="space-y-4">
                 <FloatingInput
+                  key="forgot-email"
                   id="forgot-email"
                   type="email"
                   label="Email Address"
@@ -301,11 +322,7 @@ export function AuthModal() {
                 <div className="text-center pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setErrorMsg("");
-                      setSuccessMsg("");
-                      openAuthModal("login");
-                    }}
+                    onClick={switchToLogin}
                     className="text-xs text-charcoal/60 hover:text-brand-green font-medium cursor-pointer"
                   >
                     Remember your password? Sign in
@@ -313,8 +330,9 @@ export function AuthModal() {
                 </div>
               </form>
             ) : isLogin ? (
-              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+              <form key="modal-login-form" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <FloatingInput
+                  key="login-email"
                   id="login-email"
                   type="email"
                   label="Email Address"
@@ -323,6 +341,7 @@ export function AuthModal() {
                   {...loginForm.register("email")}
                 />
                 <FloatingInput
+                  key="login-password"
                   id="login-password"
                   type={showPassword ? "text" : "password"}
                   label="Password"
@@ -342,11 +361,7 @@ export function AuthModal() {
                 <div className="flex items-center justify-end -mt-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setErrorMsg("");
-                      setSuccessMsg("");
-                      openAuthModal("forgot_password");
-                    }}
+                    onClick={switchToForgot}
                     className="text-xs text-brand-green hover:underline font-medium cursor-pointer"
                   >
                     Forgot password?
@@ -357,8 +372,9 @@ export function AuthModal() {
                 </Button>
               </form>
             ) : (
-              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+              <form key="modal-signup-form" onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                 <FloatingInput
+                  key="signup-name"
                   id="signup-name"
                   type="text"
                   label="Full Name"
@@ -367,6 +383,7 @@ export function AuthModal() {
                   {...signupForm.register("full_name")}
                 />
                 <FloatingInput
+                  key="signup-email"
                   id="signup-email"
                   type="email"
                   label="Email Address"
@@ -375,6 +392,7 @@ export function AuthModal() {
                   {...signupForm.register("email")}
                 />
                 <FloatingInput
+                  key="signup-password"
                   id="signup-password"
                   type={showPassword ? "text" : "password"}
                   label="Password (min 8 characters)"
@@ -392,6 +410,7 @@ export function AuthModal() {
                   {...signupForm.register("password")}
                 />
                 <FloatingInput
+                  key="signup-confirm"
                   id="signup-confirm"
                   type="password"
                   label="Confirm Password"

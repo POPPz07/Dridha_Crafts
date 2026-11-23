@@ -70,6 +70,26 @@ function LoginContent() {
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
   const signupForm = useForm<SignupForm>({ resolver: zodResolver(signupSchema) });
 
+  const switchToSignup = () => {
+    const email = loginForm.getValues("email");
+    if (email) {
+      signupForm.setValue("email", email, { shouldValidate: true });
+    }
+    setView("signup");
+    setErrorMessage("");
+    setSuccessMessage("");
+  };
+
+  const switchToLogin = () => {
+    const email = signupForm.getValues("email");
+    if (email) {
+      loginForm.setValue("email", email, { shouldValidate: true });
+    }
+    setView("login");
+    setErrorMessage("");
+    setSuccessMessage("");
+  };
+
   useEffect(() => {
     if (user) {
       router.replace(redirectTo);
@@ -210,11 +230,7 @@ function LoginContent() {
         <div className="flex rounded-xl bg-brand-cream p-1 mb-6 border border-warmgrey/60">
           <button
             type="button"
-            onClick={() => {
-              setView("login");
-              setErrorMessage("");
-              setSuccessMessage("");
-            }}
+            onClick={switchToLogin}
             className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
               view === "login"
                 ? "bg-brand-green text-white shadow-soft"
@@ -225,11 +241,7 @@ function LoginContent() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              setView("signup");
-              setErrorMessage("");
-              setSuccessMessage("");
-            }}
+            onClick={switchToSignup}
             className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
               view === "signup"
                 ? "bg-brand-green text-white shadow-soft"
@@ -256,12 +268,13 @@ function LoginContent() {
 
       {/* Login Form */}
       {view === "login" ? (
-        <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+        <form key="page-login-form" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-charcoal/80 mb-1.5">
               Email Address
             </label>
             <input
+              key="login-email-input"
               type="email"
               placeholder="you@example.com"
               {...loginForm.register("email")}
@@ -280,6 +293,7 @@ function LoginContent() {
             </label>
             <div className="relative">
               <input
+                key="login-password-input"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 {...loginForm.register("password")}
@@ -302,7 +316,12 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={() => {
-                  useAuthStore.getState().openAuthModal("forgot_password");
+                  const email = loginForm.getValues("email");
+                  if (email) {
+                    useAuthStore.getState().openAuthModal("forgot_password");
+                  } else {
+                    useAuthStore.getState().openAuthModal("forgot_password");
+                  }
                 }}
                 className="text-xs font-semibold text-brand-green hover:underline cursor-pointer"
               >
@@ -329,12 +348,13 @@ function LoginContent() {
         </form>
       ) : (
         /* Signup Form */
-        <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+        <form key="page-signup-form" onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-charcoal/80 mb-1.5">
               Full Name
             </label>
             <input
+              key="signup-name-input"
               type="text"
               placeholder="Virendra Singh"
               {...signupForm.register("full_name")}
@@ -352,6 +372,7 @@ function LoginContent() {
               Email Address
             </label>
             <input
+              key="signup-email-input"
               type="email"
               placeholder="you@example.com"
               {...signupForm.register("email")}
