@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
 import { createClient } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 // ── Validation Schemas ─────────────────────────────────────────
 const loginSchema = z.object({
@@ -60,24 +61,25 @@ export function AuthModal() {
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      const supabase = createClient();
       const redirectUrl =
         typeof window !== "undefined"
           ? `${window.location.origin}/reset-password`
           : "/reset-password";
 
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: redirectUrl,
+      const res = await api.post<{ message: string }>("/api/auth/forgot-password", {
+        email: data.email,
+        redirect_to: redirectUrl,
       });
 
-      if (error) {
-        setErrorMsg(error.message);
-        return;
-      }
-
-      setSuccessMsg("Password reset email sent! Check your inbox for instructions to set a new password.");
-    } catch {
-      setErrorMsg("Failed to send password reset email. Please try again.");
+      setSuccessMsg(
+        res.message ||
+          "Password reset email sent! Check your inbox for instructions to set a new password."
+      );
+    } catch (err: any) {
+      setErrorMsg(
+        err?.message ||
+          "This email address is not registered with Dridha Crafts. Please check your email or create an account."
+      );
     } finally {
       setIsLoading(false);
     }

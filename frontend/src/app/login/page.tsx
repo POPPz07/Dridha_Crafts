@@ -298,6 +298,17 @@ function LoginContent() {
                 {loginForm.formState.errors.password.message}
               </p>
             )}
+            <div className="flex justify-end mt-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  useAuthStore.getState().openAuthModal("forgot_password");
+                }}
+                className="text-xs font-semibold text-brand-green hover:underline cursor-pointer"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           <Button

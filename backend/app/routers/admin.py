@@ -693,6 +693,10 @@ async def delete_customer(
     if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY and auth_id:
         try:
             sb = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+            try:
+                sb.auth.admin.sign_out(auth_id, scope="global")
+            except Exception:
+                pass
             sb.auth.admin.delete_user(auth_id)
         except Exception:
             pass

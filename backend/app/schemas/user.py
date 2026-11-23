@@ -85,3 +85,10 @@ class AddressUpdate(BaseModel):
     city: Optional[str] = Field(None, min_length=1, max_length=100)
     state: Optional[str] = Field(None, min_length=1, max_length=100)
     pincode: Optional[str] = Field(None, min_length=6, max_length=10, pattern=r"^\d{6}$")
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Schema for requesting a password reset email."""
+
+    email: EmailStr
+    redirect_to: Optional[str] = None

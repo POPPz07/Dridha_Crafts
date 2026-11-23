@@ -100,6 +100,33 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
+
+    // Auto-logout if user account was deleted or credentials revoked
+    if (response.status === 401 && typeof window !== "undefined") {
+      const detailStr = typeof (data as any)?.detail === "string" ? (data as any).detail : "";
+      if (
+        detailStr.includes("no longer exists") ||
+        detailStr.includes("deactivated") ||
+        detailStr.includes("Invalid or expired token") ||
+        detailStr.includes("Could not validate credentials")
+      ) {
+        try {
+          const supabase = createClient();
+          supabase.auth.signOut().catch(() => {});
+          import("@/stores/authStore").then(({ useAuthStore }) => {
+            useAuthStore.getState().logout();
+          });
+          if (
+            window.location.pathname.startsWith("/profile") ||
+            window.location.pathname.startsWith("/admin")
+          ) {
+            window.location.href =
+              "/login?redirect=" + encodeURIComponent(window.location.pathname);
+          }
+        } catch {}
+      }
+    }
+
     throw new ApiError(response.status, response.statusText, data);
   }
 

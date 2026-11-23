@@ -98,11 +98,11 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Always a dark-green frosted bar — readable over every section.
-  // On scroll: fully opaque + tighter shadow. At top: slightly more transparent.
+  // Solid signature dark-pine green (#0e2a1e) across all pages for 100% visual consistency.
+  // On scroll: tighter shadow and crisp border.
   const headerBg = isScrolled
-    ? "bg-[#0e2a1e]/95 backdrop-blur-md shadow-[0_1px_0_rgba(255,255,255,0.06)] border-b border-white/8"
-    : "bg-[#0e2a1e]/80 backdrop-blur-sm";
+    ? "bg-[#0e2a1e] shadow-[0_4px_20px_rgba(0,0,0,0.18)] border-b border-white/10"
+    : "bg-[#0e2a1e] border-b border-white/6";
 
   const linkClass =
     "text-[11px] font-bold tracking-[0.18em] uppercase text-white/75 hover:text-[#e5c89d] transition-colors duration-200";

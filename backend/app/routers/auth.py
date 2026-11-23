@@ -4,14 +4,14 @@ Handles user registration, login, profile, and logout via Supabase Auth.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import create_client
 
 from app.config import get_settings
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, ForgotPasswordRequest
 from app.middleware.auth import get_current_user
 from app.utils.limiter import limiter
 
@@ -171,3 +171,53 @@ async def logout(
     # Supabase handles token invalidation on the client side.
     # No server-side action needed for JWT-based auth.
     return None
+
+
+@router.post("/forgot-password")
+@limiter.limit(get_settings().RATE_LIMIT_AUTH)
+async def forgot_password(
+    request: Request,
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Verify that an email is registered in the database before sending password recovery instructions.
+    If the email does not exist, immediately returns 404 to inform the user.
+    """
+    email_clean = body.email.strip().lower()
+
+    # 1. Strictly verify registered presence in database
+    result = await db.execute(select(User).where(func.lower(User.email) == email_clean))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This email address is not registered with Dridha Crafts. Please check your email or create an account.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been deactivated. Please contact support.",
+        )
+
+    # 2. Trigger password reset through Supabase Auth
+    supabase = _get_supabase_anon_client()
+    redirect_url = body.redirect_to or "http://localhost:3000/reset-password"
+
+    try:
+        auth_res = supabase.auth.reset_password_for_email(
+            email_clean,
+            {"redirect_to": redirect_url},
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to dispatch reset email: {exc}",
+        )
+
+    return {
+        "message": "Password reset instructions have been sent to your email address. Please check your inbox.",
+        "email": email_clean,
+    }
