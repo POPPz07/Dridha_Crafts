@@ -215,14 +215,15 @@ export default function CheckoutPage() {
     }, 2500);
 
     const addressData = getValues();
+    const cleanPhone = addressData.phone.replace(/[^\d]/g, "").slice(-10);
     const shippingAddressPayload = {
-      full_name: addressData.full_name,
-      phone: addressData.phone,
-      address_line_1: addressData.address_line_1,
-      address_line_2: addressData.address_line_2 || null,
-      city: addressData.city,
-      state: addressData.state,
-      pincode: addressData.pincode,
+      full_name: addressData.full_name.trim(),
+      phone: cleanPhone || addressData.phone.trim(),
+      address_line_1: addressData.address_line_1.trim(),
+      address_line_2: addressData.address_line_2?.trim() || null,
+      city: addressData.city.trim(),
+      state: addressData.state.trim(),
+      pincode: addressData.pincode.trim(),
     };
 
     const itemsPayload = items.map((i) => {
@@ -243,7 +244,7 @@ export default function CheckoutPage() {
         payment_method: "whatsapp_upi",
         idempotency_key: idempotencyKey,
         customer_email: user?.email || undefined,
-        customer_phone: addressData.phone,
+        customer_phone: cleanPhone || addressData.phone,
         items: itemsPayload,
       };
 
