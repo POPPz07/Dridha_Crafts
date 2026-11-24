@@ -23,7 +23,9 @@ import {
   Loader2,
   RefreshCw,
   HelpCircle,
+  Printer,
 } from "lucide-react";
+import CustomerInvoiceModal from "@/components/orders/CustomerInvoiceModal";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
@@ -245,6 +247,7 @@ export default function ProfilePage() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [expandedOrderDetails, setExpandedOrderDetails] = useState<Order | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [invoiceModalOrder, setInvoiceModalOrder] = useState<Order | null>(null);
 
   // Sync profile fields from user
   useEffect(() => {
@@ -839,6 +842,16 @@ export default function ProfilePage() {
                                         <span>Total</span>
                                         <span>{formatPrice(expandedOrderDetails.total)}</span>
                                       </div>
+                                      <div className="pt-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => setInvoiceModalOrder(expandedOrderDetails)}
+                                          className="w-full bg-stone-50 hover:bg-stone-100 text-charcoal border border-warmgrey/80 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                                        >
+                                          <Printer className="w-3.5 h-3.5 text-brand-green" />
+                                          Download / Print Official Tax Invoice
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 </>
@@ -854,6 +867,13 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Customer Invoice Modal */}
+        <CustomerInvoiceModal
+          isOpen={Boolean(invoiceModalOrder)}
+          onClose={() => setInvoiceModalOrder(null)}
+          order={invoiceModalOrder}
+        />
       </Container>
     </main>
   );

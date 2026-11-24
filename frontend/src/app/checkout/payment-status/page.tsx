@@ -10,12 +10,16 @@ import {
   Clock,
   RefreshCw,
   Sparkles,
+  Printer,
+  FileText,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { api } from "@/lib/api";
 import { useCartStore } from "@/stores/cartStore";
+import CustomerInvoiceModal from "@/components/orders/CustomerInvoiceModal";
+import type { Order } from "@/types/order";
 
 interface PaymentStatusData {
   payment_id: string;
@@ -40,6 +44,23 @@ function PaymentStatusContent() {
   const [pollCount, setPollCount] = useState(0);
   const [data, setData] = useState<PaymentStatusData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Customer Invoice Modal State
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+  const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+
+  const fetchAndOpenInvoice = async () => {
+    if (!data?.order_id) return;
+    setIsFetchingInvoice(true);
+    try {
+      const ord = await api.get<Order>(`/api/orders/${data.order_id}`);
+      setInvoiceOrder(ord);
+    } catch (e) {
+      console.error("Failed to load invoice:", e);
+    } finally {
+      setIsFetchingInvoice(false);
+    }
+  };
 
   const clearCart = useCartStore((s) => s.clearCart);
   const hasClearedCart = useRef(false);
@@ -223,6 +244,17 @@ function PaymentStatusContent() {
           )}
         </div>
 
+        {/* Download / Print Tax Invoice Action */}
+        <button
+          type="button"
+          onClick={fetchAndOpenInvoice}
+          disabled={isFetchingInvoice}
+          className="w-full bg-stone-50 hover:bg-stone-100 text-charcoal border border-warmgrey/80 py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs disabled:opacity-50"
+        >
+          <Printer className="w-4 h-4 text-brand-green" />
+          {isFetchingInvoice ? "Preparing Invoice..." : "Download / Print Official Tax Invoice"}
+        </button>
+
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Link href="/shop" className="flex-1">
             <Button variant="primary" size="lg" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />}>
@@ -339,6 +371,13 @@ function PaymentStatusContent() {
           </Button>
         </Link>
       </div>
+
+      {/* Customer Invoice Modal */}
+      <CustomerInvoiceModal
+        isOpen={Boolean(invoiceOrder)}
+        onClose={() => setInvoiceOrder(null)}
+        order={invoiceOrder}
+      />
     </div>
   );
 }

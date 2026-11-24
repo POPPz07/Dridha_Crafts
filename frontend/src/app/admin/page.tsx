@@ -32,7 +32,9 @@ import {
   Hammer,
   Filter,
   ArrowRight,
+  Printer,
 } from "lucide-react";
+import OrderPrintModal from "@/components/orders/OrderPrintModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -828,6 +830,38 @@ function OrdersTab({
   const [statusNoteInput, setStatusNoteInput] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Batch & Single Order Printing State
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [printOrders, setPrintOrders] = useState<AdminOrder[]>([]);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
+  const openPrintForOrder = (ord: AdminOrder) => {
+    setPrintOrders([ord]);
+    setIsPrintModalOpen(true);
+  };
+
+  const openBatchPrint = () => {
+    const selected = orders.filter((o) => selectedOrderIds.includes(o.id));
+    if (selected.length > 0) {
+      setPrintOrders(selected);
+      setIsPrintModalOpen(true);
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.length === orders.length && orders.length > 0) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(orders.map((o) => o.id));
+    }
+  };
+
   // Sync state if initialFilter prop changes (e.g. from Live Pulse stage card click)
   useEffect(() => {
     if (initialFilter) {
@@ -1114,6 +1148,38 @@ function OrdersTab({
         </div>
       ) : (
         <div className="space-y-5">
+          {/* Batch Selection Action Bar */}
+          {selectedOrderIds.length > 0 && (
+            <div className="sticky top-4 z-20 bg-brand-green text-white px-5 py-3 rounded-2xl shadow-lg flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 border border-brand-green/30">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedOrderIds.length === orders.length && orders.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded text-brand-green accent-brand-gold cursor-pointer"
+                />
+                <span className="text-xs font-bold">
+                  {selectedOrderIds.length} {selectedOrderIds.length === 1 ? "Order" : "Orders"} Selected for Printing
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={openBatchPrint}
+                  className="bg-white text-brand-green hover:bg-brand-cream px-4 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Batch Print Slips ({selectedOrderIds.length})
+                </button>
+                <button
+                  onClick={() => setSelectedOrderIds([])}
+                  className="text-white/80 hover:text-white text-xs underline font-medium ml-1"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           {orders.map((order) => (
             <div
               key={order.id}
@@ -1122,6 +1188,13 @@ function OrdersTab({
               {/* Header */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrderIds.includes(order.id)}
+                    onChange={() => toggleSelectOrder(order.id)}
+                    className="w-4 h-4 rounded text-brand-green accent-brand-green cursor-pointer"
+                    title="Select for batch A4 printing"
+                  />
                   <span className="font-bold text-brand-green text-lg font-mono">
                     #{order.order_number}
                   </span>
@@ -1375,6 +1448,16 @@ function OrdersTab({
                   </button>
                 )}
 
+                {/* A4 Print Slips & Invoices Action */}
+                <button
+                  onClick={() => openPrintForOrder(order)}
+                  className="bg-stone-50 text-charcoal border border-warmgrey/80 px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-brand-cream transition-colors shadow-2xs"
+                  title="Print Outer Box Shipping Slip & Inner Packing Invoice on A4"
+                >
+                  <Printer className="w-3.5 h-3.5 text-brand-green" />
+                  Print Slips (A4)
+                </button>
+
                 {/* Universal Cancel Button for in-flight orders */}
                 {order.status !== "cancelled" &&
                   order.status !== "delivered" && (
@@ -1607,6 +1690,13 @@ function OrdersTab({
           </div>
         </div>
       )}
+
+      {/* A4 Order Slips & Invoice Print Modal */}
+      <OrderPrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        orders={printOrders}
+      />
     </div>
   );
 }
