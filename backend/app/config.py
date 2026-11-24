@@ -46,7 +46,16 @@ class Settings(BaseSettings):
 
     # ── Security ─────────────────────────────────────────
     CORS_ORIGINS: list[str] | str = Field(
-        default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3005", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
+        default=[
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3005",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+            "https://dridhacrafts.co.in",
+            "https://www.dridhacrafts.co.in",
+            "https://dridhacrafts.vercel.app",
+        ],
         description="Allowed CORS origins (frontend URLs)",
     )
 

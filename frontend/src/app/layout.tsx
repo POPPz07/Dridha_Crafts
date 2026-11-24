@@ -13,7 +13,7 @@ import { TopProgressBar } from "@/components/common/TopProgressBar";
 import { MediaProtection } from "@/components/common/MediaProtection";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dridhacrafts.com"),
+  metadataBase: new URL("https://dridhacrafts.co.in"),
   title: {
     default: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories | Kashmir Valley",
     template: "%s | Dridha Crafts",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://dridhacrafts.com",
+    url: "https://dridhacrafts.co.in",
     siteName: "Dridha Crafts",
     title: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories",
     description:

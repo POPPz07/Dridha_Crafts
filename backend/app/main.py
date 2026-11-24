@@ -116,7 +116,14 @@ app.add_middleware(SlowAPIMiddleware)
 # Trusted Host Middleware (Host header poisoning & cache poisoning defense)
 allowed_hosts = ["localhost", "127.0.0.1", "*.localhost", "testserver"]
 if settings.ENVIRONMENT == "production":
-    allowed_hosts.extend(["dridhacrafts.com", "*.dridhacrafts.com", "*.onrender.com", "*.vercel.app"])
+    allowed_hosts.extend([
+        "dridhacrafts.co.in",
+        "*.dridhacrafts.co.in",
+        "dridhacrafts.com",
+        "*.dridhacrafts.com",
+        "*.onrender.com",
+        "*.vercel.app",
+    ])
 else:
     allowed_hosts.append("*")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)

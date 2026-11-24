@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { PRODUCTS_DATA, BUNDLES_DATA } from "@/lib/products-data";
 
-const SITE_URL = "https://dridhacrafts.com";
+const SITE_URL = "https://dridhacrafts.co.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date();
