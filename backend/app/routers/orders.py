@@ -295,21 +295,33 @@ async def create_order(
 
             variant = None
             if item_in.variant_id:
+                try:
+                    v_uuid = uuid.UUID(str(item_in.variant_id))
+                    var_result = await db.execute(
+                        select(ProductVariant)
+                        .where(
+                            ProductVariant.id == v_uuid,
+                            ProductVariant.product_id == product.id,
+                            ProductVariant.is_active == True,
+                        )
+                        .with_for_update()
+                    )
+                    variant = var_result.scalar_one_or_none()
+                except (ValueError, TypeError):
+                    variant = None
+
+            if not variant and item_in.variant_name:
+                # Lookup by polish/finish name if ID was a frontend slug or string
                 var_result = await db.execute(
                     select(ProductVariant)
                     .where(
-                        ProductVariant.id == item_in.variant_id,
                         ProductVariant.product_id == product.id,
+                        ProductVariant.variant_name.ilike(item_in.variant_name.strip()),
                         ProductVariant.is_active == True,
                     )
                     .with_for_update()
                 )
                 variant = var_result.scalar_one_or_none()
-                if not variant:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Variant '{item_in.variant_id}' not found or inactive",
-                    )
 
             available = variant.stock_quantity if variant else product.stock_quantity
             if item_in.quantity > available:

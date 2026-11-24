@@ -225,12 +225,17 @@ export default function CheckoutPage() {
       pincode: addressData.pincode,
     };
 
-    const itemsPayload = items.map((i) => ({
-      product_id: i.product_id,
-      variant_id: i.variant_id || null,
-      variant_name: i.variant?.variant_name || null,
-      quantity: i.quantity,
-    }));
+    const itemsPayload = items.map((i) => {
+      const isValidUuid =
+        i.variant_id &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(i.variant_id);
+      return {
+        product_id: i.product_id,
+        variant_id: isValidUuid ? i.variant_id : null,
+        variant_name: i.variant?.variant_name || null,
+        quantity: i.quantity,
+      };
+    });
 
     try {
       const orderPayload = {

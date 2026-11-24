@@ -6,7 +6,7 @@ Pydantic models for order creation, responses, and admin updates.
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from app.schemas.user import AddressCreate
@@ -40,7 +40,7 @@ class OrderItemCreate(BaseModel):
     """Item snapshot input for order creation."""
 
     product_id: uuid.UUID
-    variant_id: Optional[uuid.UUID] = None
+    variant_id: Optional[Union[uuid.UUID, str]] = None
     quantity: int = Field(default=1, ge=1, le=10)
     variant_name: Optional[str] = None
 
