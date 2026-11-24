@@ -7,18 +7,18 @@ export const metadata: Metadata = {
   description:
     "Explore our complete collection of handcrafted mountain pine desk accessories, laptop stands, mobile holders, headphone stands, and curated duo & trio gift combos. Pan-India delivery.",
   alternates: {
-    canonical: "https://dridhacrafts.com/shop",
+    canonical: "https://www.dridhacrafts.co.in/shop",
   },
   openGraph: {
     title: "Shop Handcrafted Solid Pine Desk Accessories | Dridha Crafts",
     description:
       "Explore our full collection of handcrafted mountain pine desk accessories, laptop risers, mobile docks, and artisan gift combos.",
-    url: "https://dridhacrafts.com/shop",
+    url: "https://www.dridhacrafts.co.in/shop",
     siteName: "Dridha Crafts",
     type: "website",
     images: [
       {
-        url: "https://dridhacrafts.com/images/image1.jpeg",
+        url: "https://www.dridhacrafts.co.in/images/image1.jpeg",
         width: 1200,
         height: 630,
         alt: "Dridha Crafts Handcrafted Pine Collection",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     title: "Shop Handcrafted Wooden Desk Accessories | Dridha Crafts",
     description:
       "Explore our full collection of handcrafted pine desk accessories, laptop risers, and artisan combos.",
-    images: ["https://dridhacrafts.com/images/image1.jpeg"],
+    images: ["https://www.dridhacrafts.co.in/images/image1.jpeg"],
   },
 };
 
@@ -41,7 +41,7 @@ export default function ShopPage() {
     name: "Dridha Crafts Wooden Desk Accessories & Organizers",
     description:
       "Complete collection of artisan handcrafted pine desk accessories, phone stands, laptop risers, and desk organizers.",
-    url: "https://dridhacrafts.com/shop",
+    url: "https://www.dridhacrafts.co.in/shop",
     mainEntity: {
       "@type": "ItemList",
       name: "Handcrafted Solid Pine Desk Collection",
@@ -51,19 +51,19 @@ export default function ShopPage() {
           "@type": "ListItem",
           position: index + 1,
           name: product.name,
-          url: `https://dridhacrafts.com/products/${product.slug}`,
+          url: `https://www.dridhacrafts.co.in/products/${product.slug}`,
           image: product.images[0]?.url.startsWith("http")
             ? product.images[0]?.url
-            : `https://dridhacrafts.com${product.images[0]?.url}`,
+            : `https://www.dridhacrafts.co.in${product.images[0]?.url}`,
         })),
         ...BUNDLES_DATA.map((bundle, index) => ({
           "@type": "ListItem",
           position: PRODUCTS_DATA.length + index + 1,
           name: bundle.name,
-          url: `https://dridhacrafts.com/products/${bundle.slug}`,
+          url: `https://www.dridhacrafts.co.in/products/${bundle.slug}`,
           image: bundle.image.startsWith("http")
             ? bundle.image
-            : `https://dridhacrafts.com${bundle.image}`,
+            : `https://www.dridhacrafts.co.in${bundle.image}`,
         })),
       ],
     },

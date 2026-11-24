@@ -37,7 +37,7 @@ PRODUCTS_TO_SYNC = [
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
-            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("569.00"), "stock_quantity": 30},
         ],
     },
     {
@@ -65,7 +65,7 @@ PRODUCTS_TO_SYNC = [
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
-            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("469.00"), "stock_quantity": 35},
         ],
     },
     {
@@ -94,7 +94,7 @@ PRODUCTS_TO_SYNC = [
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
-            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("259.00"), "stock_quantity": 50},
         ],
     },
     {
@@ -120,7 +120,7 @@ PRODUCTS_TO_SYNC = [
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
-            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 40},
         ],
     },
     {
@@ -144,7 +144,7 @@ PRODUCTS_TO_SYNC = [
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},
-            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 25},
         ],
     },
 ]

@@ -30,7 +30,7 @@ export async function generateMetadata(
   const primaryImage = product.images?.[0]?.url || "/images/image1.jpeg";
   const fullImageUrl = primaryImage.startsWith("http")
     ? primaryImage
-    : `https://dridhacrafts.com${primaryImage}`;
+    : `https://www.dridhacrafts.co.in${primaryImage}`;
 
   const title = `${product.name} — Handcrafted Solid Pine | Dridha Crafts`;
   const description =
@@ -41,12 +41,12 @@ export async function generateMetadata(
     title,
     description,
     alternates: {
-      canonical: `https://dridhacrafts.com/products/${product.slug}`,
+      canonical: `https://www.dridhacrafts.co.in/products/${product.slug}`,
     },
     openGraph: {
       title: `${product.name} | Dridha Crafts`,
       description,
-      url: `https://dridhacrafts.com/products/${product.slug}`,
+      url: `https://www.dridhacrafts.co.in/products/${product.slug}`,
       siteName: "Dridha Crafts",
       images: [
         {
@@ -81,7 +81,7 @@ export default async function ProductPage({ params }: PageProps) {
       : [{ url: "/images/image1.jpeg", alt: product.name }]
   )
     .filter((img) => !img.url.endsWith(".mp4"))
-    .map((img) => (img.url.startsWith("http") ? img.url : `https://dridhacrafts.com${img.url}`));
+    .map((img) => (img.url.startsWith("http") ? img.url : `https://www.dridhacrafts.co.in${img.url}`));
 
   const sku = `DC-${product.slug.toUpperCase().replace(/[^A-Z0-9]/g, "-")}`;
   const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: PageProps) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://dridhacrafts.com/products/${product.slug}`,
+      url: `https://www.dridhacrafts.co.in/products/${product.slug}`,
       priceCurrency: "INR",
       price: product.price,
       priceValidUntil,
@@ -120,7 +120,7 @@ export default async function ProductPage({ params }: PageProps) {
       seller: {
         "@type": "Organization",
         name: "Dridha Crafts",
-        url: "https://dridhacrafts.com",
+        url: "https://www.dridhacrafts.co.in",
       },
       shippingDetails: {
         "@type": "OfferShippingDetails",
@@ -173,25 +173,25 @@ export default async function ProductPage({ params }: PageProps) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://dridhacrafts.com",
+        item: "https://www.dridhacrafts.co.in",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Collection",
-        item: "https://dridhacrafts.com/shop",
+        item: "https://www.dridhacrafts.co.in/shop",
       },
       {
         "@type": "ListItem",
         position: 3,
         name: product.category,
-        item: `https://dridhacrafts.com/shop?category=${encodeURIComponent(product.category)}`,
+        item: `https://www.dridhacrafts.co.in/shop?category=${encodeURIComponent(product.category)}`,
       },
       {
         "@type": "ListItem",
         position: 4,
         name: product.name,
-        item: `https://dridhacrafts.com/products/${product.slug}`,
+        item: `https://www.dridhacrafts.co.in/products/${product.slug}`,
       },
     ],
   };

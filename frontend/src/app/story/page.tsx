@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
@@ -5,10 +6,29 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Sparkles, Shield, Heart } from "lucide-react";
 
-export const metadata = {
-  title: "Our Story — Handcrafted in Kashmir Valley",
+export const metadata: Metadata = {
+  title: "Our Story — Handcrafted in Kashmir Valley | Dridha Crafts",
   description:
-    "Learn about our journey: from naturally fallen mountain trees and generational craftsmen to mindful, ergonomic modern desk accessories.",
+    "Learn about our journey: from naturally fallen mountain pine trees and generational craftsmen to mindful, ergonomic modern desk accessories.",
+  alternates: {
+    canonical: "https://www.dridhacrafts.co.in/story",
+  },
+  openGraph: {
+    title: "Our Story — Handcrafted in Kashmir Valley | Dridha Crafts",
+    description:
+      "Learn about our journey: from naturally fallen mountain pine trees and generational craftsmen to mindful, ergonomic modern desk accessories.",
+    url: "https://www.dridhacrafts.co.in/story",
+    siteName: "Dridha Crafts",
+    type: "website",
+    images: [
+      {
+        url: "https://www.dridhacrafts.co.in/images/sd-2.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "Dridha Crafts Artisan Story — Kashmir Pine Wood",
+      },
+    ],
+  },
 };
 
 export default function StoryPage() {

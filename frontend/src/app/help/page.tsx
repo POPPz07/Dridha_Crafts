@@ -6,13 +6,13 @@ export const metadata: Metadata = {
   description:
     "Find answers about Dridha Crafts handcrafted pine desk accessories, Pan-India shipping, custom artisan engraving, and wood care instructions.",
   alternates: {
-    canonical: "https://dridhacrafts.com/help",
+    canonical: "https://www.dridhacrafts.co.in/help",
   },
   openGraph: {
     title: "Help & FAQ — Dridha Crafts",
     description:
       "Answers to common questions about handcrafted wooden desk accessories, shipping across India, custom engraving, and wood care.",
-    url: "https://dridhacrafts.com/help",
+    url: "https://www.dridhacrafts.co.in/help",
     siteName: "Dridha Crafts",
     type: "website",
   },

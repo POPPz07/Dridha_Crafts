@@ -1,9 +1,11 @@
 User-agent: *
+Allow: /
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /checkout
 Disallow: /profile
 Disallow: /account
+Disallow: /reset-password
 Disallow: /api/*
 
-Sitemap: https://dridhacrafts.com/sitemap.xml
+Sitemap: https://www.dridhacrafts.co.in/sitemap.xml

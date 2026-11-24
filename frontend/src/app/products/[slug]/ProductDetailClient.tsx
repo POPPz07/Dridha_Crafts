@@ -166,8 +166,18 @@ function ProductDetail({ product }: { product: StaticProduct }) {
     };
   });
 
-  // Both standard finishes are inclusive with no hidden surcharge
-  const bundlePolishSurcharge = 0;
+  // Calculate polish surcharge for combos (+₹10 for mobile stand, +₹20 for others when Rich Brown Polish is selected)
+  const bundlePolishSurcharge = useMemo(() => {
+    if (!isBundle || !currentBundle) return 0;
+    let surcharge = 0;
+    currentBundle.items.forEach((item, idx) => {
+      const finish = bundleFinishes[idx] || POLISH_OPTIONS[0];
+      if (finish === "Rich Brown Polish") {
+        surcharge += item.toLowerCase().includes("mobile") ? 10 : 20;
+      }
+    });
+    return surcharge;
+  }, [isBundle, currentBundle, bundleFinishes]);
 
   const ActiveScene = SCENE_COMPONENTS[product.slug];
   const activeVariant = product.variants?.find((v) => v.id === selectedVariantId) || null;

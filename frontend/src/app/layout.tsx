@@ -13,7 +13,7 @@ import { TopProgressBar } from "@/components/common/TopProgressBar";
 import { MediaProtection } from "@/components/common/MediaProtection";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dridhacrafts.co.in"),
+  metadataBase: new URL("https://www.dridhacrafts.co.in"),
   title: {
     default: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories | Kashmir Valley",
     template: "%s | Dridha Crafts",
@@ -29,13 +29,18 @@ export const metadata: Metadata = {
     "Dridha Crafts",
     "pine wood organizers",
     "artisan desk sets",
+    "wooden mobile holder",
+    "handcrafted desk setups",
   ],
   authors: [{ name: "Dridha Crafts" }],
   creator: "Dridha Crafts",
+  alternates: {
+    canonical: "https://www.dridhacrafts.co.in",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://dridhacrafts.co.in",
+    url: "https://www.dridhacrafts.co.in",
     siteName: "Dridha Crafts",
     title: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories",
     description:
@@ -84,18 +89,22 @@ const brandKnowledgeGraph = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://dridhacrafts.com/#organization",
+      "@id": "https://www.dridhacrafts.co.in/#organization",
       name: "Dridha Crafts",
-      url: "https://dridhacrafts.com",
+      url: "https://www.dridhacrafts.co.in",
       logo: {
         "@type": "ImageObject",
-        url: "https://dridhacrafts.com/images/image1.jpeg",
+        url: "https://www.dridhacrafts.co.in/images/image1.jpeg",
         caption: "Dridha Crafts Handcrafted Atelier",
       },
       description:
         "Handcrafted solid pine desk accessories and organizers made from sustainably sourced fallen trees in the Kashmir Valley.",
       email: "craftsdridha@gmail.com",
       telephone: "+919767807889",
+      sameAs: [
+        "https://www.instagram.com/dridha_crafts",
+        "https://www.youtube.com/@DridhaCrafts",
+      ],
       address: {
         "@type": "PostalAddress",
         addressRegion: "Jammu and Kashmir",
@@ -113,19 +122,19 @@ const brandKnowledgeGraph = {
     },
     {
       "@type": "WebSite",
-      "@id": "https://dridhacrafts.com/#website",
-      url: "https://dridhacrafts.com",
+      "@id": "https://www.dridhacrafts.co.in/#website",
+      url: "https://www.dridhacrafts.co.in",
       name: "Dridha Crafts",
       description:
         "Handcrafted Solid Pine Desk Accessories & Organizers from Kashmir",
       publisher: {
-        "@id": "https://dridhacrafts.com/#organization",
+        "@id": "https://www.dridhacrafts.co.in/#organization",
       },
       potentialAction: {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: "https://dridhacrafts.com/shop?category={search_term_string}",
+          urlTemplate: "https://www.dridhacrafts.co.in/shop?category={search_term_string}",
         },
         "query-input": "required name=search_term_string",
       },
