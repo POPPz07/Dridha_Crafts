@@ -60,9 +60,27 @@ export async function getProductBySlug(slug: string): Promise<StaticProduct | nu
     if (apiP && apiP.id) {
       const fallback = localMatch;
       const images =
-        apiP.images && apiP.images.length > 0
+        fallback?.images && fallback.images.length > 0
+          ? fallback.images
+          : apiP.images && apiP.images.length > 0
           ? apiP.images.map((img: any) => ({ url: img.image_url, alt: img.alt_text }))
-          : fallback?.images || [{ url: apiP.primary_image_url || "/images/image1.jpeg", alt: apiP.name }];
+          : [{ url: apiP.primary_image_url || "/images/image1.jpeg", alt: apiP.name }];
+
+      // Strictly ensure only the two canonical finishes exist ("Classic Natural Polish" & "Rich Brown Polish")
+      let variants = fallback?.variants && fallback.variants.length > 0 ? fallback.variants : [];
+      if (!variants || variants.length === 0) {
+        variants = (apiP.variants || [])
+          .filter((v: any) => !v.variant_name.toLowerCase().includes("unpolished"))
+          .map((v: any) => ({
+            id: v.id,
+            variant_name: v.variant_name.toLowerCase().includes("brown")
+              ? "Rich Brown Polish"
+              : "Classic Natural Polish",
+            variant_type: "Finish",
+            price_override: v.price_override ? Number(v.price_override) : null,
+            stock_quantity: Number(v.stock_quantity || 30),
+          }));
+      }
 
       return {
         id: apiP.id,
@@ -81,13 +99,7 @@ export async function getProductBySlug(slug: string): Promise<StaticProduct | nu
         stock_quantity: Number(apiP.stock_quantity ?? fallback?.stock_quantity ?? 10),
         images,
         badge: fallback?.badge || (apiP.is_featured ? "Bestseller" : undefined),
-        variants: apiP.variants?.map((v: any) => ({
-          id: v.id,
-          variant_name: v.variant_name,
-          variant_type: v.variant_type,
-          price_override: v.price_override ? Number(v.price_override) : null,
-          stock_quantity: Number(v.stock_quantity),
-        })),
+        variants,
       };
     }
   } catch (err) {

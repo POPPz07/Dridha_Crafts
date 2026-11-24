@@ -133,7 +133,7 @@ export default function CustomerInvoiceModal({
               </div>
               <div>
                 <span className="text-gray-600">Payment Mode: </span>
-                <strong className="uppercase">{order.payment_method.replace("_", " ")}</strong>
+                <strong className="uppercase">{(order.payment_method || "prepaid").replace("_", " ")}</strong>
               </div>
               {order.tracking_number && (
                 <div>

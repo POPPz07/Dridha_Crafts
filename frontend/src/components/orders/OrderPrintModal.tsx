@@ -606,7 +606,7 @@ function TaxInvoiceSlip({
             PAYMENT &amp; LOGISTICS:
           </span>
           <div className="font-bold text-gray-900 mt-0.5 uppercase">
-            Payment: {order.payment_method.replace("_", " ")}
+            Payment: {(order.payment_method || "prepaid").replace("_", " ")}
           </div>
           <div className="text-emerald-700 font-bold uppercase text-[9px]">
             Status: {order.payment_status}

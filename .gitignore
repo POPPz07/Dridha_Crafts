@@ -64,7 +64,7 @@ dridha_crafts_info/
 create_admin.py
 backend/create_admin.py
 Dridha_Crafts_Cashfree_Implementation_Plan.md
-public/
+/public/
 
 GEMINI.md
 backend/scripts/clear_test_data.py
