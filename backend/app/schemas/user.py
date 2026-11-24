@@ -19,6 +19,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
     full_name: str = Field(..., min_length=1, max_length=100, description="User's full name")
+    phone: str = Field(..., pattern=r"^[6-9]\d{9}$", description="10-digit Indian phone number")
 
 
 class UserResponse(BaseModel):

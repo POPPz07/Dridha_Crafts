@@ -44,7 +44,16 @@ export default function CustomerInvoiceModal({
     window.print();
   };
 
-  const shippingCost = Number(order.shipping_cost ?? 39);
+  const isMobileStandOrder =
+    order.items &&
+    order.items.length > 0 &&
+    order.items.every(
+      (item: any) =>
+        item.product_slug === "mobile-stand" ||
+        (item.product_name && item.product_name.toLowerCase().includes("mobile stand") && !item.product_name.toLowerCase().includes("trio") && !item.product_name.toLowerCase().includes("duo"))
+    );
+  const fallbackShipping = isMobileStandOrder ? 19 : 39;
+  const shippingCost = Number(order.shipping_cost ?? (order.subtotal ? order.total - order.subtotal : fallbackShipping));
   const subtotal = Number(order.subtotal || (order.total - shippingCost));
 
   const modalContent = (

@@ -17,8 +17,19 @@ export function CartDrawer() {
   if (!isOpen) return null;
 
   const subtotalAmount = subtotal();
-  const DELIVERY_CHARGES = 39;
-  const estimatedTotal = items.length > 0 ? subtotalAmount + DELIVERY_CHARGES : 0;
+  const isOnlyMobileStand =
+    items.length > 0 &&
+    items.every(
+      (i) =>
+        i.product?.slug === "mobile-stand" ||
+        i.product_id === "31e508df-81ec-41cb-9446-79855ce4e9bd" ||
+        (i.product?.name &&
+          i.product.name.toLowerCase().includes("mobile stand") &&
+          !i.product.name.toLowerCase().includes("trio") &&
+          !i.product.name.toLowerCase().includes("duo"))
+    );
+  const deliveryCharges = items.length === 0 ? 0 : isOnlyMobileStand ? 19 : 39;
+  const estimatedTotal = items.length > 0 ? subtotalAmount + deliveryCharges : 0;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -144,7 +155,7 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-charcoal/60">Delivery Charges</span>
-                <span className="font-semibold text-charcoal">{formatPrice(DELIVERY_CHARGES)}</span>
+                <span className="font-semibold text-charcoal">{formatPrice(deliveryCharges)}</span>
               </div>
               <div className="border-t border-warmgrey/50 pt-2 flex justify-between items-center">
                 <span className="font-display text-lg font-bold text-charcoal">Estimated Total</span>

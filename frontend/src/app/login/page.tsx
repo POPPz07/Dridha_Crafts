@@ -22,6 +22,10 @@ const signupSchema = z
   .object({
     full_name: z.string().min(2, "Name must be at least 2 characters").max(100),
     email: z.string().email("Enter a valid email address"),
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
     password: z.string().min(8, "Password must be at least 8 characters").max(128),
     confirm_password: z.string(),
   })
@@ -161,6 +165,7 @@ function LoginContent() {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: data.full_name,
+            phone: data.phone,
           },
         },
       });
@@ -175,7 +180,7 @@ function LoginContent() {
           id: authData.user.id,
           email: authData.user.email || data.email,
           full_name: data.full_name,
-          phone: null,
+          phone: data.phone,
           role: "customer",
           created_at: authData.user.created_at,
         });
@@ -387,6 +392,30 @@ function LoginContent() {
             {signupForm.formState.errors.email && (
               <p className="text-[11px] text-red-600 mt-1">
                 {signupForm.formState.errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-charcoal/80 mb-1.5">
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-charcoal/50 font-medium">
+                +91
+              </span>
+              <input
+                key="signup-phone-input"
+                type="tel"
+                placeholder="9876543210"
+                maxLength={10}
+                {...signupForm.register("phone")}
+                className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-warmgrey/80 focus:border-brand-green focus:outline-none text-sm bg-brand-cream/30 text-charcoal"
+              />
+            </div>
+            {signupForm.formState.errors.phone && (
+              <p className="text-[11px] text-red-600 mt-1">
+                {signupForm.formState.errors.phone.message}
               </p>
             )}
           </div>

@@ -64,13 +64,38 @@ async def get_current_user(
             )
 
         # Auto-create profile only for legitimate, verified Supabase accounts
+        meta = {}
+        phone_val = None
+        if is_valid_auth and auth_user_resp and getattr(auth_user_resp, "user", None):
+            sb_user = auth_user_resp.user
+            meta = getattr(sb_user, "user_metadata", {}) or {}
+            phone_val = meta.get("phone") or getattr(sb_user, "phone", None)
+
+        full_name_val = meta.get("full_name") or email.split("@")[0]
         user = User(
             auth_id=auth_id,
             email=email,
-            full_name=email.split("@")[0],  # Fallback name
+            full_name=full_name_val,
+            phone=phone_val,
         )
         db.add(user)
         await db.flush()  # Populate id
+    elif not user.phone:
+        # Sync phone from Supabase if not yet populated
+        settings = get_settings()
+        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
+            try:
+                sb = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                auth_user_resp = sb.auth.admin.get_user_by_id(auth_id)
+                if auth_user_resp and getattr(auth_user_resp, "user", None):
+                    sb_user = auth_user_resp.user
+                    meta = getattr(sb_user, "user_metadata", {}) or {}
+                    phone_val = meta.get("phone") or getattr(sb_user, "phone", None)
+                    if phone_val:
+                        user.phone = phone_val
+                        await db.flush()
+            except Exception:
+                pass
 
     if not user.is_active:
         raise HTTPException(

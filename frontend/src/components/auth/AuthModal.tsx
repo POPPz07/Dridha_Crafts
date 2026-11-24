@@ -25,6 +25,10 @@ const signupSchema = z
   .object({
     full_name: z.string().min(2, "Name must be at least 2 characters").max(100),
     email: z.string().email("Enter a valid email"),
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
     password: z.string().min(8, "At least 8 characters").max(128),
     confirm_password: z.string(),
   })
@@ -184,6 +188,7 @@ export function AuthModal() {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: data.full_name,
+            phone: data.phone,
           },
         },
       });
@@ -198,7 +203,7 @@ export function AuthModal() {
           id: authData.user.id,
           email: authData.user.email || data.email,
           full_name: data.full_name,
-          phone: authData.user.phone || null,
+          phone: data.phone,
           role: "customer",
           created_at: authData.user.created_at,
         });
@@ -396,6 +401,17 @@ export function AuthModal() {
                   autoComplete="email"
                   error={signupForm.formState.errors.email?.message}
                   {...signupForm.register("email")}
+                />
+                <FloatingInput
+                  key="signup-phone"
+                  id="signup-phone"
+                  type="tel"
+                  label="Phone Number (10 digits)"
+                  placeholder="9876543210"
+                  maxLength={10}
+                  autoComplete="tel"
+                  error={signupForm.formState.errors.phone?.message}
+                  {...signupForm.register("phone")}
                 />
                 <FloatingInput
                   key="signup-password"

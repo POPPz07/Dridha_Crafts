@@ -464,8 +464,12 @@ async def create_order(
         # 30-minute reservation window for pending online / manual payments
         expires_at = now + timedelta(minutes=30)
 
-    # Pan-India delivery charges (₹39)
-    shipping_cost = Decimal("39.00")
+    # Pan-India delivery charges (₹19 for mobile-stand only orders, ₹39 standard)
+    is_only_mobile_stand = bool(order_items) and all(
+        (item.product_slug == "mobile-stand" or str(item.product_id) == "31e508df-81ec-41cb-9446-79855ce4e9bd")
+        for item in order_items
+    )
+    shipping_cost = Decimal("19.00") if is_only_mobile_stand else Decimal("39.00")
     total = subtotal + shipping_cost
 
     customer_email = data.customer_email or current_user.email

@@ -80,8 +80,18 @@ export default function CheckoutPage() {
   const totalItems = useCartStore((s) => s.totalItems());
   const clearCart = useCartStore((s) => s.clearCart);
 
-  const DELIVERY_CHARGES = 39;
-  const deliveryCharges = items.length > 0 ? DELIVERY_CHARGES : 0;
+  const isOnlyMobileStand =
+    items.length > 0 &&
+    items.every(
+      (i) =>
+        i.product?.slug === "mobile-stand" ||
+        i.product_id === "31e508df-81ec-41cb-9446-79855ce4e9bd" ||
+        (i.product?.name &&
+          i.product.name.toLowerCase().includes("mobile stand") &&
+          !i.product.name.toLowerCase().includes("trio") &&
+          !i.product.name.toLowerCase().includes("duo"))
+    );
+  const deliveryCharges = items.length === 0 ? 0 : isOnlyMobileStand ? 19 : 39;
   const totalAmount = subtotal + deliveryCharges;
 
   const {

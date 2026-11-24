@@ -71,6 +71,8 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
         customer_phone = str(raw_customer_phone).replace("\r", "").replace("\n", "").strip()
         customer_email = str(raw_customer_email).replace("\r", "").replace("\n", "").strip()
         total_amount = float(getattr(order, "total", 0.0))
+        shipping_cost = float(getattr(order, "shipping_cost", 39.0))
+        subtotal_amount = float(getattr(order, "subtotal", total_amount - shipping_cost))
 
         # Shipping Address formatting
         addr_1 = getattr(order, "shipping_address_line_1", "")
@@ -133,6 +135,14 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
                         </tbody>
                         <tfoot>
                             <tr>
+                                <td colspan="2" style="padding: 6px 10px; color: #6E6861; text-align: right;">Subtotal:</td>
+                                <td style="padding: 6px 10px; color: #6E6861; text-align: right;">₹{subtotal_amount:,.2f}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding: 6px 10px; color: #6E6861; text-align: right;">Delivery Charges:</td>
+                                <td style="padding: 6px 10px; color: #6E6861; text-align: right;">₹{shipping_cost:,.2f}</td>
+                            </tr>
+                            <tr>
                                 <td colspan="2" style="padding: 12px 10px; font-weight: 700; text-align: right;">Grand Total:</td>
                                 <td style="padding: 12px 10px; font-weight: 700; font-size: 16px; color: #1B3B2B; text-align: right;">₹{total_amount:,.2f}</td>
                             </tr>
@@ -175,7 +185,15 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
                         <tbody>
                             {items_html}
                             <tr>
-                                <td colspan="2" style="padding: 12px 10px; font-weight: 700; text-align: right;">Total (Pan-India Delivery):</td>
+                                <td colspan="2" style="padding: 6px 10px; color: #6E6861; text-align: right;">Subtotal:</td>
+                                <td style="padding: 6px 10px; color: #6E6861; text-align: right;">₹{subtotal_amount:,.2f}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding: 6px 10px; color: #6E6861; text-align: right;">Delivery Charges:</td>
+                                <td style="padding: 6px 10px; color: #6E6861; text-align: right;">₹{shipping_cost:,.2f}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding: 12px 10px; font-weight: 700; text-align: right;">Total:</td>
                                 <td style="padding: 12px 10px; font-weight: 700; font-size: 16px; color: #1B3B2B; text-align: right;">₹{total_amount:,.2f}</td>
                             </tr>
                         </tbody>
@@ -219,6 +237,7 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
                     resend.Emails.send({
                         "from": from_email,
                         "to": admin_recipients,
+                        "reply_to": "craftsdridha@gmail.com",
                         "subject": admin_subject,
                         "html": admin_html,
                     })
@@ -233,6 +252,7 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
                     resend.Emails.send({
                         "from": "Dridha Crafts <onboarding@resend.dev>",
                         "to": ["virendrap3000@gmail.com"],
+                        "reply_to": "craftsdridha@gmail.com",
                         "subject": admin_subject,
                         "html": admin_html,
                     })
@@ -245,6 +265,7 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
                         resend.Emails.send({
                             "from": from_email,
                             "to": [customer_email],
+                            "reply_to": "craftsdridha@gmail.com",
                             "subject": customer_subject,
                             "html": customer_html,
                         })

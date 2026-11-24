@@ -63,7 +63,10 @@ async def signup(
                 "email": data.email,
                 "password": data.password,
                 "email_confirm": True,
-                "user_metadata": {"full_name": data.full_name},
+                "user_metadata": {
+                    "full_name": data.full_name,
+                    "phone": data.phone,
+                },
             }
         )
     except Exception as exc:
@@ -77,6 +80,7 @@ async def signup(
         auth_id=auth_response.user.id,
         email=data.email,
         full_name=data.full_name,
+        phone=data.phone,
         role="customer",
         is_active=True,
     )
