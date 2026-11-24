@@ -418,7 +418,7 @@ export default function HomePage() {
                   {/* Image */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-warmgrey/20">
                     <Image
-                      src={currentImage?.url || "/images/image1.jpeg"}
+                      src={currentImage?.url || "/images/sd-2.jpeg"}
                       alt={currentImage?.alt || product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
@@ -849,7 +849,7 @@ export default function HomePage() {
             disablePictureInPicture
             onContextMenu={(e) => e.preventDefault()}
             className="absolute inset-0 w-full h-full object-cover"
-            poster="/images/image1.jpeg"
+            poster="/images/sd-2.jpeg"
           >
             <source src="/videos/brand_video1.mp4" type="video/mp4" />
           </video>

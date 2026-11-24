@@ -1,6 +1,6 @@
 """
 Dridha Crafts - Email Notification Service
-Handles automated transactional emails via Gmail SMTP.
+Handles automated transactional emails via Resend HTTPS (production) with Gmail SMTP fallback (local dev).
 """
 
 import logging
@@ -48,15 +48,15 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
     """
     Send an instant order alert email to the admin (craftsdridha@gmail.com).
     Also sends an order summary receipt to the customer if customer_email is available.
+    Uses Resend HTTPS API when RESEND_API_KEY is available (reliable on Render free tier),
+    with SMTP as fallback for local development.
     """
     settings = get_settings()
-    if not settings.SMTP_PASSWORD:
-        logger.info("SMTP_PASSWORD is not set. Skipping email dispatch for order %s.", getattr(order, "order_number", "N/A"))
-        return False
-
-    server = _get_smtp_connection()
-    if not server:
-        logger.warning("Could not establish SMTP connection. Email not sent.")
+    if not settings.RESEND_API_KEY and not settings.SMTP_PASSWORD:
+        logger.info(
+            "Neither RESEND_API_KEY nor SMTP_PASSWORD is set. Skipping email dispatch for order %s.",
+            getattr(order, "order_number", "N/A"),
+        )
         return False
 
     try:
@@ -148,75 +148,149 @@ def send_order_notification_email(order: Any, items: list[Any]) -> bool:
         </html>
         """
 
-        msg_admin = MIMEMultipart("alternative")
-        msg_admin["Subject"] = admin_subject
-        msg_admin["From"] = settings.SMTP_USER
-        msg_admin["To"] = settings.ADMIN_NOTIFICATION_EMAIL
-        msg_admin.attach(MIMEText(admin_html, "html"))
-        server.send_message(msg_admin)
-        logger.info("Admin order alert sent for order #%s.", order_num)
-
         # ── 2. Customer Receipt Email (if customer_email provided) ─────────────
-        if customer_email and "@" in customer_email:
-            customer_subject = f"Order #{order_num} Received - Dridha Crafts"
-            customer_html = f"""
-            <!DOCTYPE html>
-            <html>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; margin: 0; padding: 24px; color: #2A2826;">
-                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #E5E0D8; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <div style="background-color: #1B3B2B; padding: 28px; text-align: center; color: #ffffff;">
-                        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Dridha Crafts</h1>
-                        <p style="margin: 6px 0 0; font-size: 13px; color: #D5C29D; text-transform: uppercase; letter-spacing: 1px;">Handmade in the Kashmir Valley</p>
+        customer_subject = f"Order #{order_num} Received - Dridha Crafts"
+        customer_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; margin: 0; padding: 24px; color: #2A2826;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #E5E0D8; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="background-color: #1B3B2B; padding: 28px; text-align: center; color: #ffffff;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Dridha Crafts</h1>
+                    <p style="margin: 6px 0 0; font-size: 13px; color: #D5C29D; text-transform: uppercase; letter-spacing: 1px;">Handmade in the Kashmir Valley</p>
+                </div>
+                <div style="padding: 28px;">
+                    <h2 style="font-size: 18px; color: #1B3B2B; margin-top: 0;">Namaste {customer_name},</h2>
+                    <p style="font-size: 14px; line-height: 1.6; color: #4A4641;">
+                        Thank you for your order with Dridha Crafts! We have received your order <strong>#{order_num}</strong>.
+                    </p>
+                    <div style="background: #F4F1EA; border-left: 4px solid #1B3B2B; padding: 14px 18px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 13px; color: #2A2826; line-height: 1.5;">
+                            ⏱ <strong>Payment Verification:</strong> Your wooden pieces are reserved for 48 hours. Please complete your payment via WhatsApp so our artisans can start preparing your package.
+                        </p>
                     </div>
-                    <div style="padding: 28px;">
-                        <h2 style="font-size: 18px; color: #1B3B2B; margin-top: 0;">Namaste {customer_name},</h2>
-                        <p style="font-size: 14px; line-height: 1.6; color: #4A4641;">
-                            Thank you for your order with Dridha Crafts! We have received your order <strong>#{order_num}</strong>.
-                        </p>
-                        <div style="background: #F4F1EA; border-left: 4px solid #1B3B2B; padding: 14px 18px; margin: 20px 0; border-radius: 4px;">
-                            <p style="margin: 0; font-size: 13px; color: #2A2826; line-height: 1.5;">
-                                ⏱ <strong>Payment Verification:</strong> Your wooden pieces are reserved for 48 hours. Please complete your payment via WhatsApp so our artisans can start preparing your package.
-                            </p>
-                        </div>
 
-                        <h3 style="margin: 20px 0 10px; font-size: 15px; color: #1B3B2B;">Order Details</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
-                            <tbody>
-                                {items_html}
-                                <tr>
-                                    <td colspan="2" style="padding: 12px 10px; font-weight: 700; text-align: right;">Total (Pan-India Delivery):</td>
-                                    <td style="padding: 12px 10px; font-weight: 700; font-size: 16px; color: #1B3B2B; text-align: right;">₹{total_amount:,.2f}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <h3 style="margin: 20px 0 10px; font-size: 15px; color: #1B3B2B;">Order Details</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+                        <tbody>
+                            {items_html}
+                            <tr>
+                                <td colspan="2" style="padding: 12px 10px; font-weight: 700; text-align: right;">Total (Pan-India Delivery):</td>
+                                <td style="padding: 12px 10px; font-weight: 700; font-size: 16px; color: #1B3B2B; text-align: right;">₹{total_amount:,.2f}</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                        <p style="font-size: 14px; line-height: 1.6; color: #4A4641;">
-                            <strong>Delivery Address:</strong><br/>
-                            {full_address}
-                        </p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #4A4641;">
+                        <strong>Delivery Address:</strong><br/>
+                        {full_address}
+                    </p>
 
-                        <div style="text-align: center; margin: 30px 0 10px;">
-                            <a href="https://wa.me/{settings.WHATSAPP_NUMBER}" style="display: inline-block; background-color: #1B3B2B; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">Chat on WhatsApp to Complete Payment</a>
-                        </div>
+                    <div style="text-align: center; margin: 30px 0 10px;">
+                        <a href="https://wa.me/{settings.WHATSAPP_NUMBER}" style="display: inline-block; background-color: #1B3B2B; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">Chat on WhatsApp to Complete Payment</a>
                     </div>
                 </div>
-            </body>
-            </html>
-            """
-            msg_customer = MIMEMultipart("alternative")
-            msg_customer["Subject"] = customer_subject
-            msg_customer["From"] = settings.SMTP_USER
-            msg_customer["To"] = customer_email
-            msg_customer.attach(MIMEText(customer_html, "html"))
-            server.send_message(msg_customer)
-            logger.info("Customer order confirmation sent to %s.", mask_email(customer_email))
+            </div>
+        </body>
+        </html>
+        """
 
-        return True
+        # ═════════════════════════════════════════════════════════════════════
+        # PRIORITY 1: Dispatch via Resend HTTPS API (Port 443, never blocked)
+        # ═════════════════════════════════════════════════════════════════════
+        if settings.RESEND_API_KEY:
+            try:
+                import resend
+                resend.api_key = settings.RESEND_API_KEY.strip()
+
+                # Determine verified sender vs fallback sandbox
+                from_email = settings.FROM_EMAIL
+                if not from_email or "@gmail.com" in from_email.lower():
+                    from_email = "Dridha Crafts <orders@dridhacrafts.co.in>"
+
+                admin_recipients = [settings.ADMIN_NOTIFICATION_EMAIL]
+                # Ensure virendrap3000@gmail.com also receives alerts
+                if "virendrap3000@gmail.com" not in [r.lower() for r in admin_recipients]:
+                    admin_recipients.append("virendrap3000@gmail.com")
+
+                # Try sending Admin alert via custom domain
+                admin_sent = False
+                try:
+                    resend.Emails.send({
+                        "from": from_email,
+                        "to": admin_recipients,
+                        "subject": admin_subject,
+                        "html": admin_html,
+                    })
+                    logger.info("Admin order alert sent via Resend for order #%s to %s", order_num, admin_recipients)
+                    admin_sent = True
+                except Exception as resend_err:
+                    logger.warning(
+                        "Resend domain send failed (%s). Retrying with sandbox onboarding@resend.dev to account email...",
+                        resend_err,
+                    )
+                    # Retry using sandbox onboarding@resend.dev to account owner
+                    resend.Emails.send({
+                        "from": "Dridha Crafts <onboarding@resend.dev>",
+                        "to": ["virendrap3000@gmail.com"],
+                        "subject": admin_subject,
+                        "html": admin_html,
+                    })
+                    logger.info("Admin order alert sent via Resend sandbox for order #%s to virendrap3000@gmail.com", order_num)
+                    admin_sent = True
+
+                # Customer receipt email
+                if customer_email and "@" in customer_email:
+                    try:
+                        resend.Emails.send({
+                            "from": from_email,
+                            "to": [customer_email],
+                            "subject": customer_subject,
+                            "html": customer_html,
+                        })
+                        logger.info("Customer order confirmation sent via Resend to %s", mask_email(customer_email))
+                    except Exception as cust_err:
+                        logger.warning("Customer confirmation via Resend failed (pending domain verification): %s", cust_err)
+
+                if admin_sent:
+                    return True
+            except Exception as resend_general_err:
+                logger.error("Resend dispatch encountered error: %s. Attempting SMTP fallback...", resend_general_err)
+
+        # ═════════════════════════════════════════════════════════════════════
+        # PRIORITY 2: Dispatch via SMTP (Local development fallback)
+        # ═════════════════════════════════════════════════════════════════════
+        server = _get_smtp_connection()
+        if not server:
+            logger.warning("Could not establish SMTP connection. Email not sent.")
+            return False
+
+        try:
+            msg_admin = MIMEMultipart("alternative")
+            msg_admin["Subject"] = admin_subject
+            msg_admin["From"] = settings.SMTP_USER
+            msg_admin["To"] = settings.ADMIN_NOTIFICATION_EMAIL
+            msg_admin.attach(MIMEText(admin_html, "html"))
+            server.send_message(msg_admin)
+            logger.info("Admin order alert sent via SMTP for order #%s.", order_num)
+
+            if customer_email and "@" in customer_email:
+                msg_customer = MIMEMultipart("alternative")
+                msg_customer["Subject"] = customer_subject
+                msg_customer["From"] = settings.SMTP_USER
+                msg_customer["To"] = customer_email
+                msg_customer.attach(MIMEText(customer_html, "html"))
+                server.send_message(msg_customer)
+                logger.info("Customer order confirmation sent via SMTP to %s.", mask_email(customer_email))
+
+            return True
+        finally:
+            try:
+                server.quit()
+            except Exception:
+                pass
+
     except Exception as e:
         logger.error("Error sending order notification email: %s", e)
         return False
-    finally:
-        try:
-            server.quit()
-        except Exception:
-            pass
+

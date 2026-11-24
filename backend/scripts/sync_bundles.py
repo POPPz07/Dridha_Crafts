@@ -79,7 +79,7 @@ BUNDLES_TO_SYNC = [
         "description": "The complete multi-screen workstation: dynamic ShiftDesk riser, ventilated Multi-Angle Laptop Stand, and interlocking Mobile Stand for maximum ergonomic comfort.",
         "price": Decimal("1060.00"),
         "original_price": Decimal("1247.00"),
-        "image_url": "/images/bundles/bundle-shiftdesk-mobile.jpg",
+        "image_url": "/images/bundles/bundle-shiftdesk-laptop-mobile.jpg",
         "is_active": True,
         "is_featured": True,
         "items": [
@@ -95,7 +95,7 @@ BUNDLES_TO_SYNC = [
         "description": "The ultimate creator setup: adjustable ShiftDesk laptop riser, Dropzone dual headphone & phone cradle, and interlocking Mobile Stand for total desk organization.",
         "price": Decimal("975.00"),
         "original_price": Decimal("1147.00"),
-        "image_url": "/images/bundles/bundle-shiftdesk-headphone.jpg",
+        "image_url": "/images/bundles/bundle-shiftdesk-dropzone-mobile.jpg",
         "is_active": True,
         "is_featured": True,
         "items": [
@@ -111,7 +111,7 @@ BUNDLES_TO_SYNC = [
         "description": "Lightweight, slotted Himalayan Pine Laptop Stand combined with our Dropzone headphone dock and interlocking Mobile Stand for streamlined efficiency.",
         "price": Decimal("890.00"),
         "original_price": Decimal("1047.00"),
-        "image_url": "/images/bundles/bundle-laptop-headphone.jpg",
+        "image_url": "/images/bundles/bundle-laptop-dropzone-mobile.jpg",
         "is_active": True,
         "is_featured": True,
         "items": [

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Printer,
   X,
@@ -22,6 +23,7 @@ export type PrintableOrder = {
   payment_method: string;
   total: number;
   subtotal?: number;
+  shipping_cost?: number;
   shipping_name: string;
   shipping_phone: string;
   shipping_address_line_1: string;
@@ -55,10 +57,24 @@ export default function OrderPrintModal({
   onClose,
   orders,
 }: OrderPrintModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>("dual_pair");
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("2_per_page");
   const [copiesPerOrder, setCopiesPerOrder] = useState<number>(2);
   const [showCutLines, setShowCutLines] = useState<boolean>(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("printing-modal");
+      return () => {
+        document.body.classList.remove("printing-modal");
+      };
+    }
+  }, [isOpen]);
 
   // Format currency
   const fmt = (amt?: number) => `₹${Number(amt || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
@@ -107,16 +123,16 @@ export default function OrderPrintModal({
     return pages;
   }, [queuedSlips, slipsPerPage]);
 
-  if (!isOpen || orders.length === 0) return null;
+  if (!isOpen || orders.length === 0 || !mounted) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:static print:inset-auto">
+  const modalContent = (
+    <div id="printable-modal-root" className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:static print:inset-auto">
       {/* ── Screen Dialog Container (Hidden on Print) ── */}
-      <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden print:hidden">
+      <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden print-screen-only print:hidden" data-print-screen-only="true">
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-warmgrey/50 bg-stone-50/80 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -371,7 +387,7 @@ export default function OrderPrintModal({
         @media print {
           @page {
             size: A4 portrait;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: white !important;
@@ -383,13 +399,30 @@ export default function OrderPrintModal({
             page-break-after: always;
             break-after: page;
           }
-          .no-print, header, nav, footer, #__next > *:not(.fixed) {
+          body.printing-modal > *:not(#printable-modal-root),
+          body:has(#printable-modal-root) > *:not(#printable-modal-root) {
             display: none !important;
+            visibility: hidden !important;
+          }
+          #printable-modal-root {
+            display: block !important;
+            visibility: visible !important;
+            position: static !important;
+            width: 100% !important;
+            background: white !important;
+            color: black !important;
+          }
+          .print-screen-only,
+          [data-print-screen-only="true"] {
+            display: none !important;
+            visibility: hidden !important;
           }
         }
       `}</style>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -474,10 +507,10 @@ function ShippingBoxSlip({
               RETURN / SENDER:
             </span>
             <strong className="block text-[11px] font-bold mt-0.5">Dridha Crafts</strong>
-            <span className="text-gray-700 block">Kashmir Atelier</span>
-            <span className="text-gray-700 block">Srinagar, J&amp;K</span>
-            <span className="font-mono font-bold block mt-0.5">PIN: 190001</span>
-            <span className="text-gray-700 block mt-0.5">Ph: +91 97678 07889</span>
+            <span className="text-gray-800 block">Sun City Area, Anand Nagar</span>
+            <span className="text-gray-800 block">Sinhgad Road, Pune, Maharashtra</span>
+            <span className="font-mono font-bold block mt-0.5">PIN: 411051</span>
+            <span className="text-gray-800 block mt-0.5">Ph: +91 97678 07889</span>
           </div>
 
           {/* Visual Barcode Pattern */}
@@ -658,9 +691,19 @@ function TaxInvoiceSlip({
 
         {/* Totals Box */}
         <div className="text-right space-y-0.5 min-w-32">
+          {order.subtotal && order.subtotal !== order.total && (
+            <div className="flex justify-between text-gray-600 text-[9px]">
+              <span>Subtotal:</span>
+              <span className="font-mono">{fmt(order.subtotal)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-gray-600 text-[9px]">
             <span>Shipping:</span>
-            <span className="font-semibold text-emerald-700 uppercase">FREE</span>
+            <span className="font-mono font-bold text-gray-900">
+              {Number(order.shipping_cost ?? (order.subtotal ? order.total - order.subtotal : 39)) > 0
+                ? fmt(order.shipping_cost ?? (order.subtotal ? order.total - order.subtotal : 39))
+                : "FREE"}
+            </span>
           </div>
           <div className="flex justify-between font-black text-xs sm:text-sm border-t border-black pt-1 text-black">
             <span>Grand Total:</span>

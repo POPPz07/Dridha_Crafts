@@ -27,7 +27,7 @@ export async function generateMetadata(
     };
   }
 
-  const primaryImage = product.images?.[0]?.url || "/images/image1.jpeg";
+  const primaryImage = product.images?.[0]?.url || "/images/sd-2.jpeg";
   const fullImageUrl = primaryImage.startsWith("http")
     ? primaryImage
     : `https://www.dridhacrafts.co.in${primaryImage}`;
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: PageProps) {
   const allImages = (
     product.images && product.images.length > 0
       ? product.images
-      : [{ url: "/images/image1.jpeg", alt: product.name }]
+      : [{ url: "/images/sd-2.jpeg", alt: product.name }]
   )
     .filter((img) => !img.url.endsWith(".mp4"))
     .map((img) => (img.url.startsWith("http") ? img.url : `https://www.dridhacrafts.co.in${img.url}`));

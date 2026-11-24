@@ -44,10 +44,10 @@ export const metadata: Metadata = {
     siteName: "Dridha Crafts",
     title: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories",
     description:
-      "Handcrafted wooden desk accessories made from sustainably sourced fallen trees. Laptop stands, mobile stands, cable holders, and more.",
+      "Handcrafted wooden desk accessories made from sustainably sourced fallen pine trees in the Kashmir Valley. Laptop stands, mobile holders, and desk organizers.",
     images: [
       {
-        url: "/images/image1.jpeg",
+        url: "https://www.dridhacrafts.co.in/images/sd-2.jpeg",
         width: 1200,
         height: 630,
         alt: "Dridha Crafts Handcrafted Pine Collection",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories",
     description:
       "Handcrafted wooden desk accessories made from sustainably sourced fallen pine trees in the Kashmir Valley.",
-    images: ["/images/image1.jpeg"],
+    images: ["https://www.dridhacrafts.co.in/images/sd-2.jpeg"],
   },
   icons: {
     icon: [
@@ -97,7 +97,7 @@ const brandKnowledgeGraph = {
       url: "https://www.dridhacrafts.co.in",
       logo: {
         "@type": "ImageObject",
-        url: "https://www.dridhacrafts.co.in/images/image1.jpeg",
+        url: "https://www.dridhacrafts.co.in/icon-192.png",
         caption: "Dridha Crafts Handcrafted Atelier",
       },
       description:

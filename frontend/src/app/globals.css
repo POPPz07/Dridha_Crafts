@@ -168,3 +168,41 @@ picture {
   -webkit-user-select: none;
 }
 
+/* ── Clean Invoice & Slip Printing Isolation ─────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  /* When printing an invoice modal, hide every other element in body */
+  body.printing-modal > *:not(#printable-modal-root),
+  body:has(#printable-modal-root) > *:not(#printable-modal-root) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  #printable-modal-root {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  #printable-modal-root * {
+    visibility: visible !important;
+  }
+
+  .print-screen-only,
+  [data-print-screen-only="true"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+

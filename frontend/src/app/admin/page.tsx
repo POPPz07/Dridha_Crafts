@@ -33,6 +33,7 @@ import {
   Filter,
   ArrowRight,
   Printer,
+  RotateCcw,
 } from "lucide-react";
 import OrderPrintModal from "@/components/orders/OrderPrintModal";
 
@@ -70,6 +71,8 @@ type AdminOrder = {
   payment_status: string;
   payment_method: string;
   total: number;
+  subtotal?: number;
+  shipping_cost?: number;
   shipping_name: string;
   shipping_phone: string;
   shipping_address_line_1: string;
@@ -1018,6 +1021,58 @@ function OrdersTab({
     }
   };
 
+  const revertToVerification = async (orderId: string) => {
+    if (!confirm("Revert this order back to Needs Verification?")) return;
+    setActionLoading(orderId + "_revert");
+    try {
+      await api.put(`/api/admin/orders/${orderId}/revert-to-verification`, {});
+      await fetchOrders();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to revert order");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const revertToCrafting = async (orderId: string) => {
+    if (!confirm("Return this order back to Artisan Crafting workshop?")) return;
+    setActionLoading(orderId + "_revert");
+    try {
+      await api.put(`/api/admin/orders/${orderId}/revert-to-crafting`, {});
+      await fetchOrders();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to return to crafting");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const revertToReadyToPack = async (orderId: string) => {
+    if (!confirm("Revert this order back to Ready to Pack?")) return;
+    setActionLoading(orderId + "_revert");
+    try {
+      await api.put(`/api/admin/orders/${orderId}/revert-to-ready-to-pack`, {});
+      await fetchOrders();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to revert to ready to pack");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const revertToShipped = async (orderId: string) => {
+    if (!confirm("Revert this order back to In Transit / Shipped?")) return;
+    setActionLoading(orderId + "_revert");
+    try {
+      await api.put(`/api/admin/orders/${orderId}/revert-to-shipped`, {});
+      await fetchOrders();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to revert to in transit");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const filterPills: { id: OrderFilter; label: string; icon: React.ElementType }[] = [
     { id: "needs_verification", label: "Needs Verification", icon: Clock },
     { id: "crafting", label: "Artisan Crafting", icon: Hammer },
@@ -1318,7 +1373,7 @@ function OrdersTab({
               {/* Lifecycle Stage Action Buttons */}
               <div className="flex flex-wrap gap-2.5 pt-1">
                 {/* Stage 1: Needs Verification */}
-                {order.status === "payment_verification" && (
+                {(order.status === "payment_verification" || order.status === "pending" || order.status === "payment_pending") && (
                   <button
                     onClick={() => approvePayment(order.id)}
                     disabled={actionLoading === order.id + "_approve"}
@@ -1329,45 +1384,11 @@ function OrdersTab({
                     ) : (
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     )}
-                    Approve Payment
+                    Approve Payment ➔ Artisan Crafting
                   </button>
                 )}
 
-                {/* Stage 2 & 3: Ready to Pack (confirmed) */}
-                {order.status === "confirmed" && (
-                  <>
-                    <button
-                      onClick={() => startCrafting(order.id)}
-                      disabled={actionLoading === order.id + "_craft"}
-                      className="bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-amber-700 disabled:opacity-60 transition-colors shadow-xs"
-                    >
-                      {actionLoading === order.id + "_craft" ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Hammer className="w-3.5 h-3.5" />
-                      )}
-                      Start Crafting
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShipModal({
-                          orderId: order.id,
-                          orderNumber: order.order_number,
-                        });
-                        setTrackingInput(order.tracking_number || "");
-                        setCarrierInput(order.carrier || "Delhivery");
-                        setTrackingUrlInput(order.tracking_url || "");
-                        setStatusNoteInput("Dispatched from Srinagar Studio");
-                      }}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-xs"
-                    >
-                      <Truck className="w-3.5 h-3.5" />
-                      Mark Shipped
-                    </button>
-                  </>
-                )}
-
-                {/* Stage: Artisan Crafting (processing) */}
+                {/* Stage 2: Artisan Crafting (processing) */}
                 {order.status === "processing" && (
                   <>
                     <button
@@ -1383,6 +1404,21 @@ function OrdersTab({
                       Crafting Complete ➔ Ready to Pack
                     </button>
                     <button
+                      onClick={() => revertToVerification(order.id)}
+                      disabled={actionLoading === order.id + "_revert"}
+                      className="bg-stone-100 text-charcoal/80 border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors flex items-center gap-1.5"
+                      title="Step back to Payment Verification"
+                    >
+                      <RotateCcw className="w-3 h-3 text-charcoal/60" />
+                      Revert to Verification
+                    </button>
+                  </>
+                )}
+
+                {/* Stage 3: Ready to Pack (confirmed) */}
+                {order.status === "confirmed" && (
+                  <>
+                    <button
                       onClick={() => {
                         setShipModal({
                           orderId: order.id,
@@ -1396,7 +1432,16 @@ function OrdersTab({
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-xs"
                     >
                       <Truck className="w-3.5 h-3.5" />
-                      Mark Shipped
+                      Packaged ➔ Mark Shipped (In Transit)
+                    </button>
+                    <button
+                      onClick={() => revertToCrafting(order.id)}
+                      disabled={actionLoading === order.id + "_revert"}
+                      className="bg-stone-100 text-charcoal/80 border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors flex items-center gap-1.5"
+                      title="Step back to Artisan Crafting"
+                    >
+                      <RotateCcw className="w-3 h-3 text-charcoal/60" />
+                      Back to Artisan Crafting
                     </button>
                   </>
                 )}
@@ -1404,19 +1449,6 @@ function OrdersTab({
                 {/* Stage 4: In Transit / Shipped */}
                 {order.status === "shipped" && (
                   <>
-                    <button
-                      onClick={() => {
-                        setTrackingModal(order);
-                        setTrackingInput(order.tracking_number || "");
-                        setCarrierInput(order.carrier || "Delhivery");
-                        setTrackingUrlInput(order.tracking_url || "");
-                        setStatusNoteInput(order.tracking_status_note || "");
-                      }}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-purple-700 transition-colors shadow-xs"
-                    >
-                      <Truck className="w-3.5 h-3.5" />
-                      Update Tracking / Location Note
-                    </button>
                     <button
                       onClick={() => markDelivered(order.id)}
                       disabled={actionLoading === order.id + "_deliver"}
@@ -1429,23 +1461,56 @@ function OrdersTab({
                       )}
                       Mark Delivered
                     </button>
+                    <button
+                      onClick={() => {
+                        setTrackingModal(order);
+                        setTrackingInput(order.tracking_number || "");
+                        setCarrierInput(order.carrier || "Delhivery");
+                        setTrackingUrlInput(order.tracking_url || "");
+                        setStatusNoteInput(order.tracking_status_note || "");
+                      }}
+                      className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-purple-700 transition-colors shadow-xs"
+                    >
+                      <Truck className="w-3.5 h-3.5" />
+                      Update Tracking / Note
+                    </button>
+                    <button
+                      onClick={() => revertToReadyToPack(order.id)}
+                      disabled={actionLoading === order.id + "_revert"}
+                      className="bg-stone-100 text-charcoal/80 border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors flex items-center gap-1.5"
+                      title="Step back to Ready to Pack"
+                    >
+                      <RotateCcw className="w-3 h-3 text-charcoal/60" />
+                      Back to Ready to Pack
+                    </button>
                   </>
                 )}
 
                 {/* Stage 5: Delivered */}
                 {order.status === "delivered" && (
-                  <button
-                    onClick={() => {
-                      setTrackingModal(order);
-                      setTrackingInput(order.tracking_number || "");
-                      setCarrierInput(order.carrier || "Delhivery");
-                      setTrackingUrlInput(order.tracking_url || "");
-                      setStatusNoteInput(order.tracking_status_note || "");
-                    }}
-                    className="bg-stone-100 text-charcoal border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors"
-                  >
-                    Edit Tracking Info
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setTrackingModal(order);
+                        setTrackingInput(order.tracking_number || "");
+                        setCarrierInput(order.carrier || "Delhivery");
+                        setTrackingUrlInput(order.tracking_url || "");
+                        setStatusNoteInput(order.tracking_status_note || "");
+                      }}
+                      className="bg-stone-100 text-charcoal border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors"
+                    >
+                      Edit Tracking Info
+                    </button>
+                    <button
+                      onClick={() => revertToShipped(order.id)}
+                      disabled={actionLoading === order.id + "_revert"}
+                      className="bg-stone-100 text-charcoal/80 border border-warmgrey/70 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-stone-200 transition-colors flex items-center gap-1.5"
+                      title="Step back to In Transit"
+                    >
+                      <RotateCcw className="w-3 h-3 text-charcoal/60" />
+                      Return to In Transit
+                    </button>
+                  </>
                 )}
 
                 {/* A4 Print Slips & Invoices Action */}

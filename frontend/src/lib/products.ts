@@ -18,7 +18,7 @@ export async function getProducts(): Promise<StaticProduct[]> {
         const images =
           apiP.images && apiP.images.length > 0
             ? apiP.images.map((img: any) => ({ url: img.image_url, alt: img.alt_text }))
-            : fallback?.images || [{ url: apiP.primary_image_url || "/images/image1.jpeg", alt: apiP.name }];
+            : fallback?.images || [{ url: apiP.primary_image_url || "/images/sd-2.jpeg", alt: apiP.name }];
 
         return {
           id: apiP.id,
@@ -64,7 +64,7 @@ export async function getProductBySlug(slug: string): Promise<StaticProduct | nu
           ? fallback.images
           : apiP.images && apiP.images.length > 0
           ? apiP.images.map((img: any) => ({ url: img.image_url, alt: img.alt_text }))
-          : [{ url: apiP.primary_image_url || "/images/image1.jpeg", alt: apiP.name }];
+          : [{ url: apiP.primary_image_url || "/images/sd-2.jpeg", alt: apiP.name }];
 
       // Strictly ensure only the two canonical finishes exist ("Classic Natural Polish" & "Rich Brown Polish")
       let variants = fallback?.variants && fallback.variants.length > 0 ? fallback.variants : [];

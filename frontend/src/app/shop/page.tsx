@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.dridhacrafts.co.in/images/image1.jpeg",
+        url: "https://www.dridhacrafts.co.in/images/sd-2.jpeg",
         width: 1200,
         height: 630,
         alt: "Dridha Crafts Handcrafted Pine Collection",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     title: "Shop Handcrafted Wooden Desk Accessories | Dridha Crafts",
     description:
       "Explore our full collection of handcrafted pine desk accessories, laptop risers, and artisan combos.",
-    images: ["https://www.dridhacrafts.co.in/images/image1.jpeg"],
+    images: ["https://www.dridhacrafts.co.in/images/sd-2.jpeg"],
   },
 };
 

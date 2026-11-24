@@ -1,6 +1,8 @@
 "use client";
 
-import { Printer, X, Download, ShieldCheck, Sparkles, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Printer, X } from "lucide-react";
 import type { Order } from "@/types/order";
 
 interface CustomerInvoiceModalProps {
@@ -14,7 +16,22 @@ export default function CustomerInvoiceModal({
   onClose,
   order,
 }: CustomerInvoiceModalProps) {
-  if (!isOpen || !order) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("printing-modal");
+      return () => {
+        document.body.classList.remove("printing-modal");
+      };
+    }
+  }, [isOpen]);
+
+  if (!isOpen || !order || !mounted) return null;
 
   const fmt = (amt?: number) => `₹${Number(amt || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
@@ -27,12 +44,15 @@ export default function CustomerInvoiceModal({
     window.print();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static print:inset-auto">
+  const shippingCost = Number(order.shipping_cost ?? 39);
+  const subtotal = Number(order.subtotal || (order.total - shippingCost));
+
+  const modalContent = (
+    <div id="printable-modal-root" className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static print:inset-auto">
       {/* Container */}
       <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden print:border-none print:shadow-none print:max-w-none print:rounded-none">
         {/* Header - Screen only */}
-        <div className="p-4 sm:p-5 border-b border-warmgrey/50 bg-stone-50 flex items-center justify-between print:hidden">
+        <div className="p-4 sm:p-5 border-b border-warmgrey/50 bg-stone-50 flex items-center justify-between print-screen-only print:hidden" data-print-screen-only="true">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-green text-white flex items-center justify-center">
               <Printer className="w-5 h-5" />
@@ -64,7 +84,7 @@ export default function CustomerInvoiceModal({
         </div>
 
         {/* Invoice Printable Sheet */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-white text-black font-sans print:p-0">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-white text-black font-sans print:p-0 print:overflow-visible">
           {/* Top Brand Bar */}
           <div className="border-b-2 border-black pb-4 flex justify-between items-start gap-4">
             <div>
@@ -196,11 +216,13 @@ export default function CustomerInvoiceModal({
             <div className="sm:col-span-5 text-right space-y-2">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal:</span>
-                <span className="font-mono">{fmt(order.subtotal || order.total)}</span>
+                <span className="font-mono">{fmt(subtotal)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping &amp; Packaging:</span>
-                <span className="font-semibold text-emerald-700 uppercase">FREE</span>
+                <span className="font-semibold text-gray-900 font-mono">
+                  {shippingCost > 0 ? fmt(shippingCost) : "FREE"}
+                </span>
               </div>
               <div className="flex justify-between text-base font-black border-t-2 border-black pt-2 text-black">
                 <span>Total Paid:</span>
@@ -225,7 +247,7 @@ export default function CustomerInvoiceModal({
         </div>
 
         {/* Modal Footer (Screen only) */}
-        <div className="p-4 border-t border-warmgrey/50 bg-stone-50 flex items-center justify-between print:hidden">
+        <div className="p-4 border-t border-warmgrey/50 bg-stone-50 flex items-center justify-between print-screen-only print:hidden" data-print-screen-only="true">
           <span className="text-xs text-charcoal/60">
             Need help with this order? Contact WhatsApp at <strong>+91 97678 07889</strong>
           </span>
@@ -239,4 +261,7 @@ export default function CustomerInvoiceModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
+

@@ -214,7 +214,7 @@ export function ShopClient() {
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-warmgrey/20">
                   <Image
-                    src={product.images[0]?.url || "/images/image1.jpeg"}
+                    src={product.images[0]?.url || "/images/sd-2.jpeg"}
                     alt={product.images[0]?.alt || product.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700 ease-smooth"

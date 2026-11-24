@@ -358,9 +358,10 @@ async def approve_payment(
         )
 
     now = datetime.now(timezone.utc)
-    order.status = OrderStatus.CONFIRMED.value
+    order.status = OrderStatus.PROCESSING.value
     order.payment_status = PaymentStatus.PAID.value
     order.payment_completed_at = now
+    order.tracking_status_note = "Payment verified. Artisan crafting in progress at workshop."
 
     # Commit all inventory reservations
     res_result = await db.execute(
@@ -373,7 +374,7 @@ async def approve_payment(
         res.committed_at = now
 
     await db.flush()
-    return {"message": "Payment approved", "order_number": order.order_number}
+    return {"message": "Payment approved. Order moved to Artisan Crafting.", "order_number": order.order_number, "status": order.status}
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +422,96 @@ async def order_ready_to_pack(
     await db.flush()
     return {
         "message": "Order moved to Ready to Pack",
+        "order_number": order.order_number,
+        "status": order.status,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 3d. Reverse / Step-Back Lifecycle Endpoints (Bidirectional pipeline flow)
+# ---------------------------------------------------------------------------
+
+@router.put("/orders/{order_id}/revert-to-verification")
+async def revert_order_to_verification(
+    order_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revert order from Artisan Crafting back to payment_verification."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    order.status = OrderStatus.PAYMENT_VERIFICATION.value
+    order.payment_status = PaymentStatus.MANUAL_VERIFICATION.value
+    order.tracking_status_note = "Payment pending re-verification"
+    await db.flush()
+    return {
+        "message": "Order reverted to Needs Verification",
+        "order_number": order.order_number,
+        "status": order.status,
+    }
+
+
+@router.put("/orders/{order_id}/revert-to-crafting")
+async def revert_order_to_crafting(
+    order_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revert order from Ready to Pack back to Artisan Crafting."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    order.status = OrderStatus.PROCESSING.value
+    order.tracking_status_note = "Returned to workshop for artisan refinement"
+    await db.flush()
+    return {
+        "message": "Order reverted to Artisan Crafting",
+        "order_number": order.order_number,
+        "status": order.status,
+    }
+
+
+@router.put("/orders/{order_id}/revert-to-ready-to-pack")
+async def revert_order_to_ready_to_pack(
+    order_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revert order from In Transit / Shipped back to Ready to Pack."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    order.status = OrderStatus.CONFIRMED.value
+    order.tracking_status_note = "Returned to packaging station"
+    await db.flush()
+    return {
+        "message": "Order reverted to Ready to Pack",
+        "order_number": order.order_number,
+        "status": order.status,
+    }
+
+
+@router.put("/orders/{order_id}/revert-to-shipped")
+async def revert_order_to_shipped(
+    order_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revert order from Delivered back to Shipped / In Transit."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    order.status = OrderStatus.SHIPPED.value
+    order.delivered_at = None
+    order.tracking_status_note = "In transit with courier"
+    await db.flush()
+    return {
+        "message": "Order reverted to In Transit",
         "order_number": order.order_number,
         "status": order.status,
     }
