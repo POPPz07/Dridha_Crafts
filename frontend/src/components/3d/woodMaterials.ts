@@ -1,6 +1,6 @@
 "use client";
 
-export type FinishOption = "unpolished" | "transparent" | "brown";
+export type FinishOption = "transparent" | "brown" | "unpolished";
 
 export interface WoodColorTheme {
   primary: string;   // Main body / deck / column
@@ -12,28 +12,31 @@ export interface WoodColorTheme {
 
 /**
  * Single source of truth for Dridha Crafts 3D materials.
- * Guaranteed 100% color, roughness, and lighting consistency across all products.
+ * Two signature finishes:
+ * 1. Classic Natural Polish (Signature Kashmir blonde pine with protective clear sheen)
+ * 2. Rich Brown Polish (Deep rich artisan warm brown pine stain)
  */
-export const WOOD_FINISH_THEMES: Record<FinishOption, WoodColorTheme> = {
-  unpolished: {
-    primary: "#dfa663", // Signature Kashmir blonde natural pine (raw matte)
-    accent: "#c68644",
-    detail: "#d69858",
-    roughness: 0.62,
-    metalness: 0.01,
-  },
+export const WOOD_FINISH_THEMES: Record<string, WoodColorTheme> = {
   transparent: {
-    primary: "#dfa663", // Exact same wood color as unpolished, with clear protective polish sheen
+    primary: "#dfa663", // Classic Natural Polish: Signature Kashmir blonde natural pine with sheen
     accent: "#c68644",
     detail: "#d69858",
     roughness: 0.36,
     metalness: 0.02,
   },
   brown: {
-    primary: "#b86a2a", // Deep rich artisan warm brown pine polish
+    primary: "#b86a2a", // Rich Brown Polish: Deep rich artisan warm brown pine polish
     accent: "#964f19",
     detail: "#a55c20",
     roughness: 0.42,
+    metalness: 0.02,
+  },
+  // Fallback alias for safety (maps to Classic Natural Polish)
+  unpolished: {
+    primary: "#dfa663",
+    accent: "#c68644",
+    detail: "#d69858",
+    roughness: 0.36,
     metalness: 0.02,
   },
 };

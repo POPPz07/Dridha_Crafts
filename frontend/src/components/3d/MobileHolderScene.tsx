@@ -24,8 +24,8 @@ export type { FinishOption };
  * - Solid on the LEFT half (x from -1.3 to 0)
  * - Arched foot cutout at the bottom resting at ground level
  */
-function SpinePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
-  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+function SpinePiece({ finish = "transparent" }: { finish?: FinishOption }) {
+  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -93,8 +93,8 @@ function SpinePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
 /**
  * Piece 2: Horizontal Cradle / Perch
  */
-function CradlePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
-  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+function CradlePiece({ finish = "transparent" }: { finish?: FinishOption }) {
+  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -198,7 +198,7 @@ function CradlePiece({ finish = "unpolished" }: { finish?: FinishOption }) {
 /**
  * Assembled Mobile Stand:
  */
-function MobileStandAssembly({ finish = "unpolished" }: { finish?: FinishOption }) {
+function MobileStandAssembly({ finish = "transparent" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
 
   // Slow continuous turntable rotation
@@ -230,7 +230,7 @@ function MobileStandAssembly({ finish = "unpolished" }: { finish?: FinishOption 
   );
 }
 
-export function MobileHolderScene({ finish = "unpolished" }: { finish?: FinishOption }) {
+export function MobileHolderScene({ finish = "transparent" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows

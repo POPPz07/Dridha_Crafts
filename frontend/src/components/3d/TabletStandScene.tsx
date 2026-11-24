@@ -17,8 +17,8 @@ export type { FinishOption };
 /**
  * Piece 1: Main Sloping Deck (Tablet / Laptop Board)
  */
-function TabletDeckPiece({ finish = "unpolished" }: { finish?: FinishOption }) {
-  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+function TabletDeckPiece({ finish = "transparent" }: { finish?: FinishOption }) {
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -148,12 +148,12 @@ function TabletDeckPiece({ finish = "unpolished" }: { finish?: FinishOption }) {
  */
 function TabletSupportLeg({
   legLength = 1.61,
-  finish = "unpolished",
+  finish = "transparent",
 }: {
   legLength?: number;
   finish?: FinishOption;
 }) {
-  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
   const geometry = useMemo(() => {
     const shape = new Shape();
 
@@ -208,9 +208,9 @@ function TabletSupportLeg({
 /**
  * Assembled Tablet Stand:
  */
-function TabletStandAssembly({ finish = "unpolished" }: { finish?: FinishOption }) {
+function TabletStandAssembly({ finish = "transparent" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
-  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
 
   // Slow continuous turntable rotation
   useFrame((_state, delta) => {
@@ -251,7 +251,7 @@ function TabletStandAssembly({ finish = "unpolished" }: { finish?: FinishOption 
   );
 }
 
-export function TabletStandScene({ finish = "unpolished" }: { finish?: FinishOption }) {
+export function TabletStandScene({ finish = "transparent" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows

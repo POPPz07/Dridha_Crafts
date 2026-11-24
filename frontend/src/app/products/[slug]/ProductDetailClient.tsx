@@ -30,6 +30,7 @@ import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 import { ProductReviewsSection } from "@/components/products/ProductReviewsSection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProductDetailSkeleton } from "@/components/ui/SkeletonCard";
+import type { FinishOption } from "@/components/3d/woodMaterials";
 
 const CustomCaddyScene = dynamic(
   () => import("@/components/3d/CustomCaddyScene").then((m) => m.CustomCaddyScene),
@@ -78,7 +79,7 @@ function Loading3DBox({ label }: { label: string }) {
   );
 }
 
-const SCENE_COMPONENTS: Record<string, React.ComponentType<{ finish?: "unpolished" | "transparent" | "brown" }>> = {
+const SCENE_COMPONENTS: Record<string, React.ComponentType<{ finish?: FinishOption }>> = {
   "custom-artisan-desk-caddy": CustomCaddyScene,
   "shiftdesk-stand": AtelierScene,
   "signature-shiftdesk-stand": AtelierScene,
@@ -89,9 +90,8 @@ const SCENE_COMPONENTS: Record<string, React.ComponentType<{ finish?: "unpolishe
 };
 
 const POLISH_OPTIONS = [
-  "Unpolished (Natural Raw Wood)",
-  "Polished — Transparent Polish (+₹20)",
-  "Polished — Brown Colour Polish (+₹20)",
+  "Classic Natural Polish",
+  "Rich Brown Polish",
 ];
 
 interface ProductDetailClientProps {
@@ -160,39 +160,27 @@ function ProductDetail({ product }: { product: StaticProduct }) {
   // For combos: maintain separate polish choice for each product in the bundle
   const [bundleFinishes, setBundleFinishes] = useState<Record<number, string>>(() => {
     return {
-      0: "Unpolished (Natural Raw Wood)",
-      1: "Unpolished (Natural Raw Wood)",
-      2: "Unpolished (Natural Raw Wood)",
+      0: "Classic Natural Polish",
+      1: "Classic Natural Polish",
+      2: "Classic Natural Polish",
     };
   });
 
-  // Calculate polish surcharge for combos (+₹20 for each polished item)
-  const bundlePolishSurcharge = useMemo(() => {
-    if (!isBundle || !currentBundle) return 0;
-    let count = 0;
-    currentBundle.items.forEach((_, idx) => {
-      const finish = bundleFinishes[idx] || POLISH_OPTIONS[0];
-      if (finish.includes("Polished")) {
-        count += 1;
-      }
-    });
-    return count * 20;
-  }, [isBundle, currentBundle, bundleFinishes]);
+  // Both standard finishes are inclusive with no hidden surcharge
+  const bundlePolishSurcharge = 0;
 
   const ActiveScene = SCENE_COMPONENTS[product.slug];
   const activeVariant = product.variants?.find((v) => v.id === selectedVariantId) || null;
 
-  const currentFinish = useMemo<"unpolished" | "transparent" | "brown">(() => {
+  const currentFinish = useMemo<FinishOption>(() => {
     if (isBundle) {
-      const firstFinish = bundleFinishes[0] || "";
-      if (firstFinish.toLowerCase().includes("brown")) return "brown";
-      if (firstFinish.toLowerCase().includes("transparent")) return "transparent";
-      return "unpolished";
+      const firstFinish = (bundleFinishes[0] || "").toLowerCase();
+      if (firstFinish.includes("brown")) return "brown";
+      return "transparent";
     }
-    const name = activeVariant?.variant_name?.toLowerCase() || "";
+    const name = (activeVariant?.variant_name || "").toLowerCase();
     if (name.includes("brown")) return "brown";
-    if (name.includes("transparent")) return "transparent";
-    return "unpolished";
+    return "transparent";
   }, [isBundle, bundleFinishes, activeVariant]);
   const currentPrice = isBundle
     ? product.price + bundlePolishSurcharge
@@ -349,14 +337,19 @@ function ProductDetail({ product }: { product: StaticProduct }) {
 
             {/* 3D Canvas or Photo Viewer */}
             {viewMode === "3d" && ActiveScene ? (
-              <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-[#ecdcc6] border border-warmgrey/60 shadow-medium">
-                <div className="absolute inset-0 w-full h-full">
-                  <ActiveScene finish={currentFinish} />
+              <div className="space-y-1.5">
+                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-[#ecdcc6] border border-warmgrey/60 shadow-medium">
+                  <div className="absolute inset-0 w-full h-full">
+                    <ActiveScene finish={currentFinish} />
+                  </div>
+                  <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] text-white font-medium select-none pointer-events-none">
+                    <Box className="w-3 h-3 text-[#dfa663]" />
+                    Drag to rotate • 360° Studio Model
+                  </div>
                 </div>
-                <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] text-white font-medium select-none pointer-events-none">
-                  <Box className="w-3 h-3 text-[#dfa663]" />
-                  Drag to rotate • 360° Studio Model
-                </div>
+                <p className="text-[10px] text-charcoal/40 text-center tracking-tight select-none">
+                  *Note: 3D model tones and grain patterns may vary slightly from authentic handcrafted wood finish.
+                </p>
               </div>
             ) : (
               <>
@@ -639,6 +632,9 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                     </button>
                   ))}
                 </div>
+                <span className="text-[10px] text-charcoal/40 italic block pt-1 select-none">
+                  *Note: 3D model colors may slightly differ from actual handcrafted pine finish.
+                </span>
               </div>
             )}
 

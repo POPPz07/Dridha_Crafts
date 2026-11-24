@@ -41,7 +41,7 @@ export function Dropzone3DSection() {
 
         {/* 3D Scene */}
         <div className="w-full h-full absolute inset-0">
-          <DropzoneScene finish="unpolished" />
+          <DropzoneScene finish="transparent" />
         </div>
       </div>
 

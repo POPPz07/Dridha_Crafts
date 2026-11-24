@@ -36,9 +36,8 @@ PRODUCTS_TO_SYNC = [
             {"image_url": "/images/sd-polish-brown.jpg", "alt_text": "ShiftDesk Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 4},
         ],
         "variants": [
-            {"variant_name": "Unpolished (Natural Raw Wood)", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
-            {"variant_name": "Polished — Transparent Polish", "variant_type": "Finish", "price_override": Decimal("569.00"), "stock_quantity": 30},
-            {"variant_name": "Polished — Brown Colour Polish", "variant_type": "Finish", "price_override": Decimal("569.00"), "stock_quantity": 30},
+            {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
         ],
     },
     {
@@ -65,9 +64,8 @@ PRODUCTS_TO_SYNC = [
             {"image_url": "/images/ls-4.jpg", "alt_text": "Handcrafted Laptop Stand studio cutout", "is_primary": False, "sort_order": 4},
         ],
         "variants": [
-            {"variant_name": "Unpolished (Natural Raw Wood)", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
-            {"variant_name": "Polished — Transparent Polish", "variant_type": "Finish", "price_override": Decimal("469.00"), "stock_quantity": 35},
-            {"variant_name": "Polished — Brown Colour Polish", "variant_type": "Finish", "price_override": Decimal("469.00"), "stock_quantity": 35},
+            {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
         ],
     },
     {
@@ -95,9 +93,8 @@ PRODUCTS_TO_SYNC = [
             {"image_url": "/images/ms-polish-brown.jpg", "alt_text": "Mobile Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 5},
         ],
         "variants": [
-            {"variant_name": "Unpolished (Natural Raw Wood)", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
-            {"variant_name": "Polished — Transparent Polish", "variant_type": "Finish", "price_override": Decimal("259.00"), "stock_quantity": 50},
-            {"variant_name": "Polished — Brown Colour Polish", "variant_type": "Finish", "price_override": Decimal("259.00"), "stock_quantity": 50},
+            {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
         ],
     },
     {
@@ -122,9 +119,8 @@ PRODUCTS_TO_SYNC = [
             {"image_url": "/images/h-3.jpeg", "alt_text": "Dropzone Headphone & Phone Stand artisan detail view", "is_primary": False, "sort_order": 2},
         ],
         "variants": [
-            {"variant_name": "Unpolished (Natural Raw Wood)", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
-            {"variant_name": "Polished — Transparent Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 40},
-            {"variant_name": "Polished — Brown Colour Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 40},
+            {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
         ],
     },
     {
@@ -147,9 +143,8 @@ PRODUCTS_TO_SYNC = [
             {"image_url": "/images/image11.png", "alt_text": "Solid Bookends (Pair)", "is_primary": True, "sort_order": 0},
         ],
         "variants": [
-            {"variant_name": "Unpolished (Natural Raw Wood)", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},
-            {"variant_name": "Polished — Transparent Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 25},
-            {"variant_name": "Polished — Brown Colour Polish", "variant_type": "Finish", "price_override": Decimal("369.00"), "stock_quantity": 25},
+            {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},
+            {"variant_name": "Rich Brown Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},
         ],
     },
 ]

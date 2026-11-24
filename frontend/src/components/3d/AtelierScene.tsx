@@ -146,10 +146,10 @@ function Timber({
  *  2. plain rectangular support handle;
  *  3. flat base: 4 rear slots and two raised front prongs/stoppers.
  */
-function ShiftDeskStand({ finish = "unpolished" }: { finish?: FinishOption }) {
+function ShiftDeskStand({ finish = "transparent" }: { finish?: FinishOption }) {
   const model = useRef<Group>(null);
   const deckAngle = 0.56;
-  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+  const cfg = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
 
   useFrame((_state, delta) => {
     if (model.current) model.current.rotation.y += delta * 0.1;
@@ -254,7 +254,7 @@ function ShiftDeskStand({ finish = "unpolished" }: { finish?: FinishOption }) {
   );
 }
 
-export function AtelierScene({ finish = "unpolished" }: { finish?: FinishOption }) {
+export function AtelierScene({ finish = "transparent" }: { finish?: FinishOption }) {
   return (
     <Canvas
       shadows

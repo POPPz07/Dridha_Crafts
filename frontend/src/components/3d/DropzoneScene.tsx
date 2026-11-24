@@ -275,11 +275,11 @@ function DropzoneAssembly({
  * Uses unified studio lighting and materials consistent across all Dridha products.
  */
 export default function DropzoneScene({
-  finish = "unpolished",
+  finish = "transparent",
 }: {
   finish?: FinishOption;
 }) {
-  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.unpolished;
+  const theme = WOOD_FINISH_THEMES[finish] || WOOD_FINISH_THEMES.transparent;
 
   return (
     <div className="relative w-full h-full select-none">
