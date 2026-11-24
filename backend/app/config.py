@@ -52,9 +52,11 @@ class Settings(BaseSettings):
             "http://localhost:3005",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "http://127.0.0.1:3005",
             "https://dridhacrafts.co.in",
             "https://www.dridhacrafts.co.in",
             "https://dridhacrafts.vercel.app",
+            "https://dridha-crafts-frontend.vercel.app",
         ],
         description="Allowed CORS origins (frontend URLs)",
     )
@@ -98,7 +100,7 @@ class Settings(BaseSettings):
     CASHFREE_API_VERSION: str = Field(default="2023-08-01", description="Pinned Cashfree API version")
     CASHFREE_PAYMENT_METHODS: str = Field(default="upi,nb", description="Restricted customer-facing payment methods (UPI & Net Banking)")
     CASHFREE_RETURN_URL: str = Field(
-        default="http://localhost:3000/checkout/payment-status?order_id={order_id}",
+        default="https://www.dridhacrafts.co.in/checkout/payment-status?order_id={order_id}",
         description="Return URL after Cashfree checkout completion",
     )
     CASHFREE_NOTIFY_URL: str = Field(

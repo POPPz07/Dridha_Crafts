@@ -172,10 +172,16 @@ export function AuthModal() {
     setErrorMsg("");
     try {
       const supabase = createClient();
+      const redirectUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}`
+          : "https://www.dridhacrafts.co.in";
+
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: data.full_name,
           },

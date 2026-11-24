@@ -204,7 +204,12 @@ async def forgot_password(
 
     # 2. Trigger password reset through Supabase Auth
     supabase = _get_supabase_anon_client()
-    redirect_url = body.redirect_to or "http://localhost:3000/reset-password"
+    default_redirect = (
+        "http://localhost:3000/reset-password"
+        if get_settings().ENVIRONMENT != "production"
+        else "https://www.dridhacrafts.co.in/reset-password"
+    )
+    redirect_url = body.redirect_to or default_redirect
 
     try:
         auth_res = supabase.auth.reset_password_for_email(
