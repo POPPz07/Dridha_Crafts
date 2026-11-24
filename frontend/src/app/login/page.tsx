@@ -117,6 +117,14 @@ function LoginContent() {
 
       if (authData.user) {
         const appRole = (authData.user.app_metadata?.role as "admin" | "customer") || "customer";
+
+        if (appRole === "admin" && !isAdminLogin) {
+          await supabase.auth.signOut();
+          setErrorMessage("Admin accounts cannot sign in through the customer storefront. Please sign in via the official Admin Portal at /admin.");
+          setIsLoading(false);
+          return;
+        }
+
         setUser({
           id: authData.user.id,
           email: authData.user.email || data.email,

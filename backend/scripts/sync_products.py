@@ -24,6 +24,7 @@ PRODUCTS_TO_SYNC = [
         "wood_type": "Kashmir Pine",
         "finish": "Multi-Angle Adjustable Elevation",
         "weight_kg": Decimal("0.80"),
+        "dimensions": "11 × 6 inches",
         "is_featured": True,
         "is_active": True,
         "stock_quantity": 30,
@@ -52,6 +53,7 @@ PRODUCTS_TO_SYNC = [
         "wood_type": "Kashmir Valley Pine",
         "finish": "Slotted Multi-Level Elevation",
         "weight_kg": Decimal("0.70"),
+        "dimensions": "11 × 6 inches",
         "is_featured": True,
         "is_active": True,
         "stock_quantity": 35,
@@ -109,6 +111,7 @@ PRODUCTS_TO_SYNC = [
         "wood_type": "Kashmir Valley Pine",
         "finish": "Dual-Purpose Headphone & Phone Dock",
         "weight_kg": Decimal("0.35"),
+        "dimensions": "6 × 6 × 10 inches",
         "is_featured": True,
         "is_active": True,
         "stock_quantity": 40,
@@ -182,6 +185,7 @@ async def sync():
             existing.wood_type = pdata["wood_type"]
             existing.finish = pdata["finish"]
             existing.weight_kg = pdata["weight_kg"]
+            existing.dimensions = pdata.get("dimensions")
             existing.is_featured = pdata["is_featured"]
             existing.is_active = pdata["is_active"]
             existing.stock_quantity = pdata["stock_quantity"]
@@ -201,18 +205,26 @@ async def sync():
                 )
                 session.add(new_img)
 
-            # Refresh variants
-            await session.execute(delete(ProductVariant).where(ProductVariant.product_id == existing.id))
+            # Refresh variants safely without violating foreign keys from existing orders
+            existing_vars = (await session.execute(select(ProductVariant).where(ProductVariant.product_id == existing.id))).scalars().all()
+            var_map = {v.variant_name: v for v in existing_vars}
             for v in pdata["variants"]:
-                new_var = ProductVariant(
-                    product_id=existing.id,
-                    variant_name=v["variant_name"],
-                    variant_type=v["variant_type"],
-                    price_override=v["price_override"],
-                    stock_quantity=v["stock_quantity"],
-                    is_active=True,
-                )
-                session.add(new_var)
+                if v["variant_name"] in var_map:
+                    ev = var_map[v["variant_name"]]
+                    ev.variant_type = v["variant_type"]
+                    ev.price_override = v["price_override"]
+                    ev.stock_quantity = v["stock_quantity"]
+                    ev.is_active = True
+                else:
+                    new_var = ProductVariant(
+                        product_id=existing.id,
+                        variant_name=v["variant_name"],
+                        variant_type=v["variant_type"],
+                        price_override=v["price_override"],
+                        stock_quantity=v["stock_quantity"],
+                        is_active=True,
+                    )
+                    session.add(new_var)
 
             print(f"Synced product: {existing.name} (Rs.{existing.price}, Save Rs.{existing.compare_at_price - existing.price})")
 
