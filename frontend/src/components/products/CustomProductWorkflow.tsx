@@ -175,7 +175,7 @@ I want to discuss dimensions, device slots, and finalized pricing for my setup.`
           name: finalTitle,
           slug: product.slug,
           price: finalPrice,
-          primary_image_url: product.images[0]?.url || "/images/custom-caddy-1.png",
+          primary_image_url: product.images[0]?.url || "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/custom-caddy-1.png",
           stock_quantity: 10,
         },
         variant: {

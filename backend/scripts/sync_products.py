@@ -30,11 +30,11 @@ PRODUCTS_TO_SYNC = [
         "stock_quantity": 30,
         "sort_order": 1,
         "images": [
-            {"image_url": "/images/sd-2.jpeg", "alt_text": "ShiftDesk Stand in Kashmir Valley on weathered pine", "is_primary": True, "sort_order": 0},
-            {"image_url": "/images/sd-3.jpeg", "alt_text": "ShiftDesk Stand 6-angle elevation view", "is_primary": False, "sort_order": 1},
-            {"image_url": "/images/sd-4.jpeg", "alt_text": "ShiftDesk Stand profile and angle riser view", "is_primary": False, "sort_order": 2},
-            {"image_url": "/images/sd-polish-transparent.jpg", "alt_text": "ShiftDesk Stand - Transparent Polish finish", "is_primary": False, "sort_order": 3},
-            {"image_url": "/images/sd-polish-brown.jpg", "alt_text": "ShiftDesk Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 4},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg", "alt_text": "ShiftDesk Stand in Kashmir Valley on weathered pine", "is_primary": True, "sort_order": 0},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-3.jpeg", "alt_text": "ShiftDesk Stand 6-angle elevation view", "is_primary": False, "sort_order": 1},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-4.jpeg", "alt_text": "ShiftDesk Stand profile and angle riser view", "is_primary": False, "sort_order": 2},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-polish-transparent.jpg", "alt_text": "ShiftDesk Stand - Transparent Polish finish", "is_primary": False, "sort_order": 3},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-polish-brown.jpg", "alt_text": "ShiftDesk Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 4},
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("549.00"), "stock_quantity": 30},
@@ -59,11 +59,11 @@ PRODUCTS_TO_SYNC = [
         "stock_quantity": 35,
         "sort_order": 2,
         "images": [
-            {"image_url": "/images/ls-6.png", "alt_text": "Handcrafted Multi-Angle Laptop Stand on desk with laptop", "is_primary": True, "sort_order": 0},
-            {"image_url": "/images/ls-1.jpg", "alt_text": "Handcrafted Laptop Stand top perspective on grass", "is_primary": False, "sort_order": 1},
-            {"image_url": "/images/ls-2.jpg", "alt_text": "Handcrafted Laptop Stand angle view in sunlight", "is_primary": False, "sort_order": 2},
-            {"image_url": "/images/ls-3.jpg", "alt_text": "Handcrafted Laptop Stand perspective with adjustment dowels", "is_primary": False, "sort_order": 3},
-            {"image_url": "/images/ls-4.jpg", "alt_text": "Handcrafted Laptop Stand studio cutout", "is_primary": False, "sort_order": 4},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-6.png", "alt_text": "Handcrafted Multi-Angle Laptop Stand on desk with laptop", "is_primary": True, "sort_order": 0},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-1.jpg", "alt_text": "Handcrafted Laptop Stand top perspective on grass", "is_primary": False, "sort_order": 1},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-2.jpg", "alt_text": "Handcrafted Laptop Stand angle view in sunlight", "is_primary": False, "sort_order": 2},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-3.jpg", "alt_text": "Handcrafted Laptop Stand perspective with adjustment dowels", "is_primary": False, "sort_order": 3},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-4.jpg", "alt_text": "Handcrafted Laptop Stand studio cutout", "is_primary": False, "sort_order": 4},
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("449.00"), "stock_quantity": 35},
@@ -87,12 +87,12 @@ PRODUCTS_TO_SYNC = [
         "stock_quantity": 50,
         "sort_order": 3,
         "images": [
-            {"image_url": "/images/ms-1.jpg", "alt_text": "Interlocking Wooden Mobile Stand on lawn", "is_primary": True, "sort_order": 0},
-            {"image_url": "/images/ms-2.jpg", "alt_text": "Wooden Mobile Stand supporting smartphone on desk", "is_primary": False, "sort_order": 1},
-            {"image_url": "/images/ms-3.jpg", "alt_text": "Dual Mobile Stands with transparent and brown finishes", "is_primary": False, "sort_order": 2},
-            {"image_url": "/images/ms-4.jpg", "alt_text": "Two-piece interlocking mobile stand profile", "is_primary": False, "sort_order": 3},
-            {"image_url": "/images/ms-polish-transparent.jpg", "alt_text": "Mobile Stand - Transparent Polish finish", "is_primary": False, "sort_order": 4},
-            {"image_url": "/images/ms-polish-brown.jpg", "alt_text": "Mobile Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 5},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-1.jpg", "alt_text": "Interlocking Wooden Mobile Stand on lawn", "is_primary": True, "sort_order": 0},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-2.jpg", "alt_text": "Wooden Mobile Stand supporting smartphone on desk", "is_primary": False, "sort_order": 1},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-3.jpg", "alt_text": "Dual Mobile Stands with transparent and brown finishes", "is_primary": False, "sort_order": 2},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-4.jpg", "alt_text": "Two-piece interlocking mobile stand profile", "is_primary": False, "sort_order": 3},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-polish-transparent.jpg", "alt_text": "Mobile Stand - Transparent Polish finish", "is_primary": False, "sort_order": 4},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ms-polish-brown.jpg", "alt_text": "Mobile Stand - Brown Colour Polish finish", "is_primary": False, "sort_order": 5},
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("249.00"), "stock_quantity": 50},
@@ -117,9 +117,9 @@ PRODUCTS_TO_SYNC = [
         "stock_quantity": 40,
         "sort_order": 4,
         "images": [
-            {"image_url": "/images/h-1.png", "alt_text": "Dropzone Headphone & Phone Stand angled desk view", "is_primary": True, "sort_order": 0},
-            {"image_url": "/images/h-2.png", "alt_text": "Dropzone Headphone & Phone Stand front profile view", "is_primary": False, "sort_order": 1},
-            {"image_url": "/images/h-3.jpeg", "alt_text": "Dropzone Headphone & Phone Stand artisan detail view", "is_primary": False, "sort_order": 2},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/h-1.png", "alt_text": "Dropzone Headphone & Phone Stand angled desk view", "is_primary": True, "sort_order": 0},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/h-2.png", "alt_text": "Dropzone Headphone & Phone Stand front profile view", "is_primary": False, "sort_order": 1},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/h-3.jpeg", "alt_text": "Dropzone Headphone & Phone Stand artisan detail view", "is_primary": False, "sort_order": 2},
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 40},
@@ -143,7 +143,7 @@ PRODUCTS_TO_SYNC = [
         "stock_quantity": 25,
         "sort_order": 5,
         "images": [
-            {"image_url": "/images/image11.png", "alt_text": "Solid Bookends (Pair)", "is_primary": True, "sort_order": 0},
+            {"image_url": "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/image11.png", "alt_text": "Solid Bookends (Pair)", "is_primary": True, "sort_order": 0},
         ],
         "variants": [
             {"variant_name": "Classic Natural Polish", "variant_type": "Finish", "price_override": Decimal("349.00"), "stock_quantity": 25},

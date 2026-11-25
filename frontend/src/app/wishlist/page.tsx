@@ -61,7 +61,7 @@ export default function WishlistPage() {
               >
                 <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-warmgrey/30">
                   <Image
-                    src={product.images[0]?.url || "/images/sd-2.jpeg"}
+                    src={product.images[0]?.url || "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"}
                     alt={product.name}
                     fill
                     className="object-cover"

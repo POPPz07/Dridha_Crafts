@@ -47,7 +47,7 @@ export const metadata: Metadata = {
       "Handcrafted wooden desk accessories made from sustainably sourced fallen pine trees in the Kashmir Valley. Laptop stands, mobile holders, and desk organizers.",
     images: [
       {
-        url: "https://www.dridhacrafts.co.in/images/sd-2.jpeg",
+        url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg",
         width: 1200,
         height: 630,
         alt: "Dridha Crafts Handcrafted Pine Collection",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "Dridha Crafts — Handcrafted Solid Pine Desk Accessories",
     description:
       "Handcrafted wooden desk accessories made from sustainably sourced fallen pine trees in the Kashmir Valley.",
-    images: ["https://www.dridhacrafts.co.in/images/sd-2.jpeg"],
+    images: ["https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"],
   },
   icons: {
     icon: [

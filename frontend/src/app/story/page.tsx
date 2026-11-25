@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.dridhacrafts.co.in/images/sd-2.jpeg",
+        url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg",
         width: 1200,
         height: 630,
         alt: "Dridha Crafts Artisan Story — Kashmir Pine Wood",
@@ -56,7 +56,7 @@ export default function StoryPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-8 sm:p-12 border border-warmgrey/80 shadow-soft">
               <div className="lg:col-span-6 relative aspect-[4/3] rounded-2xl overflow-hidden bg-warmgrey/30">
                 <Image
-                  src="/images/sd-2.jpeg"
+                  src="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"
                   alt="ShiftDesk Stand crafted from seasoned mountain pine"
                   fill
                   className="object-cover"
@@ -84,7 +84,7 @@ export default function StoryPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-8 sm:p-12 border border-warmgrey/80 shadow-soft">
               <div className="lg:col-span-6 lg:order-2 relative aspect-[4/3] rounded-2xl overflow-hidden bg-warmgrey/30">
                 <Image
-                  src="/images/h-1.png"
+                  src="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/h-1.png"
                   alt="Artisan sculpted Dropzone Headphone Stand"
                   fill
                   className="object-cover"
@@ -112,7 +112,7 @@ export default function StoryPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-8 sm:p-12 border border-warmgrey/80 shadow-soft">
               <div className="lg:col-span-6 relative aspect-[4/3] rounded-2xl overflow-hidden bg-warmgrey/30">
                 <Image
-                  src="/images/ls-1.jpg"
+                  src="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-1.jpg"
                   alt="Handcrafted Multi-Angle Laptop Stand on workspace desk"
                   fill
                   className="object-cover"

@@ -275,7 +275,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
     }
   };
 
-  const images = product.images.length > 0 ? product.images : [{ url: "/images/sd-2.jpeg", alt: product.name }];
+  const images = product.images.length > 0 ? product.images : [{ url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg", alt: product.name }];
 
   // Build process steps from product data
   const processSteps = [
@@ -385,7 +385,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                   ) : (
                     <>
                       <Image
-                        src={images[selectedImage]?.url || "/images/sd-2.jpeg"}
+                        src={images[selectedImage]?.url || "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"}
                         alt={images[selectedImage]?.alt || product.name}
                         fill
                         draggable={false}
@@ -846,7 +846,7 @@ function ProductDetail({ product }: { product: StaticProduct }) {
               {related.map((item) => (
                 <Link key={item.id} href={`/products/${item.slug}`} className="group block bg-white rounded-2xl border border-warmgrey/60 overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
                   <div className="relative aspect-[4/3] bg-warmgrey/20 overflow-hidden">
-                    <Image src={item.images[0]?.url || "/images/sd-2.jpeg"} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="33vw" />
+                    <Image src={item.images[0]?.url || "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="33vw" />
                   </div>
                   <div className="p-4 space-y-1">
                     <p className="text-xs text-charcoal/50 uppercase tracking-wide">{item.category}</p>

@@ -69,8 +69,15 @@ Dridha_Crafts_Cashfree_Implementation_Plan.md
 GEMINI.md
 backend/scripts/clear_test_data.py
 
+# Media Assets (Served via Supabase Storage CDN)
+frontend/public/images/*
+!frontend/public/images/logo.jpg
+frontend/public/videos/
+
 # Temporary Scripts & Scratch Files
 scratch/
 *.scratch.*
 temp_*.py
 test_script_*.py
+*backup*
+*.zip

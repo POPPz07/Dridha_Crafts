@@ -258,21 +258,21 @@ export default function HomePage() {
                 num: "01",
                 title: "The Salvaged Pine",
                 desc: "We maintain a strict zero-felling policy. Every grain tells a story of mountain winters, meltwater rivers, and Himalayan winds. The wood cures naturally before it ever touches a tool.",
-                img: "/images/sd-2.jpeg",
+                img: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg",
                 imgAlt: "ShiftDesk Stand crafted from aged Himalayan pine",
               },
               {
                 num: "02",
                 title: "The Master's Hands",
                 desc: "Generations of woodworkers in Kashmir carry an unspoken dialogue with pine. Using traditional gouges and chisels, each desk accessory is hand-shaped, sanded through six grits, and oiled with natural wax.",
-                img: "/images/h-1.png",
+                img: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/h-1.png",
                 imgAlt: "Artisan sculpted Solid Wood Headphone Stand",
               },
               {
                 num: "03",
                 title: "Your Thoughtful Workspace",
                 desc: "Technology is sterile and plastic. Dridha Crafts brings tactile soul back to your workspace. A gentle touch of organic wood that elevates your mindset every time you sit down to create.",
-                img: "/images/ls-6.png",
+                img: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/ls-6.png",
                 imgAlt: "Handcrafted Multi-Angle Laptop Stand workspace setup",
               },
             ].map((chapter, i) => (
@@ -314,7 +314,7 @@ export default function HomePage() {
               <div className="md:col-span-5 relative w-full h-full min-h-[340px] sm:min-h-[440px] bg-[#dfd4be] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
                 <div className="relative w-full h-full min-h-[320px] sm:min-h-[420px] aspect-[889/1024]">
                   <Image
-                    src="/images/gift-card.jpg"
+                    src="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/gift-card.jpg"
                     alt="Dridha Crafts Packaging Thank You Card"
                     fill
                     className="object-contain"
@@ -418,7 +418,7 @@ export default function HomePage() {
                   {/* Image */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-warmgrey/20">
                     <Image
-                      src={currentImage?.url || "/images/sd-2.jpeg"}
+                      src={currentImage?.url || "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"}
                       alt={currentImage?.alt || product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
@@ -876,9 +876,9 @@ export default function HomePage() {
             disablePictureInPicture
             onContextMenu={(e) => e.preventDefault()}
             className="absolute inset-0 w-full h-full object-cover"
-            poster="/images/sd-2.jpeg"
+            poster="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/sd-2.jpeg"
           >
-            <source src="/videos/brand_video1.mp4" type="video/mp4" />
+            <source src="https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/videos/brand_video1.mp4" type="video/mp4" />
           </video>
 
           {/* Overlays — dark vignette, stronger at bottom so text pops */}
@@ -1056,7 +1056,7 @@ export default function HomePage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 {[
                   {
-                    src: "/images/brand_img1.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img1.jpeg",
                     platform: "Instagram",
                     type: "Reel",
                     caption: "Hand-chiseling the ShiftDesk stand",
@@ -1065,7 +1065,7 @@ export default function HomePage() {
                     accent: "border-brand-gold/40 text-brand-gold",
                   },
                   {
-                    src: "/images/brand_img2.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img2.jpeg",
                     platform: "YouTube",
                     type: "Video",
                     caption: "The zero-deforestation pledge in Kashmir",
@@ -1074,7 +1074,7 @@ export default function HomePage() {
                     accent: "border-red-500/40 text-red-400",
                   },
                   {
-                    src: "/images/brand_img3.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img3.jpeg",
                     platform: "Instagram",
                     type: "Story",
                     caption: "Artisan hands smoothing through 6 grits",
@@ -1083,7 +1083,7 @@ export default function HomePage() {
                     accent: "border-brand-gold/40 text-brand-gold",
                   },
                   {
-                    src: "/images/brand_img4.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img4.jpeg",
                     platform: "Facebook",
                     type: "Community",
                     caption: "Customer desk transformation with wooden riser",
@@ -1092,7 +1092,7 @@ export default function HomePage() {
                     accent: "border-blue-500/40 text-blue-400",
                   },
                   {
-                    src: "/images/brand_img5.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img5.jpeg",
                     platform: "YouTube",
                     type: "Short",
                     caption: "Testing natural wax polish in sunlight",
@@ -1101,7 +1101,7 @@ export default function HomePage() {
                     accent: "border-red-500/40 text-red-400",
                   },
                   {
-                    src: "/images/brand_img6.jpeg",
+                    src: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/brand_img6.jpeg",
                     platform: "Instagram",
                     type: "Photo",
                     caption: "Hand-stamping the artisan thank-you seal",

@@ -81,7 +81,7 @@ jobs:
           JWT_SECRET: "dummy-mock-jwt-secret-key-at-least-32-chars-long"
           SUPABASE_URL: "https://mock-project.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY: "dummy-mock-service-role-key"
-          ENVIRONMENT: "test"
+          ENVIRONMENT: "development"
           PORT: 8000
           CORS_ORIGINS: '["http://localhost:3000"]'
         run: |
@@ -106,7 +106,7 @@ jobs:
           cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --prefer-offline --no-audit
 
       - name: Verify TypeScript types
         run: npx tsc --noEmit
