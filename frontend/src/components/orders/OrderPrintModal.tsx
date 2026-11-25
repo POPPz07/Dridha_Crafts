@@ -462,6 +462,15 @@ function ShippingBoxSlip({
           <span className="text-[9px] text-gray-600 block uppercase font-semibold">
             {order.payment_method === "cod" ? "CASH ON DELIVERY" : "PREPAID / VERIFIED"}
           </span>
+          {order.tracking_number ? (
+            <span className="text-[9px] font-mono font-bold block mt-0.5 text-gray-800">
+              AWB: {order.tracking_number} {order.carrier ? `(${order.carrier})` : ""}
+            </span>
+          ) : (
+            <span className="text-[9px] font-mono block mt-0.5 text-gray-700">
+              AWB / Consignment: __________________
+            </span>
+          )}
         </div>
       </div>
 
@@ -644,9 +653,13 @@ function TaxInvoiceSlip({
           <div className="text-emerald-700 font-bold uppercase text-[9px]">
             Status: {order.payment_status}
           </div>
-          {order.tracking_number && (
+          {order.tracking_number ? (
             <div className="mt-1 font-mono text-[9px] text-gray-700">
               AWB: {order.tracking_number} {order.carrier ? `(${order.carrier})` : ""}
+            </div>
+          ) : (
+            <div className="mt-1 font-mono text-[9px] text-gray-700">
+              AWB / Consignment No: ____________________
             </div>
           )}
           <div className="text-gray-500 text-[8px] mt-1">Place of Supply: J&amp;K (01)</div>

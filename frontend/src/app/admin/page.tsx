@@ -1017,11 +1017,11 @@ function OrdersTab({
   };
 
   const shipOrder = async () => {
-    if (!shipModal || !trackingInput.trim()) return;
+    if (!shipModal) return;
     setActionLoading(shipModal.orderId + "_ship");
     try {
       await api.put(`/api/admin/orders/${shipModal.orderId}/ship`, {
-        tracking_number: trackingInput.trim(),
+        tracking_number: trackingInput.trim() || undefined,
         carrier: carrierInput.trim() || undefined,
         tracking_url: trackingUrlInput.trim() || undefined,
         status_note: statusNoteInput.trim() || undefined,
@@ -1640,14 +1640,19 @@ function OrdersTab({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-charcoal/70 uppercase tracking-wider mb-1.5">
-                Tracking / AWB Number *
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-charcoal/70 uppercase tracking-wider">
+                  Tracking / AWB Number (Optional)
+                </label>
+                <span className="text-[10px] text-charcoal/50 italic">
+                  Leave blank for offline India Post booking
+                </span>
+              </div>
               <input
                 type="text"
                 value={trackingInput}
                 onChange={(e) => setTrackingInput(e.target.value)}
-                placeholder="Enter AWB or consignment number"
+                placeholder="Enter AWB (or leave blank to write by pen on printed receipt)"
                 className="w-full border border-warmgrey/70 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
@@ -1681,11 +1686,8 @@ function OrdersTab({
             <div className="flex gap-3 pt-2">
               <button
                 onClick={shipOrder}
-                disabled={
-                  !trackingInput.trim() ||
-                  actionLoading === shipModal.orderId + "_ship"
-                }
-                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                disabled={actionLoading === shipModal.orderId + "_ship"}
+                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 {actionLoading === shipModal.orderId + "_ship" ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

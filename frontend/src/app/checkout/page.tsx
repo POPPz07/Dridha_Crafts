@@ -31,6 +31,18 @@ type AddressForm = z.infer<typeof addressSchema>;
 type PaymentMethod = "whatsapp_upi";
 type CheckoutStep = "address" | "payment" | "confirmation";
 
+// Helper to generate consistent standard order numbers: DC-YYYYMMDD-XXXXXX
+function generateStandardOrderNumber(): string {
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
+  for (let i = 0; i < 6; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `DC-${datePart}-${randomPart}`;
+}
+
 export default function CheckoutPage() {
   const [hasHydrated, setHasHydrated] = useState(false);
   const [step, setStep] = useState<CheckoutStep>(() => {
@@ -327,7 +339,7 @@ export default function CheckoutPage() {
         items: itemsPayload,
       };
 
-      let orderNum = `DC-${Date.now().toString().slice(-6)}`;
+      let orderNum = generateStandardOrderNumber();
       try {
         const res = await api.post<{ order_number: string; id: string }>("/api/orders", orderPayload);
         if (res && res.order_number) {

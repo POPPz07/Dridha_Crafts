@@ -32,7 +32,7 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 # ---------------------------------------------------------------------------
 
 class ShipBody(BaseModel):
-    tracking_number: str = Field(..., min_length=1, max_length=100)
+    tracking_number: Optional[str] = Field(None, max_length=100)
     carrier: Optional[str] = Field(None, max_length=100)
     tracking_url: Optional[str] = Field(None, max_length=500)
     status_note: Optional[str] = Field(None, max_length=500)
@@ -540,7 +540,7 @@ async def ship_order(
         )
 
     order.status = OrderStatus.SHIPPED.value
-    order.tracking_number = body.tracking_number.strip()
+    order.tracking_number = body.tracking_number.strip() if body.tracking_number and body.tracking_number.strip() else None
     if body.carrier:
         order.carrier = body.carrier.strip()
     if body.tracking_url:

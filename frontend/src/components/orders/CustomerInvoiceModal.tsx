@@ -164,11 +164,16 @@ export default function CustomerInvoiceModal({
                 <span className="text-gray-600">Payment Mode: </span>
                 <strong className="uppercase">{(order.payment_method || "prepaid").replace("_", " ")}</strong>
               </div>
-              {order.tracking_number && (
+              {order.tracking_number ? (
                 <div>
                   <span className="text-gray-600">Tracking (AWB): </span>
                   <strong className="font-mono">{order.tracking_number}</strong>
                   {order.carrier && <span className="text-gray-500"> ({order.carrier})</span>}
+                </div>
+              ) : (
+                <div>
+                  <span className="text-gray-600">Tracking (AWB / Post Reg): </span>
+                  <span className="font-mono text-gray-500">________________________</span>
                 </div>
               )}
               <div className="text-[11px] text-gray-500 pt-1">
