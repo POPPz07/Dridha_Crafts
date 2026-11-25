@@ -245,9 +245,7 @@ export const PRODUCTS_DATA: StaticProduct[] = [
     badge: "Handcrafted",
     stock_quantity: 50,
     images: [
-      { url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/custom-caddy-1.png", alt: "Custom Artisan Desk Piece 3D Render Snapshot" },
-      { url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/custom-caddy-2.png", alt: "Custom Artisan Desk Piece angled view" },
-      { url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/custom-caddy-3.png", alt: "Custom Artisan Desk Piece perspective" },
+      { url: "https://gortltkzskcsvucfouxd.supabase.co/storage/v1/object/public/products/images/custom-product.jpg", alt: "Custom Handcrafted Artisan Desk Piece in Kashmir Workshop" },
     ],
     variants: [],
   },
