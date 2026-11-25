@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
 import { createClient } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -96,9 +97,55 @@ function LoginContent() {
 
   useEffect(() => {
     if (user) {
+      if (user.role === "admin" && !isAdminLogin) {
+        const supabase = createClient();
+        supabase.auth.signOut().catch(() => {});
+        useAuthStore.getState().logout();
+        setErrorMessage("Admin accounts cannot sign in through the customer storefront. Please sign in via the official Admin Portal at /admin.");
+        return;
+      }
+      if (user.role !== "admin" && isAdminLogin) {
+        const supabase = createClient();
+        supabase.auth.signOut().catch(() => {});
+        useAuthStore.getState().logout();
+        setErrorMessage("Access denied: Customer accounts cannot sign in through the Admin Portal. Please use the standard login.");
+        return;
+      }
       router.replace(redirectTo);
     }
-  }, [user, router, redirectTo]);
+  }, [user, router, redirectTo, isAdminLogin]);
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const supabase = createClient();
+      const redirectOrigin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "https://www.dridhacrafts.co.in";
+      const oauthRedirect = `${redirectOrigin}/login?redirect=${encodeURIComponent(redirectTo)}`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: oauthRedirect,
+          queryParams: {
+            access_type: "offline",
+            prompt: "select_account",
+          },
+        },
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        setIsLoading(false);
+      }
+    } catch {
+      setErrorMessage("Could not initiate Google sign in. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (data: LoginForm) => {
     setIsLoading(true);
@@ -116,11 +163,32 @@ function LoginContent() {
       }
 
       if (authData.user) {
-        const appRole = (authData.user.app_metadata?.role as "admin" | "customer") || "customer";
+        let appRole: "admin" | "customer" = "customer";
+        try {
+          const profile = await api.get<{ role?: string }>("/api/auth/me", {
+            token: authData.session.access_token,
+          });
+          if (profile && profile.role === "admin") {
+            appRole = "admin";
+          }
+        } catch {
+          if (authData.user.app_metadata?.role === "admin") {
+            appRole = "admin";
+          }
+        }
 
         if (appRole === "admin" && !isAdminLogin) {
           await supabase.auth.signOut();
+          useAuthStore.getState().logout();
           setErrorMessage("Admin accounts cannot sign in through the customer storefront. Please sign in via the official Admin Portal at /admin.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (appRole !== "admin" && isAdminLogin) {
+          await supabase.auth.signOut();
+          useAuthStore.getState().logout();
+          setErrorMessage("Access denied: Customer accounts cannot sign in through the Admin Portal. Please use the standard login.");
           setIsLoading(false);
           return;
         }
@@ -284,6 +352,46 @@ function LoginContent() {
           {successMessage}
         </div>
       )}
+
+      {/* Continue with Google */}
+      <div className="space-y-4 mb-4">
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-warmgrey/80 bg-white hover:bg-brand-cream/50 transition-all font-semibold text-xs sm:text-sm text-charcoal shadow-2xs hover:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 cursor-pointer disabled:opacity-60"
+        >
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.94H1.28v3.15C3.31 21.36 7.38 24 12 24z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.28 14.26c-.25-.72-.38-1.49-.38-2.26s.13-1.54.38-2.26V6.59H1.28C.46 8.21 0 10.05 0 12s.46 3.79 1.28 5.41l4-3.15z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.38 0 3.31 2.64 1.28 6.59l4 3.15c.95-2.84 3.6-4.99 6.72-4.99z"
+            />
+          </svg>
+          Continue with Google
+        </button>
+
+        {/* Divider */}
+        <div className="relative text-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-warmgrey/70" />
+          </div>
+          <span className="relative bg-white px-3 text-[11px] font-medium uppercase tracking-wider text-charcoal/40">
+            or continue with email
+          </span>
+        </div>
+      </div>
 
       {/* Login Form */}
       {view === "login" ? (

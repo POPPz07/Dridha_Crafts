@@ -338,8 +338,8 @@ export default function AdminDashboard() {
       </header>
 
       {/* ── Tab Navigation ── */}
-      <nav className="bg-white border-b border-warmgrey sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-8 flex gap-0">
+      <nav className="bg-white border-b border-warmgrey sticky top-0 z-10 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex gap-0 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold border-b-2 transition-colors shrink-0 whitespace-nowrap ${
                   active
                     ? "border-brand-green text-brand-green"
                     : "border-transparent text-charcoal/60 hover:text-charcoal"
@@ -362,12 +362,16 @@ export default function AdminDashboard() {
       </nav>
 
       {/* ── Tab Content ── */}
-      <main className="max-w-7xl mx-auto px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
         <AdminErrorBoundary key={activeTab} fallbackTitle={`Error loading ${activeTab} tab`}>
           {activeTab === "pulse" && (
             <PulseTab
               onNavigateToOrders={navigateToOrdersStage}
               onNavigateToInventory={navigateToInventory}
+              onNavigateToCustomInquiries={() => {
+                setActiveTab("custom_inquiries");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             />
           )}
           {activeTab === "orders" && (
@@ -405,11 +409,14 @@ function handleAdminAuthError(err: unknown): boolean {
 function PulseTab({
   onNavigateToOrders,
   onNavigateToInventory,
+  onNavigateToCustomInquiries,
 }: {
   onNavigateToOrders: (stage: OrderFilter) => void;
   onNavigateToInventory: () => void;
+  onNavigateToCustomInquiries?: () => void;
 }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [pendingCustomCount, setPendingCustomCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<"today" | "7d" | "30d" | "all">("today");
@@ -421,6 +428,13 @@ function PulseTab({
     try {
       const data = await api.get<AdminStats>(`/api/admin/stats?timeframe=${timeframe}`);
       setStats(data);
+      try {
+        const inqs = await api.get<any[]>("/api/custom-inquiries/admin/all?limit=50");
+        if (Array.isArray(inqs)) {
+          const count = inqs.filter((i) => i.status === "pending_chat" || i.status === "approved").length;
+          setPendingCustomCount(count);
+        }
+      } catch {}
     } catch (err) {
       if (handleAdminAuthError(err)) return;
       setError(err instanceof Error ? err.message : "Failed to load stats");
@@ -597,6 +611,44 @@ function PulseTab({
                 {stats.crafting_count || 0} in crafting, {stats.shipped_count || 0} in transit
               </p>
             </div>
+          </div>
+
+          {/* ── Custom Commissions & Inquiries Spotlight Banner ── */}
+          <div className="bg-gradient-to-r from-[#faf5eb] via-white to-[#faf5eb] p-5 rounded-2xl border-2 border-brand-gold/60 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-brand-gold/20 flex items-center justify-center text-brand-green shrink-0">
+                <Sparkles className="w-6 h-6 text-brand-gold" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display font-bold text-base text-brand-green">
+                    Custom Artisan Commissions &amp; Inquiries Hub
+                  </h3>
+                  {pendingCustomCount > 0 ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      {pendingCustomCount} Active / Pending
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brand-gold/15 text-brand-brown">
+                      Bespoke Hub
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-charcoal/70 mt-1">
+                  Manage incoming customer WhatsApp specifications, review dimensions, set approved quotes (₹), and unlock 1-time Add to Cart permissions.
+                </p>
+              </div>
+            </div>
+            {onNavigateToCustomInquiries && (
+              <button
+                onClick={onNavigateToCustomInquiries}
+                className="px-4 py-2.5 rounded-xl bg-brand-green text-white hover:bg-brand-brown text-xs font-semibold flex items-center gap-2 transition-all shadow-xs shrink-0 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-brand-gold" />
+                Open Custom Inquiries Tab &rarr;
+              </button>
+            )}
           </div>
 
           {/* ── Interactive Order Pipeline Stage Summary ── */}
