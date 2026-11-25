@@ -196,6 +196,13 @@ async def create_order(
         shipping_pincode = address.pincode
     elif data.shipping_address:
         sa = data.shipping_address
+        existing_addr = (
+            await db.execute(
+                select(Address.id).where(Address.user_id == current_user.id).limit(1)
+            )
+        ).scalar_one_or_none()
+        is_first = existing_addr is None
+
         new_address = Address(
             user_id=current_user.id,
             full_name=sa.full_name,
@@ -205,7 +212,7 @@ async def create_order(
             city=sa.city,
             state=sa.state,
             pincode=sa.pincode,
-            is_default=False,
+            is_default=is_first,
         )
         db.add(new_address)
         shipping_name = sa.full_name

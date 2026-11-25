@@ -26,6 +26,7 @@ import {
   Printer,
 } from "lucide-react";
 import CustomerInvoiceModal from "@/components/orders/CustomerInvoiceModal";
+import AddressBook from "@/components/profile/AddressBook";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
@@ -865,6 +866,9 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+
+            {/* Saved Addresses Section */}
+            <AddressBook />
           </div>
         </div>
 

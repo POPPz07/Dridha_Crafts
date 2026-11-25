@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2, MapPin, Plus, Home, Star } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
+import type { Address } from "@/types/user";
 // import { getCashfree, CashfreeCheckoutResponse } from "@/lib/cashfree"; // Dormant - re-enable when Cashfree is active
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
@@ -17,7 +18,7 @@ import { formatPrice } from "@/lib/utils";
 
 const addressSchema = z.object({
   full_name: z.string().min(2, "Name too short").max(100),
-  phone: z.string().min(10, "Enter a valid phone number").max(15),
+  phone: z.string().min(10, "Enter a valid 10-digit mobile number (required for delivery coordination)").max(15),
   address_line_1: z.string().min(5, "Enter full address"),
   address_line_2: z.string().optional(),
   city: z.string().min(2, "Enter city"),
@@ -104,8 +105,84 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<AddressForm>({ resolver: zodResolver(addressSchema) });
 
-  // 1. Auto-fill from cached local draft or logged-in user profile
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [isUsingNewAddress, setIsUsingNewAddress] = useState(false);
+
+  // 1. Fetch user's saved addresses
   useEffect(() => {
+    if (!user) {
+      setIsUsingNewAddress(true);
+      return;
+    }
+    let isMounted = true;
+    setIsLoadingAddresses(true);
+    api.get<Address[]>("/api/addresses")
+      .then((data) => {
+        if (!isMounted) return;
+        const addrs = data || [];
+        setSavedAddresses(addrs);
+        if (addrs.length > 0) {
+          const defaultAddr = addrs.find((a) => a.is_default) || addrs[0];
+          setSelectedAddressId(defaultAddr.id);
+          setIsUsingNewAddress(false);
+          reset({
+            full_name: defaultAddr.full_name,
+            phone: defaultAddr.phone,
+            address_line_1: defaultAddr.address_line_1,
+            address_line_2: defaultAddr.address_line_2 || "",
+            city: defaultAddr.city,
+            state: defaultAddr.state,
+            pincode: defaultAddr.pincode,
+          });
+        } else {
+          setIsUsingNewAddress(true);
+          setSelectedAddressId(null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setIsUsingNewAddress(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingAddresses(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user, reset]);
+
+  const handleSelectAddress = (addr: Address) => {
+    setSelectedAddressId(addr.id);
+    setIsUsingNewAddress(false);
+    reset({
+      full_name: addr.full_name,
+      phone: addr.phone,
+      address_line_1: addr.address_line_1,
+      address_line_2: addr.address_line_2 || "",
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+    });
+  };
+
+  const handleStartNewAddress = () => {
+    setSelectedAddressId(null);
+    setIsUsingNewAddress(true);
+    reset({
+      full_name: user?.full_name || "",
+      phone: user?.phone || "",
+      address_line_1: "",
+      address_line_2: "",
+      city: "",
+      state: "",
+      pincode: "",
+    });
+  };
+
+  // 2. Auto-fill from cached local draft if no saved addresses are available
+  useEffect(() => {
+    if (savedAddresses.length > 0) return;
     try {
       const savedDraft = typeof window !== "undefined" ? localStorage.getItem("dridha_checkout_address") : null;
       if (savedDraft) {
@@ -123,7 +200,7 @@ export default function CheckoutPage() {
       if (user.full_name) setValue("full_name", user.full_name);
       if (user.phone) setValue("phone", user.phone);
     }
-  }, [user, reset, setValue]);
+  }, [user, reset, setValue, savedAddresses.length]);
 
   // 2. Persist filled fields to localStorage so refreshing never loses entered data
   useEffect(() => {
@@ -240,7 +317,8 @@ export default function CheckoutPage() {
 
     try {
       const orderPayload = {
-        shipping_address: shippingAddressPayload,
+        address_id: selectedAddressId && !isUsingNewAddress ? selectedAddressId : undefined,
+        shipping_address: isUsingNewAddress || !selectedAddressId ? shippingAddressPayload : undefined,
         payment_method: "whatsapp_upi",
         idempotency_key: idempotencyKey,
         customer_email: user?.email || undefined,
@@ -339,78 +417,203 @@ export default function CheckoutPage() {
             {/* STEP 1: Address */}
             {step === "address" && (
               <div className="bg-white rounded-3xl border border-warmgrey/70 shadow-soft overflow-hidden">
-                <div className="px-8 py-6 bg-brand-green">
-                  <h1 className="font-display text-2xl font-bold text-white">Shipping Address</h1>
-                  <p className="text-brand-cream/70 text-sm mt-1">Where should we deliver your order?</p>
-                </div>
-                <form onSubmit={handleSubmit(onAddressSubmit)} className="px-8 py-6 space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      label="Full Name"
-                      id="full_name"
-                      autoComplete="name"
-                      error={errors.full_name?.message}
-                      {...register("full_name")}
-                    />
-                    <FormField
-                      label="Phone Number"
-                      id="phone"
-                      type="tel"
-                      autoComplete="tel"
-                      error={errors.phone?.message}
-                      {...register("phone")}
-                    />
+                <div className="px-8 py-6 bg-brand-green flex items-center justify-between gap-4">
+                  <div>
+                    <h1 className="font-display text-2xl font-bold text-white">Shipping Address</h1>
+                    <p className="text-brand-cream/70 text-sm mt-1">Where should we deliver your order?</p>
                   </div>
-                  <FormField
-                    label="Address Line 1"
-                    id="address_line_1"
-                    autoComplete="street-address"
-                    error={errors.address_line_1?.message}
-                    {...register("address_line_1")}
-                    placeholder="House no., Street, Locality"
-                  />
-                  <FormField
-                    label="Address Line 2 (Optional)"
-                    id="address_line_2"
-                    autoComplete="address-line2"
-                    error={errors.address_line_2?.message}
-                    {...register("address_line_2")}
-                    placeholder="Landmark, Apartment, etc."
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FormField
-                      label="City"
-                      id="city"
-                      autoComplete="address-level2"
-                      error={errors.city?.message}
-                      {...register("city")}
-                    />
-                    <FormField
-                      label="State"
-                      id="state"
-                      autoComplete="address-level1"
-                      error={errors.state?.message}
-                      {...register("state")}
-                    />
-                    <FormField
-                      label="PIN Code"
-                      id="pincode"
-                      autoComplete="postal-code"
-                      error={errors.pincode?.message}
-                      {...register("pincode")}
-                      placeholder="6 digits"
-                      maxLength={6}
-                    />
-                  </div>
-                  <div className="pt-2 flex items-center justify-between">
-                    <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors">
-                      <ArrowLeft className="w-4 h-4" /> Continue Shopping
-                    </Link>
-                    <Button type="submit" variant="primary" size="lg">
-                      Continue to Payment
+                  {savedAddresses.length > 0 && !isUsingNewAddress && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleStartNewAddress}
+                      className="bg-white/10 text-white border-white/30 hover:bg-white/20 text-xs shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add New Address
                     </Button>
+                  )}
+                </div>
+
+                {isLoadingAddresses ? (
+                  <div className="py-16 text-center space-y-2">
+                    <Loader2 className="w-7 h-7 animate-spin text-brand-green mx-auto" />
+                    <p className="text-xs text-charcoal/60">Checking saved addresses...</p>
                   </div>
-                </form>
+                ) : savedAddresses.length > 0 && !isUsingNewAddress ? (
+                  /* Saved Addresses Choice View */
+                  <form onSubmit={handleSubmit(onAddressSubmit)} className="px-8 py-6 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-brand-green">
+                        Choose Delivery Location
+                      </p>
+                      <span className="text-[11px] text-charcoal/50">
+                        {savedAddresses.length} saved address{savedAddresses.length > 1 ? "es" : ""}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      {savedAddresses.map((addr) => {
+                        const isSelected = selectedAddressId === addr.id;
+                        return (
+                          <div
+                            key={addr.id}
+                            onClick={() => handleSelectAddress(addr)}
+                            className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 ${
+                              isSelected
+                                ? "border-brand-green bg-brand-green/[0.03] shadow-xs"
+                                : "border-warmgrey/80 bg-white hover:border-brand-green/40"
+                            }`}
+                          >
+                            <div className="pt-0.5">
+                              <div
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                                  isSelected
+                                    ? "border-brand-green bg-brand-green"
+                                    : "border-warmgrey bg-white"
+                                }`}
+                              >
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              </div>
+                            </div>
+
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <span className="font-bold text-sm text-brand-green flex items-center gap-1.5">
+                                  <Home className="w-3.5 h-3.5 text-brand-gold" />
+                                  {addr.full_name}
+                                </span>
+                                {addr.is_default && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-green/10 text-brand-green text-[10px] font-bold uppercase tracking-wider">
+                                    <Star className="w-2.5 h-2.5 fill-brand-green" /> Default
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-charcoal/60">Phone: +91 {addr.phone}</p>
+                              <p className="text-xs text-charcoal/80 leading-relaxed pt-0.5">
+                                {addr.address_line_1}
+                                {addr.address_line_2 ? `, ${addr.address_line_2}` : ""}, {addr.city},{" "}
+                                {addr.state} — {addr.pincode}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleStartNewAddress}
+                      className="w-full py-3.5 px-4 rounded-2xl border-2 border-dashed border-warmgrey hover:border-brand-green/60 text-xs font-semibold text-brand-green hover:bg-brand-cream/50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Deliver to a New Address
+                    </button>
+
+                    <div className="pt-3 border-t border-warmgrey/60 flex items-center justify-between">
+                      <Link
+                        href="/shop"
+                        className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Continue Shopping
+                      </Link>
+                      <Button type="submit" variant="primary" size="lg">
+                        Deliver to this Address →
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  /* Form View for New / Custom Address */
+                  <form onSubmit={handleSubmit(onAddressSubmit)} className="px-8 py-6 space-y-5">
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const def = savedAddresses.find((a) => a.is_default) || savedAddresses[0];
+                          if (def) handleSelectAddress(def);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-green hover:underline mb-1"
+                      >
+                        ← Choose from saved addresses
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        label="Full Name"
+                        id="full_name"
+                        autoComplete="name"
+                        error={errors.full_name?.message}
+                        {...register("full_name")}
+                      />
+                      <FormField
+                        label="Phone Number"
+                        id="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        error={errors.phone?.message}
+                        {...register("phone")}
+                      />
+                    </div>
+                    <FormField
+                      label="Address Line 1"
+                      id="address_line_1"
+                      autoComplete="street-address"
+                      error={errors.address_line_1?.message}
+                      {...register("address_line_1")}
+                      placeholder="House no., Street, Locality"
+                    />
+                    <FormField
+                      label="Address Line 2 (Optional)"
+                      id="address_line_2"
+                      autoComplete="address-line2"
+                      error={errors.address_line_2?.message}
+                      {...register("address_line_2")}
+                      placeholder="Landmark, Apartment, etc."
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <FormField
+                        label="City"
+                        id="city"
+                        autoComplete="address-level2"
+                        error={errors.city?.message}
+                        {...register("city")}
+                      />
+                      <FormField
+                        label="State"
+                        id="state"
+                        autoComplete="address-level1"
+                        error={errors.state?.message}
+                        {...register("state")}
+                      />
+                      <FormField
+                        label="PIN Code"
+                        id="pincode"
+                        autoComplete="postal-code"
+                        error={errors.pincode?.message}
+                        {...register("pincode")}
+                        placeholder="6 digits"
+                        maxLength={6}
+                      />
+                    </div>
+
+                    <div className="p-3 bg-brand-cream/80 border border-warmgrey/70 rounded-xl flex items-center gap-2 text-xs text-charcoal/70">
+                      <Check className="w-4 h-4 text-brand-green shrink-0" />
+                      <span>This address will be automatically saved to your account profile for future orders.</span>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between">
+                      <Link
+                        href="/shop"
+                        className="inline-flex items-center gap-1.5 text-sm text-charcoal/60 hover:text-brand-green transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Continue Shopping
+                      </Link>
+                      <Button type="submit" variant="primary" size="lg">
+                        Continue to Payment
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 
