@@ -24,6 +24,7 @@ import {
   RefreshCw,
   HelpCircle,
   Printer,
+  Hammer,
 } from "lucide-react";
 import CustomerInvoiceModal from "@/components/orders/CustomerInvoiceModal";
 import AddressBook from "@/components/profile/AddressBook";
@@ -51,30 +52,32 @@ const PAST_STATUSES: OrderStatus[] = ["delivered", "cancelled", "refunded"];
 function getStatusBadge(status: string) {
   switch (status) {
     case "payment_verification":
+    case "pending":
+    case "payment_pending":
       return {
         label: "Verification Needed",
         subtext: "Waiting for WhatsApp payment slip",
         color: "bg-amber-100 text-amber-800 border-amber-200",
         icon: <Clock className="w-3.5 h-3.5 text-amber-700" />,
       };
-    case "confirmed":
-      return {
-        label: "Confirmed",
-        subtext: "Payment received & order booked",
-        color: "bg-emerald-100 text-emerald-800 border-emerald-200",
-        icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />,
-      };
     case "processing":
       return {
-        label: "Crafting in Srinagar",
-        subtext: "Master artisans preparing your items",
+        label: "Artisan Crafting",
+        subtext: "Master artisans handcrafting in Srinagar",
+        color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        icon: <Hammer className="w-3.5 h-3.5 text-indigo-700" />,
+      };
+    case "confirmed":
+      return {
+        label: "Ready to Pack",
+        subtext: "Crafting complete • Queued for dispatch",
         color: "bg-blue-100 text-blue-800 border-blue-200",
-        icon: <Sparkles className="w-3.5 h-3.5 text-blue-700" />,
+        icon: <Package className="w-3.5 h-3.5 text-blue-700" />,
       };
     case "shipped":
       return {
-        label: "Dispatched",
-        subtext: "In transit via pan-India courier",
+        label: "In Transit",
+        subtext: "Dispatched via pan-India courier",
         color: "bg-purple-100 text-purple-800 border-purple-200",
         icon: <Truck className="w-3.5 h-3.5 text-purple-700" />,
       };
@@ -110,27 +113,39 @@ function getStatusBadge(status: string) {
 }
 
 function OrderTrackingTimeline({ order }: { order: Order }) {
+  const isReadyToPack = order.status === "confirmed";
+  const isCrafting = order.status === "processing";
+  const isShipped = order.status === "shipped";
+  const isDelivered = order.status === "delivered";
+
   const steps = [
     {
-      id: "confirmed",
-      label: "Confirmed",
-      desc: "Order verified",
-      isComplete: ["confirmed", "processing", "shipped", "delivered"].includes(order.status),
-      isCurrent: order.status === "confirmed",
+      id: "verification",
+      label: "Order Verified",
+      desc: "Payment confirmed",
+      isComplete: ["processing", "confirmed", "shipped", "delivered"].includes(order.status),
+      isCurrent: ["pending", "payment_pending", "payment_verification"].includes(order.status),
     },
     {
-      id: "processing",
+      id: "crafting",
       label: "Artisan Crafting",
-      desc: "Handcrafted in Kashmir",
-      isComplete: ["processing", "shipped", "delivered"].includes(order.status),
-      isCurrent: order.status === "processing",
+      desc: "Srinagar Wood Studio",
+      isComplete: ["confirmed", "shipped", "delivered"].includes(order.status),
+      isCurrent: isCrafting,
+    },
+    {
+      id: "ready_to_pack",
+      label: "Ready to Pack",
+      desc: "Inspected & packaged",
+      isComplete: ["shipped", "delivered"].includes(order.status),
+      isCurrent: isReadyToPack,
     },
     {
       id: "shipped",
       label: "In Transit",
       desc: order.carrier ? `Via ${order.carrier}` : "Courier dispatched",
-      isComplete: ["shipped", "delivered"].includes(order.status),
-      isCurrent: order.status === "shipped",
+      isComplete: ["delivered"].includes(order.status),
+      isCurrent: isShipped,
     },
     {
       id: "delivered",
@@ -138,8 +153,8 @@ function OrderTrackingTimeline({ order }: { order: Order }) {
       desc: order.delivered_at
         ? new Date(order.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
         : "At destination",
-      isComplete: order.status === "delivered",
-      isCurrent: order.status === "delivered",
+      isComplete: isDelivered,
+      isCurrent: isDelivered,
     },
   ];
 
@@ -150,14 +165,23 @@ function OrderTrackingTimeline({ order }: { order: Order }) {
           <Truck className="w-4 h-4 text-brand-green" /> Delivery Status &amp; Live Tracking
         </h4>
         <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brand-green/10 text-brand-green border border-brand-green/20 uppercase tracking-wider">
-          {order.status.replace("_", " ")}
+          {order.status === "confirmed" ? "Ready to Pack" : order.status.replace("_", " ")}
         </span>
       </div>
 
-      {/* Stepped Progress Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+      {/* Stepped Progress Bar - 5 Discrete Stages aligned with Atelier Pipeline */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
         {steps.map((s, idx) => (
-          <div key={s.id} className="relative flex flex-col items-center text-center p-2.5 rounded-xl bg-brand-cream/60 border border-warmgrey/40">
+          <div
+            key={s.id}
+            className={`relative flex flex-col items-center text-center p-2.5 rounded-xl border transition-all ${
+              s.isCurrent
+                ? "bg-amber-50/80 border-brand-gold shadow-xs"
+                : s.isComplete
+                ? "bg-emerald-50/50 border-emerald-200"
+                : "bg-brand-cream/60 border-warmgrey/40"
+            } ${idx === 4 ? "col-span-2 sm:col-span-1" : ""}`}
+          >
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1.5 transition-all ${
                 s.isComplete
@@ -169,10 +193,14 @@ function OrderTrackingTimeline({ order }: { order: Order }) {
             >
               {s.isComplete ? "✓" : idx + 1}
             </div>
-            <span className={`text-xs font-bold ${s.isComplete || s.isCurrent ? "text-brand-green" : "text-charcoal/40"}`}>
+            <span
+              className={`text-xs font-bold ${
+                s.isComplete || s.isCurrent ? "text-brand-green" : "text-charcoal/40"
+              }`}
+            >
               {s.label}
             </span>
-            <span className="text-[10px] text-charcoal/50 leading-tight mt-0.5">
+            <span className="text-[10px] text-charcoal/60 leading-tight mt-0.5">
               {s.desc}
             </span>
           </div>
@@ -180,7 +208,7 @@ function OrderTrackingTimeline({ order }: { order: Order }) {
       </div>
 
       {/* Live Tracking Information Card */}
-      {(order.tracking_number || order.carrier || order.tracking_status_note) && (
+      {(order.tracking_number || order.carrier || order.tracking_status_note || order.status === "shipped") && (
         <div className="p-4 rounded-xl bg-purple-50/80 border border-purple-200 space-y-2.5 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
@@ -188,9 +216,13 @@ function OrderTrackingTimeline({ order }: { order: Order }) {
                 Courier &amp; AWB Consignment
               </span>
               <p className="font-semibold text-purple-900 text-sm mt-0.5">
-                {order.carrier || "Courier Partner"}:{" "}
+                {order.carrier ? order.carrier : "Courier Consignment"}:{" "}
                 <span className="font-mono bg-white px-2 py-0.5 rounded border border-purple-200">
-                  {order.tracking_number || "Dispatched"}
+                  {order.tracking_number
+                    ? order.tracking_number
+                    : order.status === "shipped"
+                    ? "In Transit (Tracking update pending)"
+                    : "Packaging complete • Awaiting Courier Pickup"}
                 </span>
               </p>
             </div>
@@ -759,6 +791,27 @@ export default function ProfilePage() {
 
                                   {/* Interactive Order Timeline & Live Tracking Card */}
                                   <OrderTrackingTimeline order={expandedOrderDetails} />
+
+                                  {/* Order Financial Overview Banner */}
+                                  <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-warmgrey/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] font-bold text-brand-green uppercase tracking-wider">
+                                        Payment:
+                                      </span>
+                                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-stone-100 text-charcoal uppercase">
+                                        {expandedOrderDetails.payment_method.replace("_", " ")}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                      <span className="text-xs text-charcoal/60">Order Total:</span>
+                                      <span className="font-display font-bold text-base sm:text-lg text-brand-green">
+                                        {formatPrice(expandedOrderDetails.total)}
+                                      </span>
+                                      <span className="text-[11px] text-charcoal/50">
+                                        ({formatPrice(expandedOrderDetails.subtotal)} item + {formatPrice(expandedOrderDetails.shipping_cost)} delivery)
+                                      </span>
+                                    </div>
+                                  </div>
 
                                   {/* Line items list */}
                                   <div className="space-y-3">
