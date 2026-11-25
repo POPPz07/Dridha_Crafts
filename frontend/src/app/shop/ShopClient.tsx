@@ -59,6 +59,7 @@ export function ShopClient() {
     "Mobile Stands",
     "Headphone Stands",
     "Book Organizers",
+    "Bespoke Commissions",
   ];
 
   const filtered = useMemo(() => {
@@ -274,25 +275,39 @@ export function ShopClient() {
                       )}
                     </div>
 
-                    <Button
-                      variant={isAdded ? "gold" : "primary"}
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
-                      className="relative z-10"
-                    >
-                      {isAdded ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 mr-1" /> Added
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart
-                        </>
-                      )}
-                    </Button>
+                    {product.slug === "custom-artisan-desk-caddy" ? (
+                      <Button
+                        variant="gold"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/products/${product.slug}`);
+                        }}
+                        className="relative z-10"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 mr-1" /> Customize
+                      </Button>
+                    ) : (
+                      <Button
+                        variant={isAdded ? "gold" : "primary"}
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
+                        className="relative z-10"
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1" /> Added
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                   <div className="flex items-center justify-center gap-1 text-center text-xs font-medium text-charcoal/50 group-hover:text-brand-green transition-colors mt-3">
                     <span>View Full Details</span>

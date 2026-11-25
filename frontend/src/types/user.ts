@@ -34,6 +34,7 @@ export interface CartItem {
   id: string;
   product_id: string;
   variant_id: string | null;
+  custom_inquiry_id?: string | null;
   quantity: number;
   product: {
     name: string;

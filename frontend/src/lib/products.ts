@@ -13,7 +13,7 @@ export async function getProducts(): Promise<StaticProduct[]> {
   try {
     const res = await api.get<{ items: any[] }>("/api/products?per_page=50&sort_by=sort_order&sort_order=asc");
     if (res && res.items && res.items.length > 0) {
-      return res.items.map((apiP) => {
+      const mapped = res.items.map((apiP) => {
         const fallback = PRODUCTS_DATA.find((p) => p.slug === apiP.slug || p.id === apiP.id);
         const images =
           apiP.images && apiP.images.length > 0
@@ -46,6 +46,11 @@ export async function getProducts(): Promise<StaticProduct[]> {
           })),
         };
       });
+
+      // Retain bespoke or custom pieces defined in PRODUCTS_DATA (e.g. custom-artisan-desk-caddy)
+      const apiSlugs = new Set(res.items.map((i: any) => i.slug));
+      const extraLocalProducts = PRODUCTS_DATA.filter((p) => !apiSlugs.has(p.slug));
+      return [...mapped, ...extraLocalProducts];
     }
   } catch (err) {
     console.warn("Could not fetch products from backend API, using local product catalog:", err);

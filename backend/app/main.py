@@ -25,6 +25,7 @@ from app.routers import (
     admin,
     auth,
     cart,
+    custom_inquiries,
     orders,
     payments,
     products,
@@ -184,5 +185,6 @@ app.include_router(orders.router, prefix=api_prefix)
 app.include_router(reviews.router, prefix=api_prefix)
 app.include_router(wishlist.router, prefix=api_prefix)
 app.include_router(addresses.router, prefix=api_prefix)
+app.include_router(custom_inquiries.router, prefix=api_prefix)
 app.include_router(payments.router, prefix=api_prefix)
 app.include_router(admin.router, prefix=api_prefix)

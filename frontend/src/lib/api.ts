@@ -156,6 +156,13 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
     }),
 
+  patch: <T>(endpoint: string, body?: unknown, options?: FetchOptions) =>
+    fetchApi<T>(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   upload: <T>(endpoint: string, formData: FormData, options?: FetchOptions) =>
     fetchApi<T>(endpoint, {
       ...options,

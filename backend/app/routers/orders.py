@@ -32,6 +32,7 @@ from app.models.order import (
     ReservationStatus,
 )
 from app.models.product import Product, ProductVariant, Bundle
+from app.models.custom_inquiry import CustomInquiry
 from app.models.user import Address, User
 from app.schemas.order import (
     OrderCreate,
@@ -295,9 +296,49 @@ async def create_order(
                 except Exception:
                     pass
 
+                # Check if this item is a verified Custom Inquiry
+                inq_id_to_check = getattr(item_in, "custom_inquiry_id", None) or item_in.product_id
+                try:
+                    inq_uuid = uuid.UUID(str(inq_id_to_check))
+                    inq_result = await db.execute(
+                        select(CustomInquiry).where(CustomInquiry.id == inq_uuid)
+                    )
+                    inquiry = inq_result.scalar_one_or_none()
+                    if inquiry and inquiry.status in ["approved", "in_cart"]:
+                        if inquiry.approved_price is not None and inquiry.approved_price > 0:
+                            unit_price = inquiry.approved_price
+                            line_total = unit_price * item_in.quantity
+                            subtotal += line_total
+                            display_title = inquiry.custom_title or f"{inquiry.product_name} (Custom Edition)"
+                            display_spec = (
+                                inquiry.approved_dimensions
+                                or inquiry.requested_dimensions
+                                or item_in.variant_name
+                                or "Bespoke Specifications"
+                            )
+                            order_items.append(
+                                OrderItem(
+                                    id=uuid.uuid4(),
+                                    product_id=None,
+                                    variant_id=None,
+                                    product_name=display_title,
+                                    product_slug=inquiry.product_slug,
+                                    variant_name=display_spec,
+                                    price=unit_price,
+                                    quantity=item_in.quantity,
+                                    total=line_total,
+                                    image_url="/images/custom-caddy-1.png",
+                                )
+                            )
+                            inquiry.status = "ordered"
+                            inquiry.updated_at = datetime.now(timezone.utc)
+                            continue
+                except (ValueError, TypeError):
+                    pass
+
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Product or bundle '{item_in.product_id}' not found or inactive",
+                    detail=f"Product, bundle, or custom inquiry '{item_in.product_id}' not found or inactive",
                 )
 
             variant = None

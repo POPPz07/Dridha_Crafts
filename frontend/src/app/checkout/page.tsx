@@ -312,6 +312,7 @@ export default function CheckoutPage() {
         variant_id: isValidUuid ? i.variant_id : null,
         variant_name: i.variant?.variant_name || null,
         quantity: i.quantity,
+        custom_inquiry_id: i.custom_inquiry_id || null,
       };
     });
 

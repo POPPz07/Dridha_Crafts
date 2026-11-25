@@ -43,6 +43,7 @@ class OrderItemCreate(BaseModel):
     variant_id: Optional[Union[uuid.UUID, str]] = None
     quantity: int = Field(default=1, ge=1, le=10)
     variant_name: Optional[str] = None
+    custom_inquiry_id: Optional[Union[uuid.UUID, str]] = None
 
 
 class OrderCreate(BaseModel):

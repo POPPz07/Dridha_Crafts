@@ -34,8 +34,10 @@ import {
   ArrowRight,
   Printer,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import OrderPrintModal from "@/components/orders/OrderPrintModal";
+import { CustomInquiriesTab } from "@/components/admin/CustomInquiriesTab";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -249,7 +251,7 @@ class AdminErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type TabId = "pulse" | "orders" | "customers" | "inventory" | "traffic";
+type TabId = "pulse" | "orders" | "custom_inquiries" | "customers" | "inventory" | "traffic";
 type OrderFilter =
   | "needs_verification"
   | "crafting"
@@ -313,6 +315,7 @@ export default function AdminDashboard() {
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "pulse", label: "Live Pulse", icon: TrendingUp },
     { id: "orders", label: "Orders Pipeline", icon: Package },
+    { id: "custom_inquiries", label: "Custom Inquiries", icon: Sparkles },
     { id: "customers", label: "Customers", icon: Users },
     { id: "inventory", label: "Inventory", icon: Boxes },
     { id: "traffic", label: "Traffic & Analytics", icon: BarChart3 },
@@ -373,6 +376,7 @@ export default function AdminDashboard() {
               onFilterChange={setOrdersInitialFilter}
             />
           )}
+          {activeTab === "custom_inquiries" && <CustomInquiriesTab />}
           {activeTab === "customers" && <CustomersTab />}
           {activeTab === "inventory" && <InventoryTab />}
           {activeTab === "traffic" && <TrafficTab />}

@@ -28,6 +28,7 @@ import { formatPrice } from "@/lib/utils";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useAuthGatedAddToCart } from "@/hooks/useAuthGatedAddToCart";
 import { ProductReviewsSection } from "@/components/products/ProductReviewsSection";
+import { CustomProductWorkflow } from "@/components/products/CustomProductWorkflow";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProductDetailSkeleton } from "@/components/ui/SkeletonCard";
 import type { FinishOption } from "@/components/3d/woodMaterials";
@@ -648,64 +649,86 @@ function ProductDetail({ product }: { product: StaticProduct }) {
               </div>
             )}
 
-            {/* Quantity Selector */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-widest text-charcoal/60">
-                Quantity
-              </label>
-              <div className="flex items-center gap-0">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-l-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
-                  aria-label="Decrease quantity"
-                  disabled={isOutOfStock}
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <div className="w-14 h-10 flex items-center justify-center border-y border-warmgrey bg-white font-semibold text-brand-green">
-                  {quantity}
-                </div>
-                <button
-                  onClick={() => setQuantity(Math.min(currentStock || 10, quantity + 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-r-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
-                  aria-label="Increase quantity"
-                  disabled={isOutOfStock || quantity >= currentStock}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {/* 3. Dedicated Custom Commission Workflow OR Standard Order Flow */}
+            {product.slug === "custom-artisan-desk-caddy" ? (
+              <div className="pt-2">
+                <CustomProductWorkflow
+                  product={product}
+                  isStandaloneCustom={true}
+                  onAddToCartSuccess={() => setIsAdded(true)}
+                />
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Quantity Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-charcoal/60">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-0">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-10 h-10 flex items-center justify-center rounded-l-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
+                      aria-label="Decrease quantity"
+                      disabled={isOutOfStock}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <div className="w-14 h-10 flex items-center justify-center border-y border-warmgrey bg-white font-semibold text-brand-green">
+                      {quantity}
+                    </div>
+                    <button
+                      onClick={() => setQuantity(Math.min(currentStock || 10, quantity + 1))}
+                      className="w-10 h-10 flex items-center justify-center rounded-r-xl border border-warmgrey bg-white hover:bg-warmgrey/40 transition-colors text-charcoal"
+                      aria-label="Increase quantity"
+                      disabled={isOutOfStock || quantity >= currentStock}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                variant={isOutOfStock ? "outline" : isAdded ? "gold" : "primary"}
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock}
-                className={`flex-1 py-4 text-base ${isOutOfStock ? "opacity-60 cursor-not-allowed" : ""}`}
-              >
-                {isOutOfStock ? (
-                  "Out of Stock"
-                ) : isAdded ? (
-                  <><Check className="w-5 h-5 mr-2" /> Added to Cart!</>
-                ) : (
-                  <><ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart</>
-                )}
-              </Button>
-              <button
-                onClick={() => toggleWishlist(product.id)}
-                className={`flex items-center justify-center gap-2 px-5 py-4 rounded-lg border-2 transition-all duration-300 text-sm font-medium ${
-                  inWishlist
-                    ? "bg-brand-gold/10 border-brand-gold text-brand-brown"
-                    : "border-warmgrey text-charcoal/70 hover:border-brand-green hover:text-brand-green"
-                }`}
-                aria-label="Wishlist"
-              >
-                <Heart className={`w-5 h-5 ${inWishlist ? "fill-brand-gold text-brand-gold" : ""}`} />
-                {inWishlist ? "Wishlisted" : "Wishlist"}
-              </button>
-            </div>
+                {/* CTAs */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    variant={isOutOfStock ? "outline" : isAdded ? "gold" : "primary"}
+                    size="lg"
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock}
+                    className={`flex-1 py-4 text-base ${isOutOfStock ? "opacity-60 cursor-not-allowed" : ""}`}
+                  >
+                    {isOutOfStock ? (
+                      "Out of Stock"
+                    ) : isAdded ? (
+                      <><Check className="w-5 h-5 mr-2" /> Added to Cart!</>
+                    ) : (
+                      <><ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart</>
+                    )}
+                  </Button>
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    className={`flex items-center justify-center gap-2 px-5 py-4 rounded-lg border-2 transition-all duration-300 text-sm font-medium ${
+                      inWishlist
+                        ? "bg-brand-gold/10 border-brand-gold text-brand-brown"
+                        : "border-warmgrey text-charcoal/70 hover:border-brand-green hover:text-brand-green"
+                    }`}
+                    aria-label="Wishlist"
+                  >
+                    <Heart className={`w-5 h-5 ${inWishlist ? "fill-brand-gold text-brand-gold" : ""}`} />
+                    {inWishlist ? "Wishlisted" : "Wishlist"}
+                  </button>
+                </div>
+
+                {/* Custom Dimensions & Bespoke Request Section for Existing Products */}
+                <div className="pt-2">
+                  <CustomProductWorkflow
+                    product={product}
+                    isStandaloneCustom={false}
+                    onAddToCartSuccess={() => setIsAdded(true)}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Trust Badges Row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">

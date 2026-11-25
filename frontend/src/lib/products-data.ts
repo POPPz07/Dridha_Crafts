@@ -229,6 +229,29 @@ export const PRODUCTS_DATA: StaticProduct[] = [
       },
     ],
   },
+  {
+    id: "c0570001-c888-4f01-b333-7cee7987e000",
+    name: "Custom Product (Bespoke Artisan Commission)",
+    slug: "custom-artisan-desk-caddy",
+    short_description: "Bespoke handcrafted pine desk creation sculpted to your exact workstation dimensions and device requirements.",
+    long_description: "Every bespoke piece is hand-sculpted from naturally fallen Kashmir pine. Discuss your workstation dimensions, device specifications, or personalized engraving requirements directly with our artisan team over WhatsApp. Once feasibility, specifications, and pricing are finalized over chat, your custom creation is unlocked for checkout.",
+    category: "Bespoke Commissions",
+    price: 999,
+    compare_at_price: 1299,
+    wood_type: "Kashmir Valley Pine",
+    finish: "Hand-Sculpted Custom Polish",
+    weight_kg: 0.95,
+    dimensions: "Tailored to Specifications",
+    is_featured: true,
+    badge: "Handcrafted",
+    stock_quantity: 50,
+    images: [
+      { url: "/images/custom-caddy-1.png", alt: "Custom Artisan Desk Piece 3D Render Snapshot" },
+      { url: "/images/custom-caddy-2.png", alt: "Custom Artisan Desk Piece angled view" },
+      { url: "/images/custom-caddy-3.png", alt: "Custom Artisan Desk Piece perspective" },
+    ],
+    variants: [],
+  },
 ];
 
 export interface StaticBundle {

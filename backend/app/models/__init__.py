@@ -6,6 +6,7 @@ from app.models.order import Order, OrderItem, InventoryReservation
 from app.models.payment import Payment, PaymentAttempt, PaymentEvent
 from app.models.cart import CartItem
 from app.models.review import Review, Wishlist
+from app.models.custom_inquiry import CustomInquiry
 
 __all__ = [
     "User",
@@ -24,4 +25,5 @@ __all__ = [
     "CartItem",
     "Review",
     "Wishlist",
+    "CustomInquiry",
 ]
