@@ -82,34 +82,57 @@ export default function WishlistPage() {
                   <h3 className="font-display text-xl font-bold text-brand-green mt-1">
                     {product.name}
                   </h3>
-                  <p className="font-display text-2xl font-bold text-brand-green mt-2">
-                    {formatPrice(product.price)}
-                  </p>
+                  {product.slug === "custom-artisan-desk-caddy" ? (
+                    <div className="mt-2">
+                      <span className="font-display text-base font-bold text-brand-green block">
+                        Pricing on Request*
+                      </span>
+                      <span className="text-[10px] text-charcoal/50 block">
+                        *Price depending on product specifications
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="font-display text-2xl font-bold text-brand-green mt-2">
+                      {formatPrice(product.price)}
+                    </p>
+                  )}
                 </div>
 
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  onClick={() => {
-                    addToCart({
-                      id: `${product.id}-wishlist`,
-                      product_id: product.id,
-                      variant_id: null,
-                      quantity: 1,
-                      product: {
-                        name: product.name,
-                        slug: product.slug,
-                        price: product.price,
-                        primary_image_url: product.images[0]?.url || null,
-                        stock_quantity: 20,
-                      },
-                      variant: null,
-                    });
-                  }}
-                  leftIcon={<ShoppingBag className="w-4 h-4" />}
-                >
-                  Move to Cart
-                </Button>
+                {product.slug === "custom-artisan-desk-caddy" ? (
+                  <Button
+                    variant="gold"
+                    className="w-full"
+                    onClick={() => {
+                      window.location.href = `/products/${product.slug}`;
+                    }}
+                  >
+                    Customize Order
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    onClick={() => {
+                      addToCart({
+                        id: `${product.id}-wishlist`,
+                        product_id: product.id,
+                        variant_id: null,
+                        quantity: 1,
+                        product: {
+                          name: product.name,
+                          slug: product.slug,
+                          price: product.price,
+                          primary_image_url: product.images[0]?.url || null,
+                          stock_quantity: 20,
+                        },
+                        variant: null,
+                      });
+                    }}
+                    leftIcon={<ShoppingBag className="w-4 h-4" />}
+                  >
+                    Move to Cart
+                  </Button>
+                )}
               </div>
             ))}
           </div>

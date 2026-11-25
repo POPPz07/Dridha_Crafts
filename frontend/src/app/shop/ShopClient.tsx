@@ -260,18 +260,31 @@ export function ShopClient() {
 
                   <div className="pt-3 border-t border-warmgrey/60 flex items-center justify-between">
                     <div>
-                      <span className="font-display text-2xl font-bold text-brand-green">
-                        {formatPrice(product.price)}
-                      </span>
-                      {product.compare_at_price && (
-                        <span className="text-xs text-charcoal/40 line-through ml-2">
-                          {formatPrice(product.compare_at_price)}
-                        </span>
-                      )}
-                      {product.compare_at_price && product.compare_at_price > product.price && (
-                        <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
-                          Save ₹{product.compare_at_price - product.price}
-                        </span>
+                      {product.slug === "custom-artisan-desk-caddy" ? (
+                        <div>
+                          <span className="font-display text-base sm:text-lg font-bold text-brand-green block leading-tight">
+                            Pricing on Request*
+                          </span>
+                          <span className="text-[10px] text-charcoal/50 block">
+                            *Price depending on product specifications
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="font-display text-2xl font-bold text-brand-green">
+                            {formatPrice(product.price)}
+                          </span>
+                          {product.compare_at_price && (
+                            <span className="text-xs text-charcoal/40 line-through ml-2">
+                              {formatPrice(product.compare_at_price)}
+                            </span>
+                          )}
+                          {product.compare_at_price && product.compare_at_price > product.price && (
+                            <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                              Save ₹{product.compare_at_price - product.price}
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
 

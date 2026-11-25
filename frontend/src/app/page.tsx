@@ -469,42 +469,69 @@ export default function HomePage() {
 
                     <div className="pt-4 border-t border-warmgrey/60 flex items-center justify-between gap-3">
                       <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-display text-2xl font-bold text-brand-green">
-                            {formatPrice(product.price)}
-                          </span>
-                          {product.compare_at_price && (
-                            <span className="text-xs text-charcoal/40 line-through">
-                              {formatPrice(product.compare_at_price)}
+                        {product.slug === "custom-artisan-desk-caddy" ? (
+                          <div>
+                            <span className="font-display text-base sm:text-lg font-bold text-brand-green block leading-tight">
+                              Pricing on Request*
                             </span>
-                          )}
-                        </div>
-                        {product.compare_at_price && product.compare_at_price > product.price && (
-                          <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
-                            Save ₹{product.compare_at_price - product.price}
-                          </span>
+                            <span className="text-[10px] text-charcoal/50 block">
+                              *Price depending on product specifications
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-display text-2xl font-bold text-brand-green">
+                                {formatPrice(product.price)}
+                              </span>
+                              {product.compare_at_price && (
+                                <span className="text-xs text-charcoal/40 line-through">
+                                  {formatPrice(product.compare_at_price)}
+                                </span>
+                              )}
+                            </div>
+                            {product.compare_at_price && product.compare_at_price > product.price && (
+                              <span className="inline-block mt-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                                Save ₹{product.compare_at_price - product.price}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
 
-                      <Button
-                        variant={isAdded ? "gold" : "primary"}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(product);
-                        }}
-                        className="shrink-0 relative z-10"
-                      >
-                        {isAdded ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 mr-1" /> Added
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart
-                          </>
-                        )}
-                      </Button>
+                      {product.slug === "custom-artisan-desk-caddy" ? (
+                        <Button
+                          variant="gold"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/products/${product.slug}`);
+                          }}
+                          className="shrink-0 relative z-10"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 mr-1" /> Customize
+                        </Button>
+                      ) : (
+                        <Button
+                          variant={isAdded ? "gold" : "primary"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(product);
+                          }}
+                          className="shrink-0 relative z-10"
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 mr-1" /> Added
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                     <div className="flex items-center justify-center gap-1 text-center text-xs font-medium text-charcoal/50 group-hover:text-brand-green transition-colors mt-2">
                       <span>View Details</span>

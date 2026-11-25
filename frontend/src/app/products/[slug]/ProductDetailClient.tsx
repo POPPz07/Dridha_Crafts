@@ -505,33 +505,49 @@ function ProductDetail({ product }: { product: StaticProduct }) {
             </div>
 
             {/* Price */}
-            <div>
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="font-display text-4xl font-bold text-brand-green">
-                  {formatPrice(currentPrice)}
-                </span>
-                {product.compare_at_price && (
-                  <>
-                    <span className="text-lg text-charcoal/40 line-through">
-                      {formatPrice(product.compare_at_price + (isBundle ? bundlePolishSurcharge : 0))}
-                    </span>
-                    <Badge variant="sale">
-                      Save ₹{isBundle ? (bundlePolishSurcharge > 0 ? (product.compare_at_price + bundlePolishSurcharge) - currentPrice : product.compare_at_price - product.price) : product.compare_at_price - currentPrice} ({isBundle ? (currentBundle?.type === "trio" ? "15% Combo OFF" : "10% Combo OFF") : `${Math.round(((product.compare_at_price - currentPrice) / product.compare_at_price) * 100)}% OFF`})
-                    </Badge>
-                  </>
-                )}
-                {isBundle && bundlePolishSurcharge > 0 && (
-                  <span className="text-xs font-semibold text-brand-gold bg-brand-green/10 px-2.5 py-1 rounded-full">
-                    Includes +₹{bundlePolishSurcharge} polish ({bundlePolishSurcharge / 20} piece{bundlePolishSurcharge > 20 ? "s" : ""})
+            {product.slug === "custom-artisan-desk-caddy" ? (
+              <div className="space-y-1.5 p-4 rounded-2xl bg-brand-cream/80 border border-brand-gold/30">
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-2xl sm:text-3xl font-bold text-brand-green">
+                    Pricing on Request
                   </span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-brand-gold/20 text-brand-brown">
+                    Bespoke Quote
+                  </span>
+                </div>
+                <p className="text-xs text-charcoal/70 leading-relaxed">
+                  *Price depending on product specifications, dimensions, wood selection, and workshop craftsmanship feasibility.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span className="font-display text-4xl font-bold text-brand-green">
+                    {formatPrice(currentPrice)}
+                  </span>
+                  {product.compare_at_price && (
+                    <>
+                      <span className="text-lg text-charcoal/40 line-through">
+                        {formatPrice(product.compare_at_price + (isBundle ? bundlePolishSurcharge : 0))}
+                      </span>
+                      <Badge variant="sale">
+                        Save ₹{isBundle ? (bundlePolishSurcharge > 0 ? (product.compare_at_price + bundlePolishSurcharge) - currentPrice : product.compare_at_price - product.price) : product.compare_at_price - currentPrice} ({isBundle ? (currentBundle?.type === "trio" ? "15% Combo OFF" : "10% Combo OFF") : `${Math.round(((product.compare_at_price - currentPrice) / product.compare_at_price) * 100)}% OFF`})
+                      </Badge>
+                    </>
+                  )}
+                  {isBundle && bundlePolishSurcharge > 0 && (
+                    <span className="text-xs font-semibold text-brand-gold bg-brand-green/10 px-2.5 py-1 rounded-full">
+                      Includes +₹{bundlePolishSurcharge} polish ({bundlePolishSurcharge / 20} piece{bundlePolishSurcharge > 20 ? "s" : ""})
+                    </span>
+                  )}
+                </div>
+                {isBundle && product.compare_at_price && (
+                  <p className="text-xs text-charcoal/60 mt-1">
+                    Individual items bought separately: <span className="font-semibold text-charcoal/80">{formatPrice(product.compare_at_price)}</span> • Extra {currentBundle?.type === "trio" ? "15%" : "10%"} Combo Discount applied
+                  </p>
                 )}
               </div>
-              {isBundle && product.compare_at_price && (
-                <p className="text-xs text-charcoal/60 mt-1">
-                  Individual items bought separately: <span className="font-semibold text-charcoal/80">{formatPrice(product.compare_at_price)}</span> • Extra {currentBundle?.type === "trio" ? "15%" : "10%"} Combo Discount applied
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Stock indicator */}
             <div>
@@ -835,7 +851,11 @@ function ProductDetail({ product }: { product: StaticProduct }) {
                   <div className="p-4 space-y-1">
                     <p className="text-xs text-charcoal/50 uppercase tracking-wide">{item.category}</p>
                     <h3 className="font-semibold text-sm text-brand-green group-hover:text-brand-brown transition-colors">{item.name}</h3>
-                    <p className="font-display font-bold text-brand-green">{formatPrice(item.price)}</p>
+                    {item.slug === "custom-artisan-desk-caddy" ? (
+                      <p className="text-xs font-semibold text-brand-green">Pricing on Request*</p>
+                    ) : (
+                      <p className="font-display font-bold text-brand-green">{formatPrice(item.price)}</p>
+                    )}
                   </div>
                 </Link>
               ))}
