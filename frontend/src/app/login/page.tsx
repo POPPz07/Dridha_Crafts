@@ -597,6 +597,18 @@ function LoginContent() {
         </form>
       )}
 
+      {/* Legal Disclaimer */}
+      <p className="text-[11px] text-center text-charcoal/60 mt-5 leading-relaxed">
+        By continuing, you agree to Dridha Crafts&apos;{" "}
+        <Link href="/terms" className="text-brand-green font-semibold underline hover:text-brand-brown">
+          Terms of Service
+        </Link>{" "}
+        and acknowledge our{" "}
+        <Link href="/privacy" className="text-brand-green font-semibold underline hover:text-brand-brown">
+          Privacy Policy
+        </Link>.
+      </p>
+
       {/* Admin Notice */}
       {isAdminLogin && (
         <div className="mt-6 pt-4 border-t border-warmgrey/50 text-center">

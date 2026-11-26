@@ -196,6 +196,22 @@ export function Footer() {
                   My Wishlist
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-brand-gold hover:pl-1 transition-all duration-200"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-brand-gold hover:pl-1 transition-all duration-200"
+                >
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -240,9 +256,13 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-cream/40 gap-3">
           <p>© 2026 Dridha Crafts. All rights reserved.</p>
-          <p className="text-center">
-            Handcrafted with ❤️ in Kashmir · One-Stop Desk Atelier · Bespoke Commissions
-          </p>
+          <div className="flex items-center gap-3 text-brand-cream/60">
+            <Link href="/privacy" className="hover:text-brand-gold transition-colors">Privacy Policy</Link>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-brand-gold transition-colors">Terms of Service</Link>
+            <span>·</span>
+            <Link href="/help" className="hover:text-brand-gold transition-colors">Shipping &amp; FAQ</Link>
+          </div>
           <p className="text-right text-brand-cream/30">
             Zero Deforestation · Pure Craft
           </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -536,8 +537,23 @@ export function AuthModal() {
               </form>
             )}
 
-            <p className="text-[10px] text-charcoal/40 text-center mt-4">
-              By continuing, you agree to our Terms of Service and Privacy Policy.
+            <p className="text-[11px] text-charcoal/60 text-center mt-4 leading-relaxed">
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms"
+                onClick={closeAuthModal}
+                className="text-brand-green font-semibold underline hover:text-brand-brown"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                onClick={closeAuthModal}
+                className="text-brand-green font-semibold underline hover:text-brand-brown"
+              >
+                Privacy Policy
+              </Link>.
             </p>
           </div>
         </div>
