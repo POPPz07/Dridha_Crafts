@@ -292,44 +292,44 @@ export function AuthModal() {
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[101] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div
-          className="relative bg-white rounded-3xl shadow-elevated w-full max-w-md overflow-hidden animate-scale-in"
+          className="relative bg-white rounded-3xl shadow-elevated w-full max-w-md max-h-[min(90vh,680px)] flex flex-col overflow-hidden animate-scale-in my-auto"
           role="dialog"
           aria-modal="true"
           aria-label={isLogin ? "Login" : "Create Account"}
         >
           {/* Header */}
-          <div className="bg-brand-green px-8 pt-8 pb-6 relative">
+          <div className="bg-brand-green px-6 pt-5 pb-4 relative shrink-0">
             <button
               onClick={closeAuthModal}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+              className="absolute top-3.5 right-3.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
               aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
             {isForgot ? (
               <div>
                 <button
                   type="button"
                   onClick={switchToLogin}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#e5c89d] hover:text-white transition-colors mb-3 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#e5c89d] hover:text-white transition-colors mb-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
                 </button>
-                <h2 className="font-display text-2xl font-bold text-white">Reset Password</h2>
-                <p className="text-sm text-brand-cream/70 mt-1">
+                <h2 className="font-display text-xl sm:text-2xl font-bold text-white">Reset Password</h2>
+                <p className="text-xs text-brand-cream/70 mt-0.5">
                   Enter your registered email address and we&apos;ll send you a recovery link.
                 </p>
               </div>
             ) : (
               <>
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-1.5 mb-2.5">
                   <button
                     type="button"
                     onClick={switchToLogin}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                      isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
+                    className={`px-3.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                      isLogin ? "bg-brand-gold text-charcoal shadow-xs" : "bg-white/20 text-white/70 hover:bg-white/30"
                     }`}
                   >
                     Login
@@ -337,17 +337,17 @@ export function AuthModal() {
                   <button
                     type="button"
                     onClick={switchToSignup}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                      !isLogin ? "bg-brand-gold text-charcoal" : "bg-white/20 text-white/70 hover:bg-white/30"
+                    className={`px-3.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                      !isLogin ? "bg-brand-gold text-charcoal shadow-xs" : "bg-white/20 text-white/70 hover:bg-white/30"
                     }`}
                   >
                     Create Account
                   </button>
                 </div>
-                <h2 className="font-display text-2xl font-bold text-white">
+                <h2 className="font-display text-xl sm:text-2xl font-bold text-white">
                   {isLogin ? "Welcome Back" : "Join Dridha Crafts"}
                 </h2>
-                <p className="text-sm text-brand-cream/70 mt-1">
+                <p className="text-xs text-brand-cream/70 mt-0.5">
                   {isLogin
                     ? "Sign in to your account to view orders and wishlist."
                     : "Create an account to track orders and save your wishlist."}
@@ -357,25 +357,25 @@ export function AuthModal() {
           </div>
 
           {/* Body */}
-          <div className="px-8 py-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
             {successMsg && (
-              <div className="mb-4 px-4 py-3 bg-sage/15 border border-sage/30 rounded-xl text-sm text-brand-green-dark font-medium">
+              <div className="mb-2.5 px-3.5 py-2.5 bg-sage/15 border border-sage/30 rounded-xl text-xs text-brand-green-dark font-medium">
                 ✓ {successMsg}
               </div>
             )}
             {errorMsg && (
-              <div className="mb-4 px-4 py-3 bg-terracotta/10 border border-terracotta/20 rounded-xl text-sm text-terracotta">
+              <div className="mb-2.5 px-3.5 py-2.5 bg-terracotta/10 border border-terracotta/20 rounded-xl text-xs text-terracotta">
                 {errorMsg}
               </div>
             )}
 
             {!isForgot && (
-              <div className="space-y-4 mb-4">
+              <div className="space-y-2.5 mb-2.5">
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-warmgrey/80 bg-white hover:bg-brand-cream/50 transition-all font-semibold text-xs sm:text-sm text-charcoal shadow-2xs hover:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 cursor-pointer disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2.5 py-2 px-3 rounded-xl border border-warmgrey/80 bg-white hover:bg-brand-cream/50 transition-all font-semibold text-xs sm:text-sm text-charcoal shadow-2xs hover:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 cursor-pointer disabled:opacity-60"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path
@@ -400,7 +400,7 @@ export function AuthModal() {
 
                 <div className="relative flex items-center justify-center">
                   <div className="border-t border-warmgrey/80 w-full" />
-                  <span className="bg-white px-3 text-[11px] font-medium text-charcoal/50 uppercase tracking-wider relative">
+                  <span className="bg-white px-2.5 text-[10px] font-medium text-charcoal/50 uppercase tracking-wider relative">
                     or continue with email
                   </span>
                 </div>
@@ -408,7 +408,7 @@ export function AuthModal() {
             )}
 
             {isForgot ? (
-              <form key="modal-forgot-form" onSubmit={forgotForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+              <form key="modal-forgot-form" onSubmit={forgotForm.handleSubmit(handleForgotPassword)} className="space-y-2.5">
                 <FloatingInput
                   key="forgot-email"
                   id="forgot-email"
@@ -418,10 +418,10 @@ export function AuthModal() {
                   error={forgotForm.formState.errors.email?.message}
                   {...forgotForm.register("email")}
                 />
-                <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
+                <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full mt-2">
                   {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
                 </Button>
-                <div className="text-center pt-2">
+                <div className="text-center pt-1">
                   <button
                     type="button"
                     onClick={switchToLogin}
@@ -432,7 +432,7 @@ export function AuthModal() {
                 </div>
               </form>
             ) : isLogin ? (
-              <form key="modal-login-form" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+              <form key="modal-login-form" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-2.5">
                 <FloatingInput
                   key="login-email"
                   id="login-email"
@@ -460,21 +460,21 @@ export function AuthModal() {
                   }
                   {...loginForm.register("password")}
                 />
-                <div className="flex items-center justify-end -mt-1">
+                <div className="flex items-center justify-end -mt-0.5">
                   <button
                     type="button"
                     onClick={switchToForgot}
-                    className="text-xs text-brand-green hover:underline font-medium cursor-pointer"
+                    className="text-[11px] text-brand-green hover:underline font-medium cursor-pointer"
                   >
                     Forgot password?
                   </button>
                 </div>
-                <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
+                <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full mt-1">
                   {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             ) : (
-              <form key="modal-signup-form" onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+              <form key="modal-signup-form" onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-2.5">
                 <FloatingInput
                   key="signup-name"
                   id="signup-name"
@@ -531,13 +531,13 @@ export function AuthModal() {
                   error={signupForm.formState.errors.confirm_password?.message}
                   {...signupForm.register("confirm_password")}
                 />
-                <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="w-full mt-2">
+                <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full mt-1.5">
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             )}
 
-            <p className="text-[11px] text-charcoal/60 text-center mt-4 leading-relaxed">
+            <p className="text-[10px] sm:text-[11px] text-charcoal/55 text-center mt-2.5 leading-relaxed">
               By continuing, you agree to our{" "}
               <Link
                 href="/terms"
@@ -572,14 +572,14 @@ interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 
 const FloatingInput = ({ id, label, error, rightElement, className, ...props }: FloatingInputProps) => {
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-xs font-semibold text-charcoal/60 uppercase tracking-wide">
+    <div className="space-y-0.5">
+      <label htmlFor={id} className="block text-[10px] sm:text-[11px] font-semibold text-charcoal/60 uppercase tracking-wide">
         {label}
       </label>
       <div className="relative">
         <input
           id={id}
-          className={`w-full px-4 py-3 bg-brand-cream border rounded-xl text-sm text-charcoal placeholder-charcoal/30 transition-all outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/10 ${
+          className={`w-full px-3.5 py-2 sm:py-2.5 bg-brand-cream border rounded-xl text-xs sm:text-sm text-charcoal placeholder-charcoal/30 transition-all outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/10 ${
             error ? "border-terracotta/60 bg-terracotta/5" : "border-warmgrey"
           } ${rightElement ? "pr-10" : ""} ${className || ""}`}
           {...props}
@@ -588,7 +588,7 @@ const FloatingInput = ({ id, label, error, rightElement, className, ...props }: 
           <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightElement}</div>
         )}
       </div>
-      {error && <p className="text-xs text-terracotta font-medium">{error}</p>}
+      {error && <p className="text-[11px] text-terracotta font-medium">{error}</p>}
     </div>
   );
 };
