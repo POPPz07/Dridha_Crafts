@@ -8,7 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Check, ChevronRight, Truck, Shield, Loader2, MapPin, Plus, Home, Star } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import type { Address } from "@/types/user";
+import { createClient } from "@/lib/supabase";
+import type { Address, User } from "@/types/user";
 // import { getCashfree, CashfreeCheckoutResponse } from "@/lib/cashfree"; // Dormant - re-enable when Cashfree is active
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
@@ -140,8 +141,8 @@ export default function CheckoutPage() {
           setSelectedAddressId(defaultAddr.id);
           setIsUsingNewAddress(false);
           reset({
-            full_name: defaultAddr.full_name,
-            phone: defaultAddr.phone,
+            full_name: defaultAddr.full_name || user?.full_name || "",
+            phone: defaultAddr.phone || user?.phone || "",
             address_line_1: defaultAddr.address_line_1,
             address_line_2: defaultAddr.address_line_2 || "",
             city: defaultAddr.city,
@@ -168,8 +169,8 @@ export default function CheckoutPage() {
     setSelectedAddressId(addr.id);
     setIsUsingNewAddress(false);
     reset({
-      full_name: addr.full_name,
-      phone: addr.phone,
+      full_name: addr.full_name || user?.full_name || "",
+      phone: addr.phone || user?.phone || "",
       address_line_1: addr.address_line_1,
       address_line_2: addr.address_line_2 || "",
       city: addr.city,
@@ -192,27 +193,42 @@ export default function CheckoutPage() {
     });
   };
 
-  // 2. Auto-fill from cached local draft if no saved addresses are available
+  // 2. Auto-fill from cached local draft or profile if no saved addresses are available
   useEffect(() => {
     if (savedAddresses.length > 0) return;
+    let draftValues: Partial<AddressForm> = {};
     try {
       const savedDraft = typeof window !== "undefined" ? localStorage.getItem("dridha_checkout_address") : null;
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
         if (parsed && typeof parsed === "object") {
-          reset(parsed);
-          return;
+          draftValues = parsed;
         }
       }
     } catch {
       // ignore JSON parse errors
     }
 
-    if (user) {
-      if (user.full_name) setValue("full_name", user.full_name);
-      if (user.phone) setValue("phone", user.phone);
+    reset({
+      full_name: draftValues.full_name || user?.full_name || "",
+      phone: draftValues.phone || user?.phone || "",
+      address_line_1: draftValues.address_line_1 || "",
+      address_line_2: draftValues.address_line_2 || "",
+      city: draftValues.city || "",
+      state: draftValues.state || "",
+      pincode: draftValues.pincode || "",
+    });
+  }, [user, reset, savedAddresses.length]);
+
+  // Reactive prefill for phone & name whenever user profile resolves
+  useEffect(() => {
+    if (user?.phone && !getValues("phone")) {
+      setValue("phone", user.phone);
     }
-  }, [user, reset, setValue, savedAddresses.length]);
+    if (user?.full_name && !getValues("full_name")) {
+      setValue("full_name", user.full_name);
+    }
+  }, [user?.phone, user?.full_name, getValues, setValue]);
 
   // 2. Persist filled fields to localStorage so refreshing never loses entered data
   useEffect(() => {
@@ -288,7 +304,34 @@ export default function CheckoutPage() {
     );
   }
 
+  // Synchronize customer phone entered at checkout to the user profile
+  const syncPhoneToUserProfile = (phoneCandidate?: string) => {
+    if (!phoneCandidate) return;
+    const clean = phoneCandidate.replace(/[^\d]/g, "").slice(-10);
+    if (!clean || clean.length !== 10) return;
+
+    if (user && (!user.phone || !user.phone.trim())) {
+      // 1. Immediately update Zustand store for instant UI reflection
+      useAuthStore.getState().setUser({ ...user, phone: clean });
+
+      // 2. Persist to backend database user profile
+      api.put<User>("/api/auth/profile", { phone: clean }).catch((err) => {
+        console.warn("Could not sync phone to profile:", err);
+      });
+
+      // 3. Update Supabase Auth user metadata
+      try {
+        const supabase = createClient();
+        supabase.auth.updateUser({ data: { phone: clean } }).catch(() => {});
+      } catch {
+        // ignore Supabase client metadata sync error
+      }
+    }
+  };
+
   const onAddressSubmit = () => {
+    const addressData = getValues();
+    syncPhoneToUserProfile(addressData.phone);
     updateStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -305,6 +348,7 @@ export default function CheckoutPage() {
 
     const addressData = getValues();
     const cleanPhone = addressData.phone.replace(/[^\d]/g, "").slice(-10);
+    syncPhoneToUserProfile(cleanPhone || addressData.phone);
     const shippingAddressPayload = {
       full_name: addressData.full_name.trim(),
       phone: cleanPhone || addressData.phone.trim(),

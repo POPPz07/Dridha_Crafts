@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             session.user.user_metadata?.full_name ||
             session.user.email?.split("@")[0] ||
             "User",
-          phone: session.user.phone || null,
+          phone: session.user.user_metadata?.phone || session.user.phone || null,
           role: appRole,
           created_at: session.user.created_at,
         });

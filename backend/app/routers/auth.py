@@ -158,6 +158,24 @@ async def update_profile(
         if field in ALLOWED_UPDATE_FIELDS:
             setattr(current_user, field, value)
 
+    # Sync to Supabase Auth metadata for seamless cross-client state
+    try:
+        settings_obj = get_settings()
+        if settings_obj.SUPABASE_URL and settings_obj.SUPABASE_SERVICE_ROLE_KEY:
+            sb = _get_supabase_client()
+            meta_update = {}
+            if "phone" in update_data and update_data["phone"]:
+                meta_update["phone"] = update_data["phone"]
+            if "full_name" in update_data and update_data["full_name"]:
+                meta_update["full_name"] = update_data["full_name"]
+            if meta_update:
+                sb.auth.admin.update_user_by_id(
+                    current_user.auth_id,
+                    {"user_metadata": meta_update},
+                )
+    except Exception:
+        pass
+
     await db.flush()
     return current_user
 

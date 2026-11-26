@@ -365,6 +365,15 @@ export default function ProfilePage() {
 
       if (updated) {
         setUser(updated);
+        try {
+          const supabase = createClient();
+          await supabase.auth.updateUser({
+            data: {
+              full_name: fullName.trim(),
+              phone: phone.trim() || null,
+            },
+          });
+        } catch {}
         setProfileSuccessMsg("Profile information updated successfully!");
         setTimeout(() => setProfileSuccessMsg(""), 3500);
       }

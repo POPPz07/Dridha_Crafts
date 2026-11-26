@@ -60,6 +60,12 @@ async def create_address(
         is_default=is_first,
     )
     db.add(address)
+
+    # If user doesn't have phone set in profile, auto-populate from address
+    if data.phone and (not current_user.phone or not current_user.phone.strip()):
+        current_user.phone = data.phone.strip()
+        db.add(current_user)
+
     await db.flush()
     return address
 

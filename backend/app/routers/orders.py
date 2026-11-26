@@ -229,6 +229,23 @@ async def create_order(
             detail="Either address_id or shipping_address must be provided",
         )
 
+    # Auto-sync customer phone to user profile if user profile has no phone set (e.g. Google OAuth signups)
+    active_phone = (shipping_phone or data.customer_phone or "").strip()
+    if active_phone and (not current_user.phone or not current_user.phone.strip()):
+        current_user.phone = active_phone
+        db.add(current_user)
+        try:
+            settings_obj = get_settings()
+            if settings_obj.SUPABASE_URL and settings_obj.SUPABASE_SERVICE_ROLE_KEY:
+                from supabase import create_client as sb_create_client
+                sb = sb_create_client(settings_obj.SUPABASE_URL, settings_obj.SUPABASE_SERVICE_ROLE_KEY)
+                sb.auth.admin.update_user_by_id(
+                    current_user.auth_id,
+                    {"user_metadata": {"phone": active_phone}},
+                )
+        except Exception:
+            pass
+
     # 2 & 3. Load items, lock rows, validate stock, and build order items
     order_items: list[OrderItem] = []
     subtotal = Decimal("0.00")
