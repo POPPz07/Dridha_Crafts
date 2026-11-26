@@ -11,7 +11,6 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { TopProgressBar } from "@/components/common/TopProgressBar";
 import { MediaProtection } from "@/components/common/MediaProtection";
-import { CookieBanner } from "@/components/common/CookieBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.dridhacrafts.co.in"),
@@ -175,7 +174,6 @@ export default function RootLayout({
                 {children}
               </div>
               <Footer />
-              <CookieBanner />
             </ScrollAnimationProvider>
           </LenisProvider>
         </AuthProvider>
