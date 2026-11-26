@@ -37,15 +37,23 @@ export function ShopClient() {
     });
   }, []);
 
-  // Smooth scroll to #combos if anchor is present in URL
+  // Smooth scroll to anchor if present in URL (e.g. #combos, #custom-artisan-desk-caddy)
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#combos") {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const targetId = window.location.hash.replace("#", "");
+      if (targetId === "custom-artisan-desk-caddy") {
+        setSelectedCategory("All");
+      }
       const timer = setTimeout(() => {
-        const el = document.getElementById("combos");
+        const el = document.getElementById(targetId);
         if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-brand-gold", "shadow-elevated");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-brand-gold", "shadow-elevated");
+          }, 2500);
         }
-      }, 300);
+      }, 350);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -203,6 +211,7 @@ export function ShopClient() {
             return (
               <div
                 key={product.id}
+                id={product.slug}
                 onClick={() => router.push(`/products/${product.slug}`)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -211,7 +220,7 @@ export function ShopClient() {
                 }}
                 role="link"
                 tabIndex={0}
-                className="cursor-pointer group bg-white rounded-3xl overflow-hidden border border-warmgrey/70 hover:border-brand-gold/60 transition-all duration-500 hover:shadow-elevated flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
+                className="cursor-pointer group bg-white rounded-3xl overflow-hidden border border-warmgrey/70 hover:border-brand-gold/60 transition-all duration-500 hover:shadow-elevated flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-brand-gold/50 scroll-mt-28"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-warmgrey/20">
                   <Image
